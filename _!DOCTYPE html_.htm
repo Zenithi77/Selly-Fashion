@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html class="scroll-smooth" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Selly Fashion | Brands &amp; Types</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&amp;family=Inter:wght@300;400;600;700&amp;display=swap" rel="stylesheet"/>
+<style type="text/tailwindcss">
+        :root {
+            --primary: #ec4899;
+            --background-light: #fff1f2;
+            --background-dark: #1a1114;
+        }
+        .glass-effect {
+            backdrop-filter: blur(12px);
+            background-color: rgba(255, 255, 255, 0.7);
+        }
+        .dark .glass-effect {
+            background-color: rgba(26, 17, 20, 0.7);
+        }
+        .butterfly-glow {
+            filter: drop-shadow(0 0 15px rgba(236, 72, 153, 0.3));
+        }
+    </style>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#ec4899",
+                        "background-light": "#fff1f2",
+                        "background-dark": "#1a1114",
+                    },
+                    fontFamily: {
+                        display: ["Playfair Display", "serif"],
+                        sans: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "1rem",
+                    },
+                },
+            },
+        };
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-sans transition-colors duration-300">
+<nav class="fixed top-0 w-full z-50 glass-effect border-b border-pink-100 dark:border-pink-900/30">
+<div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-3xl">flutter_dash</span>
+<span class="font-display text-2xl font-bold tracking-tight">Selly Fashion</span>
+</div>
+<div class="hidden md:flex items-center space-x-8 font-medium">
+<a class="hover:text-primary transition-colors" href="#">Shop</a>
+<a class="text-primary transition-colors font-bold border-b-2 border-primary" href="#">Brands &amp; Types</a>
+<a class="hover:text-primary transition-colors flex items-center gap-1 bg-pink-50 dark:bg-pink-900/20 px-3 py-1 rounded-full" href="#">
+<span class="material-symbols-outlined text-sm">shuffle</span>
+                Shuffle
+            </a>
+<a class="hover:text-primary transition-colors" href="#">About Us</a>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden sm:block">
+<input class="pl-10 pr-4 py-2 bg-white/50 dark:bg-slate-800/50 border-pink-200 dark:border-pink-900/50 focus:ring-primary focus:border-primary rounded-full text-sm w-48 lg:w-64 transition-all" placeholder="Search brands..." type="text"/>
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
+</div>
+<button class="p-2 hover:bg-pink-100 dark:hover:bg-pink-900/30 rounded-full transition-colors" id="themeToggle">
+<span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
+</button>
+</div>
+</div>
+</nav>
+<main class="pt-20">
+<header class="py-16 px-6 text-center">
+<div class="max-w-4xl mx-auto">
+<span class="inline-block px-4 py-1 rounded-full bg-primary/10 text-primary font-semibold text-sm mb-4 uppercase tracking-widest">Discovery Hub</span>
+<h1 class="font-display text-4xl lg:text-6xl font-bold mb-6">Explore the <span class="text-primary italic">Selly</span> Universe</h1>
+<p class="text-lg text-slate-600 dark:text-slate-400">A structured directory of our premium brand partners and curated clothing categories.</p>
+</div>
+</header>
+<section class="max-w-7xl mx-auto px-6 pb-24">
+<div class="grid lg:grid-cols-2 gap-12 lg:gap-24">
+<div class="space-y-8">
+<div class="flex items-center justify-between border-b border-pink-100 dark:border-pink-900/30 pb-4">
+<h2 class="font-display text-3xl font-bold flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">verified</span>
+                        Featured Brands
+                    </h2>
+<a class="text-primary font-semibold hover:underline text-sm" href="#">View All 24 Brands</a>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="group bg-white dark:bg-slate-900/40 p-6 rounded-2xl border border-pink-50 dark:border-pink-900/10 hover:border-primary/30 transition-all flex flex-col items-center justify-center text-center">
+<div class="w-16 h-16 mb-4 flex items-center justify-center">
+<span class="text-2xl font-bold tracking-widest italic opacity-60 group-hover:opacity-100 group-hover:text-primary transition-all">LUMINA</span>
+</div>
+<h3 class="font-bold">Lumina Collective</h3>
+<p class="text-xs text-slate-400 mt-1">High-End Silhouettes</p>
+</div>
+<div class="group bg-white dark:bg-slate-900/40 p-6 rounded-2xl border border-pink-50 dark:border-pink-900/10 hover:border-primary/30 transition-all flex flex-col items-center justify-center text-center">
+<div class="w-16 h-16 mb-4 flex items-center justify-center">
+<span class="text-2xl font-bold tracking-widest opacity-60 group-hover:opacity-100 group-hover:text-primary transition-all">VELVET</span>
+</div>
+<h3 class="font-bold">Velvet &amp; Vine</h3>
+<p class="text-xs text-slate-400 mt-1">Organic Textiles</p>
+</div>
+<div class="group bg-white dark:bg-slate-900/40 p-6 rounded-2xl border border-pink-50 dark:border-pink-900/10 hover:border-primary/30 transition-all flex flex-col items-center justify-center text-center">
+<div class="w-16 h-16 mb-4 flex items-center justify-center">
+<span class="text-2xl font-bold tracking-widest underline decoration-primary opacity-60 group-hover:opacity-100 group-hover:text-primary transition-all">AURA</span>
+</div>
+<h3 class="font-bold">Aura Studio</h3>
+<p class="text-xs text-slate-400 mt-1">Modern Minimalism</p>
+</div>
+<div class="group bg-white dark:bg-slate-900/40 p-6 rounded-2xl border border-pink-50 dark:border-pink-900/10 hover:border-primary/30 transition-all flex flex-col items-center justify-center text-center">
+<div class="w-16 h-16 mb-4 flex items-center justify-center">
+<span class="text-2xl font-bold tracking-widest italic text-primary">NOVA</span>
+</div>
+<h3 class="font-bold">Nova Fashion</h3>
+<p class="text-xs text-slate-400 mt-1">Patriotic Flutter</p>
+</div>
+</div>
+<div class="bg-pink-50/50 dark:bg-pink-900/10 p-6 rounded-2xl">
+<h4 class="font-bold text-sm uppercase tracking-wider text-slate-500 mb-4">A-Z Partners</h4>
+<div class="grid grid-cols-2 gap-y-3">
+<a class="text-sm hover:text-primary flex items-center gap-2" href="#"><span class="w-1 h-1 bg-primary rounded-full"></span> Adorn Boutique</a>
+<a class="text-sm hover:text-primary flex items-center gap-2" href="#"><span class="w-1 h-1 bg-primary rounded-full"></span> Blue Ridge Wear</a>
+<a class="text-sm hover:text-primary flex items-center gap-2" href="#"><span class="w-1 h-1 bg-primary rounded-full"></span> Crimson Threads</a>
+<a class="text-sm hover:text-primary flex items-center gap-2" href="#"><span class="w-1 h-1 bg-primary rounded-full"></span> Flutter Design</a>
+<a class="text-sm hover:text-primary flex items-center gap-2" href="#"><span class="w-1 h-1 bg-primary rounded-full"></span> Liberty Luxe</a>
+<a class="text-sm hover:text-primary flex items-center gap-2" href="#"><span class="w-1 h-1 bg-primary rounded-full"></span> Patriot Sport</a>
+</div>
+</div>
+</div>
+<div class="space-y-8">
+<div class="flex items-center justify-between border-b border-pink-100 dark:border-pink-900/30 pb-4">
+<h2 class="font-display text-3xl font-bold flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">apparel</span>
+                        Clothing Types
+                    </h2>
+<span class="text-slate-400 text-sm">8 Primary Categories</span>
+</div>
+<div class="space-y-4">
+<div class="group relative overflow-hidden rounded-2xl h-32 cursor-pointer transition-all">
+<img alt="Dresses" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDDa6Pco0Eua9_egjCcWcUyz3dUmmzFPeik_Nq55kxlNAJ746KOu-9saiZMWY9OEnqLTBcTS1h7gOi06YVaN4469ZKlhQDKUorWTxGWqfRm1burTqTob4wnTawZcl4MxAzmeSMyKzVDQ3mrRIqDntZkYm9LqHLGVayk0lziEofP97zZHoxJP_vPmj0CDMxPOxtww6DhOEkE28ofRrKSGfJneXq6c2S8Zb4rd1h-cx6AvMjwRjjVxaGsdM2JAqSafgB-5PkVw1etBzst"/>
+<div class="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent flex items-center px-8">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-primary/80 backdrop-blur flex items-center justify-center">
+<span class="material-symbols-outlined text-white">styler</span>
+</div>
+<div>
+<h3 class="text-white font-bold text-xl uppercase tracking-wide">Dresses</h3>
+<p class="text-pink-200 text-xs">Sundresses, Maxi, Cocktail</p>
+</div>
+</div>
+</div>
+</div>
+<div class="group relative overflow-hidden rounded-2xl h-32 cursor-pointer transition-all">
+<img alt="Tops" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCPrNEYv6kmEm41Vmvk2WdjLxAGAjc89Pj6D6bpsfd6L_NgE0PJ2C4Q0mFYMKdp9aobnYt4RWHj11ee1F8oEewWtOnVPYWC5qDmZhPNXK7vfchGaWLI7OISR2RTKRfNPLcEGeDpk7IFc4s7S6NIqpUe2Y6y0fsQYF0vgj94JKJm1iWwtjAeVnS62ftcrZ9_Qg9wZo0Ir1oacva-3EWd0RuBhM5cqef_uxRkxTnvtQ85WtfRNRGRNbS-9gNfYzMmEWQWNGnkIDxJ4H1y"/>
+<div class="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent flex items-center px-8">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-primary/80 backdrop-blur flex items-center justify-center">
+<span class="material-symbols-outlined text-white">checkroom</span>
+</div>
+<div>
+<h3 class="text-white font-bold text-xl uppercase tracking-wide">Tops &amp; Blouses</h3>
+<p class="text-pink-200 text-xs">Silk, Flutter-Sleeve, Basics</p>
+</div>
+</div>
+</div>
+</div>
+<div class="group relative overflow-hidden rounded-2xl h-32 cursor-pointer transition-all">
+<img alt="Outerwear" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAyhHnJubprKsL9AYscrPvsuJWOWXjGTrw5XIOsT5Fq5v9CzmpSW5ni052ur3Rezbcm_BG5lEei3SkXCGdTiVZvslbdZ-TkTGfGit_pXrAQY76rCONlAGhg9c64CCOY2M9Id66_XIeOIdB8ug3k0-9CbjOuImeo-Y6-XJrU-nZ-GIgjary9XfMuex-4qZmGQrfT3Ks2VsrdwvzXUtqKoPTfsQuEo-_ctMEk6kkkrTtRoOivbaAFUHu-NBgoDTGSQqpKlz8bp8nxnCKt"/>
+<div class="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent flex items-center px-8">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-primary/80 backdrop-blur flex items-center justify-center">
+<span class="material-symbols-outlined text-white">dry_cleaning</span>
+</div>
+<div>
+<h3 class="text-white font-bold text-xl uppercase tracking-wide">Outerwear</h3>
+<p class="text-pink-200 text-xs">Jackets, Blazers, Coats</p>
+</div>
+</div>
+</div>
+</div>
+<div class="group relative overflow-hidden rounded-2xl h-32 cursor-pointer transition-all">
+<img alt="Accessories" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAKWZ0-82kaS8tSp_bKLk92cN2hAgdEqu9hqLjq5xGoYSxLiiUblmKw_kXXQSKpNSrFQGhnXdIgOQo4NDoii7AJLMnbpXBivLPAgBTZOLN_LFGVlFlwrWw_358Xas2l17vhp9psECU99YkzT03fIwZCNOMXl7qZ7CkP9mlWPltJDdGiuJP4OtXl0AftclveqMDwmAB_bDc0Pmwcnjq-_2n4acnxrrFFA8TidN6A1vc9Oj0av5u9nIfNWOwkvybx_SEcVG_-rB3dyft2"/>
+<div class="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent flex items-center px-8">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-primary/80 backdrop-blur flex items-center justify-center">
+<span class="material-symbols-outlined text-white">diamond</span>
+</div>
+<div>
+<h3 class="text-white font-bold text-xl uppercase tracking-wide">Accessories</h3>
+<p class="text-pink-200 text-xs">Scarves, Belts, Bags</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="py-20 bg-white dark:bg-slate-900/30 overflow-hidden relative">
+<div class="absolute top-0 right-0 p-20 opacity-10 pointer-events-none">
+<img alt="Background Motif" class="w-64 butterfly-glow" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCUhqIVUxrspQkW8ScdnzwVV9EMpgEPAgo2L7bu23SwwNg8qD-CnNhEC3itMmcueMcm_dv7Mmptg_RwKBkZEUBgYMNxsmgZc75T19_HCifcEiO-CWOvOc2l15GnxUk7JuAnzoZCR2e8MExYX2-kYP0F1OxzhpnM_iDJTSJp65l8-0BCiUMYD4kJhTHjzs4v0lhfXtNVSDxSzj1-J8FheN1R9iiAbfgRGr_PKRGONBFel1GAkTfpgPOVv5XrijdDLyuqKgMVG0wLVaqD"/>
+</div>
+<div class="max-w-7xl mx-auto px-6 flex flex-col items-center text-center">
+<h2 class="font-display text-4xl font-bold mb-6">Can't decide where to start?</h2>
+<p class="text-slate-500 dark:text-slate-400 mb-10 max-w-2xl">Use our signature brand shuffle to get a curated selection of styles from our diverse partner network.</p>
+<button class="flex items-center gap-3 bg-primary hover:bg-pink-600 text-white px-10 py-5 rounded-full font-bold shadow-xl shadow-pink-500/20 transition-all transform hover:-translate-y-1">
+<span class="material-symbols-outlined">shuffle</span>
+                Shuffle My Discovery
+            </button>
+</div>
+</section>
+</main>
+<footer class="bg-white dark:bg-slate-900/50 pt-20 pb-10 border-t border-pink-100 dark:border-pink-900/30">
+<div class="max-w-7xl mx-auto px-6">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+<div class="md:col-span-2">
+<div class="flex items-center gap-2 mb-6">
+<span class="material-symbols-outlined text-primary text-3xl">flutter_dash</span>
+<span class="font-display text-2xl font-bold tracking-tight">Selly Fashion</span>
+</div>
+<p class="text-slate-500 dark:text-slate-400 max-w-sm mb-6">
+                    Curating the finest patriotic styles across a structured network of elite brands. From our butterflies to your wardrobe.
+                </p>
+<div class="flex gap-4">
+<a class="w-10 h-10 flex items-center justify-center rounded-full bg-pink-100 dark:bg-pink-900/30 text-primary hover:bg-primary hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined">public</span>
+</a>
+<a class="w-10 h-10 flex items-center justify-center rounded-full bg-pink-100 dark:bg-pink-900/30 text-primary hover:bg-primary hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined">photo_camera</span>
+</a>
+</div>
+</div>
+<div>
+<h4 class="font-bold mb-6">Navigation</h4>
+<ul class="space-y-4 text-slate-500 dark:text-slate-400">
+<li><a class="hover:text-primary transition-colors" href="#">Brand Directory</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Category Guide</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Shuffle Mode</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Become a Partner</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-bold mb-6">Newsletter</h4>
+<p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Join Selly's circle for exclusive patriot-chic drops.</p>
+<form class="flex gap-2">
+<input class="bg-pink-50 dark:bg-slate-800 border-none rounded-xl text-sm w-full focus:ring-primary" placeholder="Your email" type="email"/>
+<button class="bg-primary text-white p-2 px-4 rounded-xl hover:bg-pink-600 transition-colors" type="submit">
+<span class="material-symbols-outlined">send</span>
+</button>
+</form>
+</div>
+</div>
+<div class="pt-8 border-t border-pink-100 dark:border-pink-900/30 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-slate-400">
+<p>© 2024 Selly Fashion. All rights reserved.</p>
+<div class="flex gap-8">
+<a class="hover:text-primary transition-colors" href="#">Terms</a>
+<a class="hover:text-primary transition-colors" href="#">Privacy</a>
+</div>
+</div>
+</div>
+</footer>
+<script>
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = document.getElementById('themeIcon');
+    const html = document.documentElement;
+    themeToggle.addEventListener('click', () => {
+        if (html.classList.contains('dark')) {
+            html.classList.remove('dark');
+            themeIcon.innerText = 'dark_mode';
+        } else {
+            html.classList.add('dark');
+            themeIcon.innerText = 'light_mode';
+        }
+    });
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        html.classList.add('dark');
+        themeIcon.innerText = 'light_mode';
+    }
+</script>
+
+</body></html>

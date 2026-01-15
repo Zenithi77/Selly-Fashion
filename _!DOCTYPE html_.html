@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html class="scroll-smooth" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Selly Fashion | Category Home</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,FILL@0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&amp;family=Inter:wght@300;400;600;700&amp;display=swap" rel="stylesheet"/>
+<style type="text/tailwindcss">
+        :root {
+            --primary: #ec4899;
+            --background-light: #fff1f2;
+            --background-dark: #1a1114;
+        }
+        .glass-effect {
+            backdrop-filter: blur(12px);
+            background-color: rgba(255, 255, 255, 0.7);
+        }
+        .dark .glass-effect {
+            background-color: rgba(26, 17, 20, 0.7);
+        }
+        .butterfly-glow {
+            filter: drop-shadow(0 0 20px rgba(236, 72, 153, 0.4));
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #fbcfe8;
+            border-radius: 10px;
+        }
+    </style>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#ec4899",
+                        "background-light": "#fff1f2",
+                        "background-dark": "#1a1114",
+                    },
+                    fontFamily: {
+                        display: ["Playfair Display", "serif"],
+                        sans: ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "1rem",
+                    },
+                },
+            },
+        };
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-sans transition-colors duration-300">
+<nav class="fixed top-0 w-full z-50 glass-effect border-b border-pink-100 dark:border-pink-900/30">
+<div class="max-w-[1600px] mx-auto px-6 h-20 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-3xl">flutter_dash</span>
+<span class="font-display text-2xl font-bold tracking-tight">Selly Fashion</span>
+</div>
+<div class="hidden lg:flex items-center space-x-10 font-medium">
+<div class="relative group">
+<button class="flex items-center gap-1 hover:text-primary transition-colors py-7">
+                    Clothing Types <span class="material-symbols-outlined text-sm">expand_more</span>
+</button>
+<div class="absolute top-full left-0 w-48 bg-white dark:bg-slate-900 shadow-xl border border-pink-50 dark:border-pink-900/30 rounded-2xl py-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+<a class="block px-6 py-2 hover:bg-pink-50 dark:hover:bg-pink-900/20 hover:text-primary" href="#">Dresses</a>
+<a class="block px-6 py-2 hover:bg-pink-50 dark:hover:bg-pink-900/20 hover:text-primary" href="#">Tops</a>
+<a class="block px-6 py-2 hover:bg-pink-50 dark:hover:bg-pink-900/20 hover:text-primary" href="#">Outerwear</a>
+<a class="block px-6 py-2 hover:bg-pink-50 dark:hover:bg-pink-900/20 hover:text-primary" href="#">Accessories</a>
+</div>
+</div>
+<div class="relative group">
+<button class="flex items-center gap-1 hover:text-primary transition-colors py-7">
+                    Brands <span class="material-symbols-outlined text-sm">expand_more</span>
+</button>
+<div class="absolute top-full left-0 w-48 bg-white dark:bg-slate-900 shadow-xl border border-pink-50 dark:border-pink-900/30 rounded-2xl py-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+<a class="block px-6 py-2 hover:bg-pink-50 dark:hover:bg-pink-900/20 hover:text-primary" href="#">Lumina</a>
+<a class="block px-6 py-2 hover:bg-pink-50 dark:hover:bg-pink-900/20 hover:text-primary" href="#">Velvet</a>
+<a class="block px-6 py-2 hover:bg-pink-50 dark:hover:bg-pink-900/20 hover:text-primary" href="#">Aura</a>
+<a class="block px-6 py-2 hover:bg-pink-50 dark:hover:bg-pink-900/20 hover:text-primary" href="#">Moderna</a>
+</div>
+</div>
+<a class="hover:text-primary transition-colors" href="#">New Arrivals</a>
+<a class="hover:text-primary transition-colors" href="#">About Us</a>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden sm:block">
+<input class="pl-10 pr-4 py-2 bg-white/50 dark:bg-slate-800/50 border-pink-200 dark:border-pink-900/50 focus:ring-primary focus:border-primary rounded-full text-sm w-48 lg:w-64 transition-all" placeholder="Search categories..." type="text"/>
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
+</div>
+<button class="p-2 hover:bg-pink-100 dark:hover:bg-pink-900/30 rounded-full relative">
+<span class="material-symbols-outlined">shopping_bag</span>
+<span class="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full"></span>
+</button>
+<button class="p-2 hover:bg-pink-100 dark:hover:bg-pink-900/30 rounded-full transition-colors" id="themeToggle">
+<span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
+</button>
+</div>
+</div>
+</nav>
+<main class="pt-20 min-h-screen flex">
+<aside class="hidden xl:block w-72 h-[calc(100vh-5rem)] sticky top-20 border-r border-pink-100 dark:border-pink-900/30 overflow-y-auto custom-scrollbar bg-white/30 dark:bg-black/10 px-8 py-10">
+<div class="mb-10">
+<h3 class="text-xs uppercase tracking-widest font-bold text-slate-400 mb-6">Shop By Type</h3>
+<nav class="space-y-3">
+<a class="flex items-center gap-3 text-slate-600 dark:text-slate-300 hover:text-primary transition-colors font-medium" href="#">
+<span class="material-symbols-outlined text-xl">styler</span> Dresses
+                </a>
+<a class="flex items-center gap-3 text-slate-600 dark:text-slate-300 hover:text-primary transition-colors font-medium" href="#">
+<span class="material-symbols-outlined text-xl">apparel</span> Tops &amp; Blouses
+                </a>
+<a class="flex items-center gap-3 text-slate-600 dark:text-slate-300 hover:text-primary transition-colors font-medium" href="#">
+<span class="material-symbols-outlined text-xl">checkroom</span> Outerwear
+                </a>
+<a class="flex items-center gap-3 text-slate-600 dark:text-slate-300 hover:text-primary transition-colors font-medium" href="#">
+<span class="material-symbols-outlined text-xl">diamond</span> Accessories
+                </a>
+<a class="flex items-center gap-3 text-slate-600 dark:text-slate-300 hover:text-primary transition-colors font-medium" href="#">
+<span class="material-symbols-outlined text-xl">footprint</span> Footwear
+                </a>
+</nav>
+</div>
+<div class="mb-10">
+<h3 class="text-xs uppercase tracking-widest font-bold text-slate-400 mb-6">Our Brands</h3>
+<nav class="space-y-3">
+<a class="flex items-center justify-between text-slate-600 dark:text-slate-300 hover:text-primary transition-colors font-medium group" href="#">
+                    Lumina Boutique <span class="text-[10px] px-2 py-0.5 rounded-full bg-pink-100 dark:bg-pink-900/40 text-primary opacity-0 group-hover:opacity-100">New</span>
+</a>
+<a class="block text-slate-600 dark:text-slate-300 hover:text-primary transition-colors font-medium" href="#">Velvet &amp; Silk</a>
+<a class="block text-slate-600 dark:text-slate-300 hover:text-primary transition-colors font-medium" href="#">Aura Collective</a>
+<a class="block text-slate-600 dark:text-slate-300 hover:text-primary transition-colors font-medium" href="#">Moderna Studio</a>
+<a class="block text-slate-600 dark:text-slate-300 hover:text-primary transition-colors font-medium italic font-bold" href="#">Nova X Selly</a>
+</nav>
+</div>
+<div class="p-6 rounded-2xl bg-gradient-to-br from-primary/10 to-transparent border border-pink-100 dark:border-pink-900/20">
+<span class="material-symbols-outlined text-primary mb-2">stars</span>
+<p class="text-sm font-bold mb-1">VIP Access</p>
+<p class="text-xs text-slate-500 dark:text-slate-400 mb-3">Early access to butterfly collection drops.</p>
+<button class="w-full py-2 bg-primary text-white text-xs font-bold rounded-lg hover:bg-pink-600 transition-colors">Join Now</button>
+</div>
+</aside>
+<div class="flex-1">
+<section class="relative h-[50vh] flex items-center overflow-hidden px-10">
+<div class="absolute inset-0 bg-gradient-to-r from-pink-100 to-transparent dark:from-pink-950/20 dark:to-transparent"></div>
+<div class="relative z-10 max-w-2xl">
+<div class="flex items-center gap-3 mb-4">
+<span class="material-symbols-outlined text-primary animate-pulse">flutter_dash</span>
+<span class="text-sm font-bold tracking-[0.2em] text-primary uppercase">Seasonal Curation</span>
+</div>
+<h1 class="font-display text-5xl lg:text-7xl font-bold leading-tight mb-6">
+                    Elevated <br/>
+<span class="text-primary italic">Patriotic Style</span>
+</h1>
+<p class="text-lg text-slate-600 dark:text-slate-400 mb-8">
+                    Browse our structured categories of signature silhouettes and exclusive brand collaborations.
+                </p>
+<div class="flex gap-4">
+<button class="bg-primary hover:bg-pink-600 text-white px-8 py-4 rounded-full font-bold shadow-lg shadow-pink-500/30 transition-all transform hover:-translate-y-1">
+                        Shop All Types
+                    </button>
+</div>
+</div>
+<img alt="Patriotic butterfly motif" class="absolute right-0 top-1/2 -translate-y-1/2 h-[80%] opacity-20 pointer-events-none butterfly-glow" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCUhqIVUxrspQkW8ScdnzwVV9EMpgEPAgo2L7bu23SwwNg8qD-CnNhEC3itMmcueMcm_dv7Mmptg_RwKBkZEUBgYMNxsmgZc75T19_HCifcEiO-CWOvOc2l15GnxUk7JuAnzoZCR2e8MExYX2-kYP0F1OxzhpnM_iDJTSJp65l8-0BCiUMYD4kJhTHjzs4v0lhfXtNVSDxSzj1-J8FheN1R9iiAbfgRGr_PKRGONBFel1GAkTfpgPOVv5XrijdDLyuqKgMVG0wLVaqD"/>
+</section>
+<section class="py-16 px-10">
+<div class="flex items-end justify-between mb-10">
+<div>
+<h2 class="font-display text-3xl font-bold mb-2">Shop by Clothing Type</h2>
+<p class="text-slate-500">Find the perfect silhouette for every occasion</p>
+</div>
+<a class="text-primary font-bold flex items-center gap-2 group" href="#">
+                    View Categories <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</a>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<div class="group relative aspect-[4/5] overflow-hidden rounded-3xl cursor-pointer">
+<img alt="Elegant dresses" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDDa6Pco0Eua9_egjCcWcUyz3dUmmzFPeik_Nq55kxlNAJ746KOu-9saiZMWY9OEnqLTBcTS1h7gOi06YVaN4469ZKlhQDKUorWTxGWqfRm1burTqTob4wnTawZcl4MxAzmeSMyKzVDQ3mrRIqDntZkYm9LqHLGVayk0lziEofP97zZHoxJP_vPmj0CDMxPOxtww6DhOEkE28ofRrKSGfJneXq6c2S8Zb4rd1h-cx6AvMjwRjjVxaGsdM2JAqSafgB-5PkVw1etBzst"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex flex-col justify-end p-8 text-white">
+<h3 class="text-2xl font-display font-bold mb-2">Dresses</h3>
+<p class="text-sm text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300">Fluid silhouettes &amp; patriotic florals</p>
+</div>
+</div>
+<div class="group relative aspect-[4/5] overflow-hidden rounded-3xl cursor-pointer">
+<img alt="Trendy tops" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCPrNEYv6kmEm41Vmvk2WdjLxAGAjc89Pj6D6bpsfd6L_NgE0PJ2C4Q0mFYMKdp9aobnYt4RWHj11ee1F8oEewWtOnVPYWC5qDmZhPNXK7vfchGaWLI7OISR2RTKRfNPLcEGeDpk7IFc4s7S6NIqpUe2Y6y0fsQYF0vgj94JKJm1iWwtjAeVnS62ftcrZ9_Qg9wZo0Ir1oacva-3EWd0RuBhM5cqef_uxRkxTnvtQ85WtfRNRGRNbS-9gNfYzMmEWQWNGnkIDxJ4H1y"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex flex-col justify-end p-8 text-white">
+<h3 class="text-2xl font-display font-bold mb-2">Tops</h3>
+<p class="text-sm text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300">Statement sleeves &amp; soft textures</p>
+</div>
+</div>
+<div class="group relative aspect-[4/5] overflow-hidden rounded-3xl cursor-pointer">
+<img alt="Denim jackets" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAyhHnJubprKsL9AYscrPvsuJWOWXjGTrw5XIOsT5Fq5v9CzmpSW5ni052ur3Rezbcm_BG5lEei3SkXCGdTiVZvslbdZ-TkTGfGit_pXrAQY76rCONlAGhg9c64CCOY2M9Id66_XIeOIdB8ug3k0-9CbjOuImeo-Y6-XJrU-nZ-GIgjary9XfMuex-4qZmGQrfT3Ks2VsrdwvzXUtqKoPTfsQuEo-_ctMEk6kkkrTtRoOivbaAFUHu-NBgoDTGSQqpKlz8bp8nxnCKt"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex flex-col justify-end p-8 text-white">
+<h3 class="text-2xl font-display font-bold mb-2">Outerwear</h3>
+<p class="text-sm text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300">Iconic denim &amp; tailored blazers</p>
+</div>
+</div>
+<div class="group relative aspect-[4/5] overflow-hidden rounded-3xl cursor-pointer">
+<img alt="Designer accessories" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAKWZ0-82kaS8tSp_bKLk92cN2hAgdEqu9hqLjq5xGoYSxLiiUblmKw_kXXQSKpNSrFQGhnXdIgOQo4NDoii7AJLMnbpXBivLPAgBTZOLN_LFGVlFlwrWw_358Xas2l17vhp9psECU99YkzT03fIwZCNOMXl7qZ7CkP9mlWPltJDdGiuJP4OtXl0AftclveqMDwmAB_bDc0Pmwcnjq-_2n4acnxrrFFA8TidN6A1vc9Oj0av5u9nIfNWOwkvybx_SEcVG_-rB3dyft2"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex flex-col justify-end p-8 text-white">
+<h3 class="text-2xl font-display font-bold mb-2">Accessories</h3>
+<p class="text-sm text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300">Silk scarves &amp; butterfly jewelry</p>
+</div>
+</div>
+</div>
+</section>
+<section class="py-16 px-10 bg-white/50 dark:bg-pink-900/5">
+<div class="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+<div>
+<h2 class="font-display text-4xl font-bold mb-4 text-slate-900 dark:text-white">Featured Brands</h2>
+<p class="text-slate-500 dark:text-slate-400">Exclusive collections curated by Selly Fashion partners</p>
+</div>
+<div class="flex gap-2">
+<button class="w-10 h-10 rounded-full border border-pink-200 dark:border-pink-800 flex items-center justify-center hover:bg-primary hover:text-white transition-all">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="w-10 h-10 rounded-full border border-pink-200 dark:border-pink-800 flex items-center justify-center hover:bg-primary hover:text-white transition-all">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<div class="bg-white dark:bg-slate-800 rounded-3xl p-8 border border-pink-100 dark:border-pink-900/30 hover:shadow-2xl hover:shadow-pink-500/10 transition-all group">
+<span class="text-xs font-bold tracking-[0.3em] text-primary uppercase block mb-6">Partner Spotlight</span>
+<h3 class="text-3xl font-display font-bold mb-4">Lumina</h3>
+<p class="text-slate-500 dark:text-slate-400 mb-8 line-clamp-2">High-end evening wear inspired by starlight and the fluttering grace of butterflies.</p>
+<div class="flex -space-x-3 mb-8">
+<div class="w-12 h-12 rounded-full border-2 border-white dark:border-slate-800 overflow-hidden bg-slate-100">
+<img alt="Lumina product" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDDa6Pco0Eua9_egjCcWcUyz3dUmmzFPeik_Nq55kxlNAJ746KOu-9saiZMWY9OEnqLTBcTS1h7gOi06YVaN4469ZKlhQDKUorWTxGWqfRm1burTqTob4wnTawZcl4MxAzmeSMyKzVDQ3mrRIqDntZkYm9LqHLGVayk0lziEofP97zZHoxJP_vPmj0CDMxPOxtww6DhOEkE28ofRrKSGfJneXq6c2S8Zb4rd1h-cx6AvMjwRjjVxaGsdM2JAqSafgB-5PkVw1etBzst"/>
+</div>
+<div class="w-12 h-12 rounded-full border-2 border-white dark:border-slate-800 overflow-hidden bg-slate-100">
+<img alt="Lumina product" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCPrNEYv6kmEm41Vmvk2WdjLxAGAjc89Pj6D6bpsfd6L_NgE0PJ2C4Q0mFYMKdp9aobnYt4RWHj11ee1F8oEewWtOnVPYWC5qDmZhPNXK7vfchGaWLI7OISR2RTKRfNPLcEGeDpk7IFc4s7S6NIqpUe2Y6y0fsQYF0vgj94JKJm1iWwtjAeVnS62ftcrZ9_Qg9wZo0Ir1oacva-3EWd0RuBhM5cqef_uxRkxTnvtQ85WtfRNRGRNbS-9gNfYzMmEWQWNGnkIDxJ4H1y"/>
+</div>
+<div class="w-12 h-12 rounded-full border-2 border-white dark:border-slate-800 bg-pink-50 flex items-center justify-center text-primary text-xs font-bold">+12</div>
+</div>
+<a class="inline-flex items-center gap-2 text-primary font-bold group-hover:gap-4 transition-all" href="#">
+                        Explore Brand <span class="material-symbols-outlined">arrow_right_alt</span>
+</a>
+</div>
+<div class="bg-white dark:bg-slate-800 rounded-3xl p-8 border border-pink-100 dark:border-pink-900/30 hover:shadow-2xl hover:shadow-pink-500/10 transition-all group">
+<span class="text-xs font-bold tracking-[0.3em] text-primary uppercase block mb-6">Partner Spotlight</span>
+<h3 class="text-3xl font-display font-bold mb-4">Aura</h3>
+<p class="text-slate-500 dark:text-slate-400 mb-8 line-clamp-2">Minimalist streetwear that honors heritage through subtle patriotic detailing.</p>
+<div class="flex -space-x-3 mb-8">
+<div class="w-12 h-12 rounded-full border-2 border-white dark:border-slate-800 overflow-hidden bg-slate-100">
+<img alt="Aura product" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAyhHnJubprKsL9AYscrPvsuJWOWXjGTrw5XIOsT5Fq5v9CzmpSW5ni052ur3Rezbcm_BG5lEei3SkXCGdTiVZvslbdZ-TkTGfGit_pXrAQY76rCONlAGhg9c64CCOY2M9Id66_XIeOIdB8ug3k0-9CbjOuImeo-Y6-XJrU-nZ-GIgjary9XfMuex-4qZmGQrfT3Ks2VsrdwvzXUtqKoPTfsQuEo-_ctMEk6kkkrTtRoOivbaAFUHu-NBgoDTGSQqpKlz8bp8nxnCKt"/>
+</div>
+<div class="w-12 h-12 rounded-full border-2 border-white dark:border-slate-800 overflow-hidden bg-slate-100">
+<img alt="Aura product" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAKWZ0-82kaS8tSp_bKLk92cN2hAgdEqu9hqLjq5xGoYSxLiiUblmKw_kXXQSKpNSrFQGhnXdIgOQo4NDoii7AJLMnbpXBivLPAgBTZOLN_LFGVlFlwrWw_358Xas2l17vhp9psECU99YkzT03fIwZCNOMXl7qZ7CkP9mlWPltJDdGiuJP4OtXl0AftclveqMDwmAB_bDc0Pmwcnjq-_2n4acnxrrFFA8TidN6A1vc9Oj0av5u9nIfNWOwkvybx_SEcVG_-rB3dyft2"/>
+</div>
+<div class="w-12 h-12 rounded-full border-2 border-white dark:border-slate-800 bg-pink-50 flex items-center justify-center text-primary text-xs font-bold">+24</div>
+</div>
+<a class="inline-flex items-center gap-2 text-primary font-bold group-hover:gap-4 transition-all" href="#">
+                        Explore Brand <span class="material-symbols-outlined">arrow_right_alt</span>
+</a>
+</div>
+<div class="bg-primary rounded-3xl p-8 text-white hover:shadow-2xl hover:shadow-pink-500/20 transition-all group flex flex-col">
+<span class="text-xs font-bold tracking-[0.3em] text-white/70 uppercase block mb-6">Collaboration</span>
+<h3 class="text-3xl font-display font-bold mb-4">Nova X Selly</h3>
+<p class="text-white/80 mb-8 line-clamp-2">A limited edition collaboration featuring hand-painted butterfly motifs on luxury denim.</p>
+<div class="mt-auto">
+<button class="w-full py-4 bg-white text-primary font-bold rounded-2xl hover:bg-pink-50 transition-colors">
+                            View Limited Drop
+                        </button>
+</div>
+</div>
+</div>
+</section>
+<section class="py-24 px-10 text-center max-w-4xl mx-auto">
+<h2 class="font-display text-4xl font-bold mb-4">Stay In The Flutter</h2>
+<p class="text-slate-500 mb-10">Sign up for weekly arrivals and exclusive brand launches across all our categories.</p>
+<form class="flex flex-col sm:flex-row gap-4">
+<input class="flex-1 bg-white dark:bg-slate-800 border-pink-100 dark:border-pink-900/30 rounded-2xl py-4 px-6 focus:ring-primary focus:border-primary shadow-sm" placeholder="Your email address" type="email"/>
+<button class="bg-primary hover:bg-pink-600 text-white px-10 py-4 rounded-2xl font-bold shadow-lg shadow-pink-500/20 transition-all">
+                    Subscribe
+                </button>
+</form>
+</section>
+</div>
+</main>
+<footer class="bg-white dark:bg-slate-900/50 pt-20 pb-10 border-t border-pink-100 dark:border-pink-900/30">
+<div class="max-w-[1600px] mx-auto px-10">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 mb-16">
+<div class="lg:col-span-2">
+<div class="flex items-center gap-2 mb-6">
+<span class="material-symbols-outlined text-primary text-3xl">flutter_dash</span>
+<span class="font-display text-2xl font-bold tracking-tight">Selly Fashion</span>
+</div>
+<p class="text-slate-500 dark:text-slate-400 max-w-sm mb-6">
+                    We celebrate the fusion of American spirit and high-fashion aesthetics. Curating a structured collection of diverse brands and clothing types for the modern silhouette.
+                </p>
+<div class="flex gap-4">
+<a class="w-10 h-10 flex items-center justify-center rounded-full bg-pink-100 dark:bg-pink-900/30 text-primary hover:bg-primary hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined">public</span>
+</a>
+<a class="w-10 h-10 flex items-center justify-center rounded-full bg-pink-100 dark:bg-pink-900/30 text-primary hover:bg-primary hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined">photo_camera</span>
+</a>
+</div>
+</div>
+<div>
+<h4 class="font-bold mb-6">Clothing Types</h4>
+<ul class="space-y-4 text-slate-500 dark:text-slate-400">
+<li><a class="hover:text-primary transition-colors" href="#">Dresses &amp; Gowns</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Tops &amp; Blouses</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Denim &amp; Pants</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Jackets &amp; Coats</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-bold mb-6">Partner Brands</h4>
+<ul class="space-y-4 text-slate-500 dark:text-slate-400">
+<li><a class="hover:text-primary transition-colors" href="#">Lumina Boutique</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Aura Collective</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Velvet Studio</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Nova Collaborations</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-bold mb-6">Company</h4>
+<ul class="space-y-4 text-slate-500 dark:text-slate-400">
+<li><a class="hover:text-primary transition-colors" href="#">Our Philosophy</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Brand Affiliates</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Careers</a></li>
+<li><a class="hover:text-primary transition-colors" href="#">Sustainability</a></li>
+</ul>
+</div>
+</div>
+<div class="pt-8 border-t border-pink-100 dark:border-pink-900/30 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-slate-400">
+<p>© 2024 Selly Fashion. All rights reserved.</p>
+<div class="flex gap-8">
+<a class="hover:text-primary transition-colors" href="#">Terms</a>
+<a class="hover:text-primary transition-colors" href="#">Privacy</a>
+<a class="hover:text-primary transition-colors" href="#">Cookies</a>
+</div>
+</div>
+</div>
+</footer>
+<script>
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = document.getElementById('themeIcon');
+    const html = document.documentElement;
+    themeToggle.addEventListener('click', () => {
+        if (html.classList.contains('dark')) {
+            html.classList.remove('dark');
+            themeIcon.innerText = 'dark_mode';
+        } else {
+            html.classList.add('dark');
+            themeIcon.innerText = 'light_mode';
+        }
+    });
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        html.classList.add('dark');
+        themeIcon.innerText = 'light_mode';
+    }
+</script>
+
+</body></html>
