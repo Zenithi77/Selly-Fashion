@@ -280,5 +280,7 @@ export default function Header() {
           className="lg:hidden fixed inset-0 bg-black/20 z-30"
           onClick={() => setIsMobileMenuOpen(false)}
         />
+      )}
+    </header>
   )
 }
