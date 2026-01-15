@@ -28,15 +28,32 @@ export default function Header() {
 
   return (
     <header className={`fixed top-0 w-full z-50 transition-all duration-300 glass-effect border-b border-pink-100 dark:border-pink-900/30`}>
-      {/* Top Banner */}
-      <div className="bg-pink-500 text-white text-center py-2 text-xs font-medium tracking-wide">
-        FREE SHIPPING ON ORDERS OVER $100 | NEW ARRIVALS WEEKLY
+      {/* Top Banner - Hidden on very small screens */}
+      <div className="bg-pink-500 text-white text-center py-1.5 sm:py-2 text-[10px] sm:text-xs font-medium tracking-wide px-2">
+        <span className="hidden sm:inline">FREE SHIPPING ON ORDERS OVER $100 | NEW ARRIVALS WEEKLY</span>
+        <span className="sm:hidden">FREE SHIPPING OVER $100 ✨</span>
       </div>
 
       {/* Main Navigation */}
       <nav className="border-b border-pink-100 dark:border-pink-900/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-14 sm:h-16">
+            
+            {/* Mobile Menu Button - LEFT side on mobile */}
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="nav-link lg:hidden p-2 hover:bg-pink-100 dark:hover:bg-pink-900/30 rounded-full transition-colors order-first"
+            >
+              {isMobileMenuOpen ? (
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                </svg>
+              )}
+            </button>
             
             {/* Left Navigation - Desktop */}
             <div className="hidden lg:flex items-center space-x-8">
@@ -90,37 +107,37 @@ export default function Header() {
             </div>
 
             {/* Center Logo */}
-            <Link href="/" className="absolute left-1/2 -translate-x-1/2 lg:static lg:translate-x-0 lg:mx-auto">
-              <h1 className="nav-link text-xl lg:text-2xl font-bold tracking-[0.1em] font-display">
+            <Link href="/" className="flex-shrink-0">
+              <h1 className="nav-link text-base sm:text-xl lg:text-2xl font-bold tracking-[0.05em] sm:tracking-[0.1em] font-display whitespace-nowrap">
                 SELLY <span className="text-pink-500">FASHION</span>
               </h1>
             </Link>
 
-            {/* Right Side */}
-            <div className="flex items-center gap-1 sm:gap-2">
+            {/* Right Side - Icons */}
+            <div className="flex items-center gap-0.5 sm:gap-2">
               {/* Search */}
-              <button className="nav-link p-2.5 hover:bg-pink-100 dark:hover:bg-pink-900/30 rounded-full transition-colors">
+              <button className="nav-link p-2 hover:bg-pink-100 dark:hover:bg-pink-900/30 rounded-full transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
                 </svg>
               </button>
 
-              {/* Account */}
-              <Link href="/account" className="nav-link p-2.5 hover:bg-pink-100 dark:hover:bg-pink-900/30 rounded-full transition-colors hidden sm:block">
+              {/* Account - Hidden on mobile */}
+              <Link href="/account" className="nav-link p-2 hover:bg-pink-100 dark:hover:bg-pink-900/30 rounded-full transition-colors hidden md:block">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
                 </svg>
               </Link>
 
-              {/* Wishlist */}
-              <Link href="/wishlist" className="nav-link p-2.5 hover:bg-pink-100 dark:hover:bg-pink-900/30 rounded-full transition-colors hidden sm:block">
+              {/* Wishlist - Hidden on mobile */}
+              <Link href="/wishlist" className="nav-link p-2 hover:bg-pink-100 dark:hover:bg-pink-900/30 rounded-full transition-colors hidden md:block">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
                 </svg>
               </Link>
 
               {/* Cart */}
-              <Link href="/cart" className="nav-link p-2.5 hover:bg-pink-100 dark:hover:bg-pink-900/30 rounded-full transition-colors relative">
+              <Link href="/cart" className="nav-link p-2 hover:bg-pink-100 dark:hover:bg-pink-900/30 rounded-full transition-colors relative">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
                 </svg>
@@ -129,10 +146,10 @@ export default function Header() {
                 </span>
               </Link>
 
-              {/* Theme Toggle */}
+              {/* Theme Toggle - Hidden on mobile */}
               <button
                 onClick={toggleTheme}
-                className="nav-link p-2.5 hover:bg-pink-100 dark:hover:bg-pink-900/30 rounded-full transition-colors hidden sm:block"
+                className="nav-link p-2 hover:bg-pink-100 dark:hover:bg-pink-900/30 rounded-full transition-colors hidden md:block"
               >
                 {isDark ? (
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
@@ -144,39 +161,124 @@ export default function Header() {
                   </svg>
                 )}
               </button>
-
-              {/* Mobile Menu Button */}
-              <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="nav-link lg:hidden p-2.5 hover:bg-pink-100 dark:hover:bg-pink-900/30 rounded-full transition-colors"
-              >
-                {isMobileMenuOpen ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-                  </svg>
-                ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-                  </svg>
-                )}
-              </button>
             </div>
           </div>
         </div>
       </nav>
 
-      {/* Mobile Menu */}
-      {isMobileMenuOpen && (
-        <div className="lg:hidden bg-white dark:bg-black border-t border-gray-100 dark:border-gray-800">
-          <div className="px-4 py-6 space-y-4">
-            <Link href="/shop" className="block text-sm font-medium tracking-wide py-2 border-b border-gray-100 dark:border-gray-800">WOMEN</Link>
-            <Link href="/shop" className="block text-sm font-medium tracking-wide py-2 border-b border-gray-100 dark:border-gray-800">MEN</Link>
-            <Link href="/new-arrivals" className="block text-sm font-medium tracking-wide py-2 border-b border-gray-100 dark:border-gray-800">NEW ARRIVALS</Link>
-            <Link href="/brands-types" className="block text-sm font-medium tracking-wide py-2 border-b border-gray-100 dark:border-gray-800">BRANDS</Link>
-            <Link href="/shop?sale=true" className="block text-sm font-medium tracking-wide py-2 text-red-500">SALE</Link>
+      {/* Mobile Menu - Full screen overlay */}
+      <div className={`lg:hidden fixed inset-0 top-[calc(3.5rem+1.75rem)] sm:top-[calc(4rem+2rem)] bg-white dark:bg-black z-40 transform transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="h-full overflow-y-auto pb-20">
+          <div className="px-6 py-4 space-y-1">
+            {/* Main Links */}
+            <Link 
+              href="/shop" 
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="flex items-center justify-between py-4 text-base font-semibold tracking-wide border-b border-gray-100 dark:border-gray-800 hover:text-pink-500 transition-colors"
+            >
+              WOMEN
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+              </svg>
+            </Link>
+            
+            <Link 
+              href="/shop" 
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="flex items-center justify-between py-4 text-base font-semibold tracking-wide border-b border-gray-100 dark:border-gray-800 hover:text-pink-500 transition-colors"
+            >
+              MEN
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+              </svg>
+            </Link>
+            
+            <Link 
+              href="/new-arrivals" 
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="flex items-center justify-between py-4 text-base font-semibold tracking-wide border-b border-gray-100 dark:border-gray-800 hover:text-pink-500 transition-colors"
+            >
+              NEW ARRIVALS
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+              </svg>
+            </Link>
+            
+            <Link 
+              href="/brands-types" 
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="flex items-center justify-between py-4 text-base font-semibold tracking-wide border-b border-gray-100 dark:border-gray-800 hover:text-pink-500 transition-colors"
+            >
+              BRANDS
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+              </svg>
+            </Link>
+            
+            <Link 
+              href="/shop?sale=true" 
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="flex items-center justify-between py-4 text-base font-semibold tracking-wide text-pink-500 border-b border-gray-100 dark:border-gray-800"
+            >
+              SALE
+              <span className="bg-pink-500 text-white text-xs px-2 py-0.5 rounded-full">HOT</span>
+            </Link>
+
+            {/* Secondary Links for Mobile */}
+            <div className="pt-6 space-y-1">
+              <p className="text-xs text-gray-400 uppercase tracking-wider mb-3">Account</p>
+              <Link 
+                href="/account" 
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center gap-3 py-3 text-sm text-gray-600 dark:text-gray-400 hover:text-pink-500 transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                </svg>
+                My Account
+              </Link>
+              <Link 
+                href="/wishlist" 
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center gap-3 py-3 text-sm text-gray-600 dark:text-gray-400 hover:text-pink-500 transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+                </svg>
+                Wishlist
+              </Link>
+              
+              {/* Theme Toggle in Mobile Menu */}
+              <button
+                onClick={toggleTheme}
+                className="flex items-center gap-3 py-3 text-sm text-gray-600 dark:text-gray-400 hover:text-pink-500 transition-colors w-full"
+              >
+                {isDark ? (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
+                    </svg>
+                    Light Mode
+                  </>
+                ) : (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z" />
+                    </svg>
+                    Dark Mode
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
-      )}
-    </header>
+      </div>
+
+      {/* Overlay when mobile menu is open */}
+      {isMobileMenuOpen && (
+        <div 
+          className="lg:hidden fixed inset-0 bg-black/20 z-30"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
   )
 }
