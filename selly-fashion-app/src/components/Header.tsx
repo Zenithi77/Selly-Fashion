@@ -2,10 +2,15 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import { useCartStore, useAuthStore } from '@/lib/store'
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null)
+  const { items, toggleCart } = useCartStore()
+  const { user, isAuthenticated, logout } = useAuthStore()
+
+  const itemCount = items.reduce((sum, item) => sum + item.quantity, 0)
 
   const toggleSubmenu = (menu: string) => {
     setOpenSubmenu(openSubmenu === menu ? null : menu)
@@ -89,7 +94,7 @@ export default function Header() {
                 </div>
               </div>
 
-              <Link href="/shop?sale=true" className="text-sm font-semibold tracking-wide text-pink-500 hover:text-pink-600 transition-colors">
+              <Link href="/sale" className="text-sm font-semibold tracking-wide text-pink-500 hover:text-pink-600 transition-colors">
                 SALE
               </Link>
             </div>
@@ -103,12 +108,30 @@ export default function Header() {
 
             {/* Right Side - Icons */}
             <div className="flex items-center gap-1 sm:gap-2">
-              {/* Account */}
-              <Link href="/account" className="p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-700">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-                </svg>
-              </Link>
+              {/* Account / Login */}
+              {isAuthenticated ? (
+                <div className="relative group">
+                  <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                    </svg>
+                  </button>
+                  <div className="absolute top-full right-0 w-48 bg-white shadow-xl rounded-xl py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 border border-gray-100">
+                    <p className="px-4 py-2 text-sm text-gray-500 border-b border-gray-100">{user?.email}</p>
+                    <Link href="/account" className="block px-4 py-2 text-sm text-gray-700 hover:bg-pink-50 hover:text-pink-500">Миний хаяг</Link>
+                    {user?.role === 'admin' && (
+                      <Link href="/admin" className="block px-4 py-2 text-sm text-pink-600 hover:bg-pink-50 font-medium">🛠️ Админ</Link>
+                    )}
+                    <button onClick={() => logout()} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-pink-50 hover:text-pink-500 border-t border-gray-100">Гарах</button>
+                  </div>
+                </div>
+              ) : (
+                <Link href="/login" className="p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-700">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                  </svg>
+                </Link>
+              )}
 
               {/* Wishlist */}
               <Link href="/wishlist" className="p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-700">
@@ -116,6 +139,21 @@ export default function Header() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
                 </svg>
               </Link>
+
+              {/* Cart Button */}
+              <button 
+                onClick={() => toggleCart()}
+                className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-700"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                </svg>
+                {itemCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-pink-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                    {itemCount > 9 ? '9+' : itemCount}
+                  </span>
+                )}
+              </button>
             </div>
           </div>
         </nav>
@@ -213,19 +251,21 @@ export default function Header() {
       </header>
 
       {/* Floating Cart Button - Bottom Right */}
-      <Link 
-        href="/cart" 
-        className="fixed bottom-6 right-6 z-50 bg-pink-500 hover:bg-pink-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
+      <button 
+        onClick={() => toggleCart()}
+        className="fixed bottom-6 right-6 z-40 bg-pink-500 hover:bg-pink-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
       >
         <div className="relative">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
           </svg>
-          <span className="absolute -top-2 -right-2 w-5 h-5 bg-white text-pink-500 text-xs font-bold rounded-full flex items-center justify-center shadow">
-            0
-          </span>
+          {itemCount > 0 && (
+            <span className="absolute -top-2 -right-2 w-5 h-5 bg-white text-pink-500 text-xs font-bold rounded-full flex items-center justify-center shadow">
+              {itemCount > 9 ? '9+' : itemCount}
+            </span>
+          )}
         </div>
-      </Link>
+      </button>
 
       {/* Overlay */}
       {isMobileMenuOpen && (

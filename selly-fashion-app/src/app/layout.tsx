@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import FloatingCart from "@/components/FloatingCart";
+import { Toaster } from "react-hot-toast";
 
 export const metadata: Metadata = {
   title: "SELLY | Premium Fashion",
@@ -25,6 +27,25 @@ export default function RootLayout({
         <Header />
         {children}
         <Footer />
+        <FloatingCart />
+        <Toaster 
+          position="top-center"
+          toastOptions={{
+            duration: 3000,
+            style: {
+              background: '#1e293b',
+              color: '#fff',
+              borderRadius: '12px',
+              padding: '12px 20px',
+            },
+            success: {
+              iconTheme: {
+                primary: '#ec4899',
+                secondary: '#fff',
+              },
+            },
+          }}
+        />
       </body>
     </html>
   );
