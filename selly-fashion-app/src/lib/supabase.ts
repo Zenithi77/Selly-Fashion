@@ -1,9 +1,34 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Create a dummy client for build time, real client for runtime
+const createSupabaseClient = (): SupabaseClient => {
+  if (!supabaseUrl || !supabaseAnonKey) {
+    // Return a mock client during build time
+    return {
+      from: () => ({
+        select: () => ({ data: [], error: null, order: () => ({ data: [], error: null, limit: () => ({ data: [], error: null, eq: () => ({ data: [], error: null, single: () => ({ data: null, error: null }) }) }) }) }),
+        insert: () => ({ select: () => ({ single: () => ({ data: null, error: null }) }) }),
+        update: () => ({ eq: () => ({ select: () => ({ single: () => ({ data: null, error: null }) }) }) }),
+        delete: () => ({ eq: () => ({ error: null }) }),
+        upsert: () => ({ select: () => ({ single: () => ({ data: null, error: null }) }) }),
+      }),
+      auth: {
+        signUp: () => Promise.resolve({ data: null, error: null }),
+        signInWithPassword: () => Promise.resolve({ data: null, error: null }),
+        signInWithOAuth: () => Promise.resolve({ data: null, error: null }),
+        signOut: () => Promise.resolve({ error: null }),
+        getUser: () => Promise.resolve({ data: { user: null }, error: null }),
+        onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+      },
+    } as unknown as SupabaseClient
+  }
+  return createClient(supabaseUrl, supabaseAnonKey)
+}
+
+export const supabase = createSupabaseClient()
 
 // Database types
 export interface Brand {
