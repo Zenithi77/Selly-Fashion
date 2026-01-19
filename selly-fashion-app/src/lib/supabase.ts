@@ -3,18 +3,52 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 
+// Create a chainable mock for build time
+const createChainableMock = () => {
+  const mock: Record<string, unknown> = {
+    data: [],
+    error: null,
+    count: 0,
+  }
+  
+  const chainable = (): Record<string, unknown> => {
+    const chain: Record<string, unknown> = {
+      select: () => chainable(),
+      insert: () => chainable(),
+      update: () => chainable(),
+      delete: () => chainable(),
+      upsert: () => chainable(),
+      eq: () => chainable(),
+      neq: () => chainable(),
+      gt: () => chainable(),
+      lt: () => chainable(),
+      gte: () => chainable(),
+      lte: () => chainable(),
+      like: () => chainable(),
+      ilike: () => chainable(),
+      is: () => chainable(),
+      in: () => chainable(),
+      contains: () => chainable(),
+      order: () => chainable(),
+      limit: () => chainable(),
+      range: () => chainable(),
+      single: () => Promise.resolve({ data: null, error: null }),
+      maybeSingle: () => Promise.resolve({ data: null, error: null }),
+      then: (resolve: (value: { data: unknown[]; error: null; count: number }) => void) => resolve(mock as { data: unknown[]; error: null; count: number }),
+      ...mock,
+    }
+    return chain
+  }
+  
+  return chainable()
+}
+
 // Create a dummy client for build time, real client for runtime
 const createSupabaseClient = (): SupabaseClient => {
   if (!supabaseUrl || !supabaseAnonKey) {
     // Return a mock client during build time
     return {
-      from: () => ({
-        select: () => ({ data: [], error: null, order: () => ({ data: [], error: null, limit: () => ({ data: [], error: null, eq: () => ({ data: [], error: null, single: () => ({ data: null, error: null }) }) }) }) }),
-        insert: () => ({ select: () => ({ single: () => ({ data: null, error: null }) }) }),
-        update: () => ({ eq: () => ({ select: () => ({ single: () => ({ data: null, error: null }) }) }) }),
-        delete: () => ({ eq: () => ({ error: null }) }),
-        upsert: () => ({ select: () => ({ single: () => ({ data: null, error: null }) }) }),
-      }),
+      from: () => createChainableMock(),
       auth: {
         signUp: () => Promise.resolve({ data: null, error: null }),
         signInWithPassword: () => Promise.resolve({ data: null, error: null }),
