@@ -24,6 +24,15 @@ interface CartStore {
   getTotalPrice: () => number
 }
 
+interface WishlistStore {
+  items: Product[]
+  addItem: (product: Product) => void
+  removeItem: (productId: string) => void
+  isInWishlist: (productId: string) => boolean
+  toggleItem: (product: Product) => void
+  clearWishlist: () => void
+}
+
 interface AuthStore {
   user: UserProfile | null
   isAuthenticated: boolean
@@ -116,6 +125,43 @@ export const useAuthStore = create<AuthStore>()(
     }),
     {
       name: 'selly-auth',
+    }
+  )
+)
+
+export const useWishlistStore = create<WishlistStore>()(
+  persist(
+    (set, get) => ({
+      items: [],
+
+      addItem: (product) => {
+        const items = get().items
+        if (!items.find(item => item.id === product.id)) {
+          set({ items: [...items, product] })
+        }
+      },
+
+      removeItem: (productId) => {
+        set({ items: get().items.filter(item => item.id !== productId) })
+      },
+
+      isInWishlist: (productId) => {
+        return get().items.some(item => item.id === productId)
+      },
+
+      toggleItem: (product) => {
+        const items = get().items
+        if (items.find(item => item.id === product.id)) {
+          set({ items: items.filter(item => item.id !== product.id) })
+        } else {
+          set({ items: [...items, product] })
+        }
+      },
+
+      clearWishlist: () => set({ items: [] }),
+    }),
+    {
+      name: 'selly-wishlist',
     }
   )
 )
