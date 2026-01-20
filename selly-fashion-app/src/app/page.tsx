@@ -372,7 +372,7 @@ export default function Home() {
           <p className="text-lg opacity-90 mb-8 max-w-md mx-auto">
             Join our exclusive club and enjoy member benefits, early access, and more.
           </p>
-          <Link href="/register" className="inline-block bg-white text-pink-500 px-8 py-4 rounded-lg font-semibold hover:bg-pink-50 transition-colors">
+          <Link href="/login" className="inline-block bg-white text-pink-500 px-8 py-4 rounded-lg font-semibold hover:bg-pink-50 transition-colors">
             JOIN NOW
           </Link>
         </div>
