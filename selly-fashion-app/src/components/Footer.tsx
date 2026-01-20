@@ -108,7 +108,7 @@ export default function Footer() {
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-slate-500">
             <p>© 2026 SELLY. All rights reserved.</p>
             <div className="flex flex-wrap justify-center gap-6">
-              <Link href="/terms" className="hover:text-pink-500 transition-colors">Terms of Service</Link>
+              <Link href="/about" className="hover:text-pink-500 transition-colors">Terms of Service</Link>
               <Link href="/privacy" className="hover:text-pink-500 transition-colors">Privacy Policy</Link>
               <Link href="/cookies" className="hover:text-pink-500 transition-colors">Cookie Policy</Link>
               <Link href="/accessibility" className="hover:text-pink-500 transition-colors">Accessibility</Link>

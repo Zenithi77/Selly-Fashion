@@ -286,7 +286,7 @@ export default function CheckoutPage() {
               </button>
 
               <p className="text-xs text-slate-500 text-center mt-4">
-                Захиалга өгснөөр та манай <Link href="/terms" className="text-pink-500">үйлчилгээний нөхцөл</Link>-ийг зөвшөөрсөнд тооцно
+                Захиалга өгснөөр та манай <Link href="/about" className="text-pink-500">үйлчилгээний нөхцөл</Link>-ийг зөвшөөрсөнд тооцно
               </p>
             </div>
           </div>
