@@ -114,7 +114,7 @@ export const useAuthStore = create<AuthStore>()(
       setUser: (user) => set({ 
         user, 
         isAuthenticated: !!user,
-        isAdmin: user?.is_admin || false
+        isAdmin: user?.role === 'admin'
       }),
 
       logout: () => set({ 

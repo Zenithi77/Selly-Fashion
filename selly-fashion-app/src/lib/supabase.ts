@@ -265,7 +265,6 @@ export const api = {
       .from('orders')
       .select(`
         *,
-        user:user_profiles(*),
         order_items(
           *,
           product:products(*)
@@ -284,7 +283,6 @@ export const api = {
       .from('orders')
       .select(`
         *,
-        user:user_profiles(*),
         order_items(
           *,
           product:products(*)
