@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { api, Product, Brand, ClothingType } from '@/lib/supabase'
+import { api, Product, Brand, ClothingType, supabase } from '@/lib/supabase'
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([])
@@ -11,6 +11,15 @@ export default function AdminProductsPage() {
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+  
+  // Brand/Category modal state
+  const [showBrandModal, setShowBrandModal] = useState(false)
+  const [showCategoryModal, setShowCategoryModal] = useState(false)
+  const [newBrandName, setNewBrandName] = useState('')
+  const [newCategoryName, setNewCategoryName] = useState('')
+  const [savingBrand, setSavingBrand] = useState(false)
+  const [savingCategory, setSavingCategory] = useState(false)
+  
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
@@ -110,6 +119,70 @@ export default function AdminProductsPage() {
 
   const generateSlug = (name: string) => {
     return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+  }
+
+  // Add new brand
+  const handleAddBrand = async () => {
+    if (!newBrandName.trim()) return
+    setSavingBrand(true)
+    try {
+      const slug = generateSlug(newBrandName)
+      const { data, error } = await supabase
+        .from('brands')
+        .insert({ name: newBrandName.trim(), slug })
+        .select()
+        .single()
+      
+      if (error) throw error
+      
+      // Refresh brands list and auto-select new brand
+      const brandsResult = await api.getBrands()
+      if (brandsResult.data) {
+        setBrands(brandsResult.data)
+      }
+      if (data) {
+        setFormData(prev => ({ ...prev, brand_id: data.id }))
+      }
+      setNewBrandName('')
+      setShowBrandModal(false)
+    } catch (error) {
+      console.error('Error adding brand:', error)
+      alert('Брэнд нэмэхэд алдаа гарлаа')
+    } finally {
+      setSavingBrand(false)
+    }
+  }
+
+  // Add new category
+  const handleAddCategory = async () => {
+    if (!newCategoryName.trim()) return
+    setSavingCategory(true)
+    try {
+      const slug = generateSlug(newCategoryName)
+      const { data, error } = await supabase
+        .from('clothing_types')
+        .insert({ name: newCategoryName.trim(), slug })
+        .select()
+        .single()
+      
+      if (error) throw error
+      
+      // Refresh categories list and auto-select new category
+      const categoriesResult = await api.getCategories()
+      if (categoriesResult.data) {
+        setCategories(categoriesResult.data)
+      }
+      if (data) {
+        setFormData(prev => ({ ...prev, clothing_type_id: data.id }))
+      }
+      setNewCategoryName('')
+      setShowCategoryModal(false)
+    } catch (error) {
+      console.error('Error adding category:', error)
+      alert('Ангилал нэмэхэд алдаа гарлаа')
+    } finally {
+      setSavingCategory(false)
+    }
   }
 
   if (loading) {
@@ -330,29 +403,49 @@ export default function AdminProductsPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Брэнд</label>
-                    <select
-                      value={formData.brand_id}
-                      onChange={(e) => setFormData({ ...formData, brand_id: e.target.value })}
-                      className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
-                    >
-                      <option value="">Сонгох...</option>
-                      {brands.map((brand) => (
-                        <option key={brand.id} value={brand.id}>{brand.name}</option>
-                      ))}
-                    </select>
+                    <div className="flex gap-2">
+                      <select
+                        value={formData.brand_id}
+                        onChange={(e) => setFormData({ ...formData, brand_id: e.target.value })}
+                        className="flex-1 px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
+                      >
+                        <option value="">Сонгох...</option>
+                        {brands.map((brand) => (
+                          <option key={brand.id} value={brand.id}>{brand.name}</option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => setShowBrandModal(true)}
+                        className="w-10 h-10 bg-pink-500 hover:bg-pink-600 text-white rounded-xl flex items-center justify-center font-bold text-xl transition-colors"
+                        title="Шинэ брэнд нэмэх"
+                      >
+                        +
+                      </button>
+                    </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Категори</label>
-                    <select
-                      value={formData.clothing_type_id}
-                      onChange={(e) => setFormData({ ...formData, clothing_type_id: e.target.value })}
-                      className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
-                    >
-                      <option value="">Сонгох...</option>
+                    <div className="flex gap-2">
+                      <select
+                        value={formData.clothing_type_id}
+                        onChange={(e) => setFormData({ ...formData, clothing_type_id: e.target.value })}
+                        className="flex-1 px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
+                      >
+                        <option value="">Сонгох...</option>
                       {categories.map((cat) => (
                         <option key={cat.id} value={cat.id}>{cat.name}</option>
                       ))}
-                    </select>
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => setShowCategoryModal(true)}
+                        className="w-10 h-10 bg-pink-500 hover:bg-pink-600 text-white rounded-xl flex items-center justify-center font-bold text-xl transition-colors"
+                        title="Шинэ категори нэмэх"
+                      >
+                        +
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -425,6 +518,90 @@ export default function AdminProductsPage() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* Brand Modal */}
+        {showBrandModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md p-6">
+              <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-4">Шинэ брэнд нэмэх</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Брэндийн нэр</label>
+                  <input
+                    type="text"
+                    value={newBrandName}
+                    onChange={(e) => setNewBrandName(e.target.value)}
+                    placeholder="Жишээ: Nike, Adidas..."
+                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
+                    autoFocus
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowBrandModal(false)
+                      setNewBrandName('')
+                    }}
+                    className="flex-1 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                  >
+                    Болих
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleAddBrand}
+                    disabled={savingBrand || !newBrandName.trim()}
+                    className="flex-1 py-2.5 bg-pink-500 text-white font-medium rounded-xl hover:bg-pink-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {savingBrand ? 'Нэмж байна...' : 'Нэмэх'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Category Modal */}
+        {showCategoryModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md p-6">
+              <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-4">Шинэ категори нэмэх</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Категорийн нэр</label>
+                  <input
+                    type="text"
+                    value={newCategoryName}
+                    onChange={(e) => setNewCategoryName(e.target.value)}
+                    placeholder="Жишээ: Цамц, Гутал..."
+                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
+                    autoFocus
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowCategoryModal(false)
+                      setNewCategoryName('')
+                    }}
+                    className="flex-1 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                  >
+                    Болих
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleAddCategory}
+                    disabled={savingCategory || !newCategoryName.trim()}
+                    className="flex-1 py-2.5 bg-pink-500 text-white font-medium rounded-xl hover:bg-pink-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {savingCategory ? 'Нэмж байна...' : 'Нэмэх'}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}
