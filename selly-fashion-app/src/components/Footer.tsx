@@ -81,11 +81,11 @@ export default function Footer() {
           <div>
             <h4 className="font-semibold text-sm tracking-wide mb-4 text-pink-500">HELP</h4>
             <ul className="space-y-3 text-slate-600 dark:text-slate-400 text-sm">
-              <li><Link href="/contact" className="hover:text-pink-500 transition-colors">Contact Us</Link></li>
-              <li><Link href="/faq" className="hover:text-pink-500 transition-colors">FAQ</Link></li>
-              <li><Link href="/shipping" className="hover:text-pink-500 transition-colors">Shipping</Link></li>
-              <li><Link href="/returns" className="hover:text-pink-500 transition-colors">Returns</Link></li>
-              <li><Link href="/size-guide" className="hover:text-pink-500 transition-colors">Size Guide</Link></li>
+              <li><Link href="/about" className="hover:text-pink-500 transition-colors">Contact Us</Link></li>
+              <li><Link href="/about" className="hover:text-pink-500 transition-colors">FAQ</Link></li>
+              <li><Link href="/about" className="hover:text-pink-500 transition-colors">Shipping</Link></li>
+              <li><Link href="/about" className="hover:text-pink-500 transition-colors">Returns</Link></li>
+              <li><Link href="/about" className="hover:text-pink-500 transition-colors">Size Guide</Link></li>
             </ul>
           </div>
 
