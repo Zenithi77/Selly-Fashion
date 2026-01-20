@@ -711,13 +711,13 @@ export default function AccountPage() {
                           </Link>
                           <div className="flex items-center justify-between mt-3">
                             <div className="flex items-center gap-2">
-                              {item.sale_price ? (
+                              {item.is_on_sale && item.original_price ? (
                                 <>
                                   <span className="font-bold text-pink-600 dark:text-pink-400">
-                                    {item.sale_price.toLocaleString()}₮
+                                    {item.price.toLocaleString()}₮
                                   </span>
                                   <span className="text-sm text-gray-400 line-through">
-                                    {item.price.toLocaleString()}₮
+                                    {item.original_price.toLocaleString()}₮
                                   </span>
                                 </>
                               ) : (
@@ -728,16 +728,7 @@ export default function AccountPage() {
                             </div>
                           </div>
                           <button
-                            onClick={() => addToCart({
-                              id: item.id,
-                              name: item.name,
-                              price: item.sale_price || item.price,
-                              image: item.image_url || '/placeholder.jpg',
-                              quantity: 1,
-                              size: 'M',
-                              color: 'Default',
-                              slug: item.slug
-                            })}
+                            onClick={() => addToCart(item, 1, item.sizes?.[0] || 'M', item.colors?.[0] || 'Default')}
                             className="w-full mt-4 py-2.5 bg-gradient-to-r from-pink-500 to-rose-500 text-white text-sm font-medium rounded-xl hover:from-pink-600 hover:to-rose-600 transition-all"
                           >
                             Сагсанд нэмэх
