@@ -94,9 +94,9 @@ export default function Footer() {
             <h4 className="font-semibold text-sm tracking-wide mb-4 text-pink-500">COMPANY</h4>
             <ul className="space-y-3 text-slate-600 dark:text-slate-400 text-sm">
               <li><Link href="/about" className="hover:text-pink-500 transition-colors">About Us</Link></li>
-              <li><Link href="/careers" className="hover:text-pink-500 transition-colors">Careers</Link></li>
-              <li><Link href="/sustainability" className="hover:text-pink-500 transition-colors">Sustainability</Link></li>
-              <li><Link href="/press" className="hover:text-pink-500 transition-colors">Press</Link></li>
+              <li><Link href="/about" className="hover:text-pink-500 transition-colors">Careers</Link></li>
+              <li><Link href="/about" className="hover:text-pink-500 transition-colors">Sustainability</Link></li>
+              <li><Link href="/about" className="hover:text-pink-500 transition-colors">Press</Link></li>
             </ul>
           </div>
         </div>
