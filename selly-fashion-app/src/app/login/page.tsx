@@ -32,14 +32,35 @@ export default function LoginPage() {
 
         if (error) throw error
 
-        // Get user profile
-        const { data: profile } = await supabase
+        // Get user profile or create basic one
+        let { data: profile } = await supabase
           .from('user_profiles')
           .select('*')
           .eq('id', data.user.id)
           .single()
 
-        setUser(profile)
+        // If no profile exists, create one
+        if (!profile) {
+          const { data: newProfile } = await supabase
+            .from('user_profiles')
+            .insert({
+              id: data.user.id,
+              email: data.user.email,
+              full_name: data.user.user_metadata?.full_name || data.user.email?.split('@')[0] || ''
+            })
+            .select()
+            .single()
+          profile = newProfile
+        }
+
+        // Set user even if profile fetch failed - use basic info
+        setUser(profile || {
+          id: data.user.id,
+          email: data.user.email,
+          full_name: data.user.user_metadata?.full_name || '',
+          is_admin: false,
+          is_vip: false
+        })
         router.push('/')
       } else {
         const { data, error } = await supabase.auth.signUp({

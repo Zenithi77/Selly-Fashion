@@ -22,19 +22,28 @@ export default function AuthCallbackPage() {
           .single()
 
         if (!profile) {
+          // Try to create profile
           const { data: newProfile } = await supabase
             .from('user_profiles')
             .insert({
               id: session.user.id,
-              full_name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0],
-              avatar_url: session.user.user_metadata?.avatar_url
+              email: session.user.email,
+              full_name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || '',
+              avatar_url: session.user.user_metadata?.avatar_url || ''
             })
             .select()
             .single()
           profile = newProfile
         }
 
-        setUser(profile)
+        // Set user with fallback to basic info
+        setUser(profile || {
+          id: session.user.id,
+          email: session.user.email,
+          full_name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || '',
+          is_admin: false,
+          is_vip: false
+        })
         router.push('/')
       } else {
         router.push('/login')
