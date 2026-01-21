@@ -269,6 +269,14 @@ export const api = {
     return { data: data as ClothingType[], error }
   },
 
+  async getClothingTypes() {
+    const { data, error } = await supabase
+      .from('clothing_types')
+      .select('*')
+      .order('name')
+    return { data: data as ClothingType[], error }
+  },
+
   async getFeaturedCategories(limit: number = 4) {
     const { data, error } = await supabase
       .from('clothing_types')
@@ -286,6 +294,16 @@ export const api = {
       .eq('slug', slug)
       .single()
     return { data: data as ClothingType, error }
+  },
+
+  async updateClothingType(id: string, category: Partial<ClothingType>) {
+    const { data, error } = await supabase
+      .from('clothing_types')
+      .update({ ...category, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single()
+    return { data, error }
   },
 
   // Orders
