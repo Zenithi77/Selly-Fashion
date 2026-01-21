@@ -39,6 +39,9 @@ const sampleProducts: Product[] = [
       logo_text: 'LUMINA',
       tagline: 'High-End Silhouettes',
       style: 'italic',
+      image_url: '',
+      is_featured: true,
+      featured_order: 1,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }
