@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { api, Brand, ClothingType } from '@/lib/supabase'
 
@@ -12,6 +12,9 @@ export default function AdminHeroPage() {
   const [showModal, setShowModal] = useState(false)
   const [editingItem, setEditingItem] = useState<Brand | ClothingType | null>(null)
   const [editType, setEditType] = useState<'brand' | 'category'>('brand')
+  const [uploading, setUploading] = useState(false)
+  const [imageInputType, setImageInputType] = useState<'url' | 'upload'>('url')
+  const fileInputRef = useRef<HTMLInputElement>(null)
   
   const [brandForm, setBrandForm] = useState({
     name: '',
@@ -89,6 +92,42 @@ export default function AdminHeroPage() {
       featured_order: category.featured_order || 0
     })
     setShowModal(true)
+  }
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'brand' | 'category') => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('folder', type === 'brand' ? 'brands' : 'categories')
+
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      })
+
+      const data = await res.json()
+
+      if (data.success && data.url) {
+        if (type === 'brand') {
+          setBrandForm({ ...brandForm, image_url: data.url })
+        } else {
+          setCategoryForm({ ...categoryForm, image_url: data.url })
+        }
+      } else {
+        alert(data.error || 'Upload failed')
+      }
+    } catch (error) {
+      console.error('Upload error:', error)
+      alert('Upload failed')
+    } finally {
+      setUploading(false)
+      // Clear file input
+      if (e.target) e.target.value = ''
+    }
   }
 
   const handleSaveBrand = async (e: React.FormEvent) => {
@@ -404,18 +443,84 @@ export default function AdminHeroPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                      Зураг URL <span className="text-pink-500">(600x800px)</span>
+                      Зураг <span className="text-pink-500">(600x800px)</span>
                     </label>
-                    <input
-                      type="url"
-                      value={brandForm.image_url}
-                      onChange={(e) => setBrandForm({ ...brandForm, image_url: e.target.value })}
-                      placeholder="https://example.com/image.jpg"
-                      className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
-                    />
+                    
+                    {/* URL / Upload toggle */}
+                    <div className="flex gap-2 mb-3">
+                      <button
+                        type="button"
+                        onClick={() => setImageInputType('url')}
+                        className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
+                          imageInputType === 'url'
+                            ? 'bg-pink-500 text-white'
+                            : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+                        }`}
+                      >
+                        🔗 URL оруулах
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setImageInputType('upload')}
+                        className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
+                          imageInputType === 'upload'
+                            ? 'bg-pink-500 text-white'
+                            : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+                        }`}
+                      >
+                        📤 Зураг upload
+                      </button>
+                    </div>
+
+                    {imageInputType === 'url' ? (
+                      <input
+                        type="url"
+                        value={brandForm.image_url}
+                        onChange={(e) => setBrandForm({ ...brandForm, image_url: e.target.value })}
+                        placeholder="https://example.com/image.jpg"
+                        className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
+                      />
+                    ) : (
+                      <div className="space-y-2">
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp,image/gif"
+                          onChange={(e) => handleFileUpload(e, 'brand')}
+                          className="hidden"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={uploading}
+                          className="w-full py-3 px-4 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl hover:border-pink-400 dark:hover:border-pink-500 transition-colors flex items-center justify-center gap-2 text-slate-600 dark:text-slate-300 disabled:opacity-50"
+                        >
+                          {uploading ? (
+                            <>
+                              <span className="animate-spin">⏳</span>
+                              Upload хийж байна...
+                            </>
+                          ) : (
+                            <>
+                              <span>📁</span>
+                              Зураг сонгох (max 5MB)
+                            </>
+                          )}
+                        </button>
+                        <p className="text-xs text-slate-500 text-center">JPEG, PNG, WebP, GIF</p>
+                      </div>
+                    )}
+
                     {brandForm.image_url && (
-                      <div className="mt-2 relative w-full aspect-[3/4] max-w-[200px] rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800">
+                      <div className="mt-3 relative w-full aspect-[3/4] max-w-[200px] rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800">
                         <img src={brandForm.image_url} alt="Preview" className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => setBrandForm({ ...brandForm, image_url: '' })}
+                          className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors text-xs"
+                        >
+                          ✕
+                        </button>
                       </div>
                     )}
                   </div>
@@ -480,18 +585,84 @@ export default function AdminHeroPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                      Зураг URL <span className="text-pink-500">(400x500px)</span>
+                      Зураг <span className="text-pink-500">(400x500px)</span>
                     </label>
-                    <input
-                      type="url"
-                      value={categoryForm.image_url}
-                      onChange={(e) => setCategoryForm({ ...categoryForm, image_url: e.target.value })}
-                      placeholder="https://example.com/image.jpg"
-                      className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
-                    />
+                    
+                    {/* URL / Upload toggle */}
+                    <div className="flex gap-2 mb-3">
+                      <button
+                        type="button"
+                        onClick={() => setImageInputType('url')}
+                        className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
+                          imageInputType === 'url'
+                            ? 'bg-pink-500 text-white'
+                            : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+                        }`}
+                      >
+                        🔗 URL оруулах
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setImageInputType('upload')}
+                        className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
+                          imageInputType === 'upload'
+                            ? 'bg-pink-500 text-white'
+                            : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+                        }`}
+                      >
+                        📤 Зураг upload
+                      </button>
+                    </div>
+
+                    {imageInputType === 'url' ? (
+                      <input
+                        type="url"
+                        value={categoryForm.image_url}
+                        onChange={(e) => setCategoryForm({ ...categoryForm, image_url: e.target.value })}
+                        placeholder="https://example.com/image.jpg"
+                        className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
+                      />
+                    ) : (
+                      <div className="space-y-2">
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp,image/gif"
+                          onChange={(e) => handleFileUpload(e, 'category')}
+                          className="hidden"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={uploading}
+                          className="w-full py-3 px-4 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl hover:border-pink-400 dark:hover:border-pink-500 transition-colors flex items-center justify-center gap-2 text-slate-600 dark:text-slate-300 disabled:opacity-50"
+                        >
+                          {uploading ? (
+                            <>
+                              <span className="animate-spin">⏳</span>
+                              Upload хийж байна...
+                            </>
+                          ) : (
+                            <>
+                              <span>📁</span>
+                              Зураг сонгох (max 5MB)
+                            </>
+                          )}
+                        </button>
+                        <p className="text-xs text-slate-500 text-center">JPEG, PNG, WebP, GIF</p>
+                      </div>
+                    )}
+
                     {categoryForm.image_url && (
-                      <div className="mt-2 relative w-full aspect-[4/5] max-w-[160px] rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800">
+                      <div className="mt-3 relative w-full aspect-[4/5] max-w-[160px] rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800">
                         <img src={categoryForm.image_url} alt="Preview" className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => setCategoryForm({ ...categoryForm, image_url: '' })}
+                          className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors text-xs"
+                        >
+                          ✕
+                        </button>
                       </div>
                     )}
                   </div>
