@@ -1,6 +1,46 @@
+'use client'
+
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { api, Brand, ClothingType } from '@/lib/supabase'
 
 export default function Home() {
+  const [featuredBrands, setFeaturedBrands] = useState<Brand[]>([])
+  const [featuredCategories, setFeaturedCategories] = useState<ClothingType[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const [brandsRes, categoriesRes] = await Promise.all([
+        api.getFeaturedBrands(5),
+        api.getFeaturedCategories(4)
+      ])
+      if (brandsRes.data) setFeaturedBrands(brandsRes.data)
+      if (categoriesRes.data) setFeaturedCategories(categoriesRes.data)
+      setLoading(false)
+    }
+    fetchData()
+  }, [])
+
+  // Default brands if none from database
+  const defaultBrands = [
+    { id: '1', slug: 'lumina', name: 'LUMINA', logo_text: 'LUMINA', tagline: 'HAUTE COUTURE', style: 'italic', image_url: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?w=600&q=80' },
+    { id: '2', slug: 'velvet', name: 'VELVET', logo_text: 'VELVET', tagline: 'SOFT LUXURY', style: 'normal', image_url: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&q=80' },
+    { id: '3', slug: 'aura', name: 'AURA', logo_text: 'AURA', tagline: 'MODERN MINIMAL', style: 'underline', image_url: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=600&q=80' },
+    { id: '4', slug: 'nova', name: 'NOVA', logo_text: 'NOVA', tagline: 'EXCLUSIVE DROP', style: 'italic', image_url: 'https://images.unsplash.com/photo-1487222477894-8943e31ef7b2?w=600&q=80' },
+    { id: '5', slug: 'eclipse', name: 'ECLIPSE', logo_text: 'ECLIPSE', tagline: 'AVANT-GARDE', style: 'normal', image_url: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=600&q=80' },
+  ]
+
+  const defaultCategories = [
+    { id: '1', slug: 'dresses', name: 'DRESSES', image_url: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=600&q=80' },
+    { id: '2', slug: 'tops', name: 'TOPS', image_url: 'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=600&q=80' },
+    { id: '3', slug: 'outerwear', name: 'OUTERWEAR', image_url: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=600&q=80' },
+    { id: '4', slug: 'accessories', name: 'ACCESSORIES', image_url: 'https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?w=600&q=80' },
+  ]
+
+  const brands = featuredBrands.length > 0 ? featuredBrands : defaultBrands as unknown as Brand[]
+  const categories = featuredCategories.length > 0 ? featuredCategories : defaultCategories as unknown as ClothingType[]
+
   return (
     <main className="pt-[104px] min-h-screen">
       {/* Hero Section - Premium Brand Showcase */}
@@ -31,107 +71,58 @@ export default function Home() {
               <span className="block bg-gradient-to-r from-pink-400 via-pink-500 to-rose-500 bg-clip-text text-transparent">LUXURY</span>
             </h1>
             <p className="text-lg text-slate-400 max-w-xl mx-auto">
-              Curated collections from the world's most exclusive fashion houses
+              Curated collections from the world&apos;s most exclusive fashion houses
             </p>
           </div>
 
-          {/* Brand Grid - 4 Featured Brands */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 max-w-5xl mx-auto w-full">
-            {/* LUMINA - Elegant */}
-            <Link href="/brand/lumina" className="group relative aspect-[3/4] rounded-2xl overflow-hidden cursor-pointer">
-              <img
-                src="https://images.unsplash.com/photo-1509631179647-0177331693ae?w=600&q=80"
-                alt="LUMINA Collection"
-                className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-70 group-hover:opacity-90 transition-opacity"></div>
-              <div className="absolute inset-0 flex flex-col items-center justify-end p-6 text-white">
-                <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                  <span className="block text-[10px] tracking-[0.3em] text-pink-300 mb-2 opacity-0 group-hover:opacity-100 transition-opacity">HAUTE COUTURE</span>
-                  <h3 className="text-2xl lg:text-3xl font-bold tracking-[0.15em] italic mb-1">LUMINA</h3>
-                  <div className="h-[2px] w-0 group-hover:w-full bg-gradient-to-r from-pink-500 to-rose-500 transition-all duration-500 mx-auto"></div>
-                </div>
-                <span className="mt-4 text-xs tracking-wider opacity-0 group-hover:opacity-100 transition-all duration-300 delay-200 flex items-center gap-2 text-pink-200">
-                  EXPLORE
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3 h-3">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-                  </svg>
-                </span>
-              </div>
-            </Link>
-
-            {/* VELVET - Soft Luxury */}
-            <Link href="/brand/velvet" className="group relative aspect-[3/4] rounded-2xl overflow-hidden cursor-pointer">
-              <img
-                src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&q=80"
-                alt="VELVET Collection"
-                className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-70 group-hover:opacity-90 transition-opacity"></div>
-              <div className="absolute inset-0 flex flex-col items-center justify-end p-6 text-white">
-                <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                  <span className="block text-[10px] tracking-[0.3em] text-pink-300 mb-2 opacity-0 group-hover:opacity-100 transition-opacity">SOFT LUXURY</span>
-                  <h3 className="text-2xl lg:text-3xl font-bold tracking-[0.15em] mb-1">VELVET</h3>
-                  <div className="h-[2px] w-0 group-hover:w-full bg-gradient-to-r from-pink-500 to-rose-500 transition-all duration-500 mx-auto"></div>
-                </div>
-                <span className="mt-4 text-xs tracking-wider opacity-0 group-hover:opacity-100 transition-all duration-300 delay-200 flex items-center gap-2 text-pink-200">
-                  EXPLORE
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3 h-3">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-                  </svg>
-                </span>
-              </div>
-            </Link>
-
-            {/* AURA - Minimalist */}
-            <Link href="/brand/aura" className="group relative aspect-[3/4] rounded-2xl overflow-hidden cursor-pointer">
-              <img
-                src="https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=600&q=80"
-                alt="AURA Collection"
-                className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-70 group-hover:opacity-90 transition-opacity"></div>
-              <div className="absolute inset-0 flex flex-col items-center justify-end p-6 text-white">
-                <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                  <span className="block text-[10px] tracking-[0.3em] text-pink-300 mb-2 opacity-0 group-hover:opacity-100 transition-opacity">MODERN MINIMAL</span>
-                  <h3 className="text-2xl lg:text-3xl font-bold tracking-[0.15em] underline decoration-pink-500 decoration-2 underline-offset-4 mb-1">AURA</h3>
-                  <div className="h-[2px] w-0 group-hover:w-full bg-gradient-to-r from-pink-500 to-rose-500 transition-all duration-500 mx-auto"></div>
-                </div>
-                <span className="mt-4 text-xs tracking-wider opacity-0 group-hover:opacity-100 transition-all duration-300 delay-200 flex items-center gap-2 text-pink-200">
-                  EXPLORE
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3 h-3">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-                  </svg>
-                </span>
-              </div>
-            </Link>
-
-            {/* NOVA - Limited Edition */}
-            <Link href="/brand/nova" className="group relative aspect-[3/4] rounded-2xl overflow-hidden cursor-pointer">
-              <img
-                src="https://images.unsplash.com/photo-1487222477894-8943e31ef7b2?w=600&q=80"
-                alt="NOVA Collection"
-                className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-pink-900 via-pink-900/50 to-transparent opacity-80 group-hover:opacity-95 transition-opacity"></div>
-              {/* Special "Limited" Badge */}
-              <div className="absolute top-4 right-4 px-3 py-1 bg-pink-500 text-white text-[10px] tracking-widest rounded-full font-semibold">
-                LIMITED
-              </div>
-              <div className="absolute inset-0 flex flex-col items-center justify-end p-6 text-white">
-                <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                  <span className="block text-[10px] tracking-[0.3em] text-pink-200 mb-2 opacity-0 group-hover:opacity-100 transition-opacity">EXCLUSIVE DROP</span>
-                  <h3 className="text-2xl lg:text-3xl font-bold tracking-[0.15em] italic mb-1">NOVA</h3>
-                  <div className="h-[2px] w-0 group-hover:w-full bg-gradient-to-r from-white to-pink-200 transition-all duration-500 mx-auto"></div>
-                </div>
-                <span className="mt-4 text-xs tracking-wider opacity-0 group-hover:opacity-100 transition-all duration-300 delay-200 flex items-center gap-2 text-pink-100">
-                  EXPLORE
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3 h-3">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-                  </svg>
-                </span>
-              </div>
-            </Link>
+          {/* Brand Grid - 5 Featured Brands from Database */}
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 lg:gap-5 max-w-6xl mx-auto w-full">
+            {loading ? (
+              // Loading skeleton
+              Array(5).fill(0).map((_, idx) => (
+                <div key={idx} className="aspect-[3/4] rounded-2xl bg-white/5 animate-pulse"></div>
+              ))
+            ) : (
+              brands.slice(0, 5).map((brand, index) => (
+                <Link 
+                  key={brand.id} 
+                  href={`/brand/${brand.slug}`} 
+                  className="group relative aspect-[3/4] rounded-2xl overflow-hidden cursor-pointer"
+                >
+                  <img
+                    src={brand.image_url || `https://images.unsplash.com/photo-1509631179647-0177331693ae?w=600&q=80`}
+                    alt={`${brand.name} Collection`}
+                    className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
+                  />
+                  <div className={`absolute inset-0 bg-gradient-to-t ${index === brands.length - 1 ? 'from-pink-900 via-pink-900/50' : 'from-black via-black/40'} to-transparent opacity-70 group-hover:opacity-90 transition-opacity`}></div>
+                  
+                  {/* Special Badge for last brand */}
+                  {index === brands.length - 1 && (
+                    <div className="absolute top-4 right-4 px-3 py-1 bg-pink-500 text-white text-[10px] tracking-widest rounded-full font-semibold">
+                      LIMITED
+                    </div>
+                  )}
+                  
+                  <div className="absolute inset-0 flex flex-col items-center justify-end p-4 lg:p-6 text-white">
+                    <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                      <span className="block text-[10px] tracking-[0.3em] text-pink-300 mb-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {brand.tagline || 'EXCLUSIVE'}
+                      </span>
+                      <h3 className={`text-xl lg:text-2xl font-bold tracking-[0.15em] mb-1 ${brand.style === 'italic' ? 'italic' : ''} ${brand.style === 'underline' ? 'underline decoration-pink-500 decoration-2 underline-offset-4' : ''}`}>
+                        {brand.logo_text || brand.name}
+                      </h3>
+                      <div className="h-[2px] w-0 group-hover:w-full bg-gradient-to-r from-pink-500 to-rose-500 transition-all duration-500 mx-auto"></div>
+                    </div>
+                    <span className="mt-4 text-xs tracking-wider opacity-0 group-hover:opacity-100 transition-all duration-300 delay-200 flex items-center gap-2 text-pink-200">
+                      EXPLORE
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3 h-3">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                      </svg>
+                    </span>
+                  </div>
+                </Link>
+              ))
+            )}
           </div>
 
           {/* Bottom CTA */}
@@ -159,61 +150,31 @@ export default function Home() {
           </div>
           
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-            {/* Dresses */}
-            <Link href="/category/dresses" className="group relative aspect-[3/4] overflow-hidden rounded-2xl bg-white dark:bg-slate-900/40 border border-pink-50 dark:border-pink-900/10 hover:border-pink-500/30 transition-all">
-              <img
-                src="https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=600&q=80"
-                alt="Dresses"
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent group-hover:from-black/70 transition-colors"></div>
-              <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                <h3 className="text-xl font-bold tracking-wide">DRESSES</h3>
-                <p className="text-sm opacity-0 group-hover:opacity-100 transition-opacity mt-2 text-pink-300">Shop the collection →</p>
-              </div>
-            </Link>
-
-            {/* Tops */}
-            <Link href="/category/tops" className="group relative aspect-[3/4] overflow-hidden rounded-2xl bg-white dark:bg-slate-900/40 border border-pink-50 dark:border-pink-900/10 hover:border-pink-500/30 transition-all">
-              <img
-                src="https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=600&q=80"
-                alt="Tops"
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent group-hover:from-black/70 transition-colors"></div>
-              <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                <h3 className="text-xl font-bold tracking-wide">TOPS</h3>
-                <p className="text-sm opacity-0 group-hover:opacity-100 transition-opacity mt-2 text-pink-300">Shop the collection →</p>
-              </div>
-            </Link>
-
-            {/* Outerwear */}
-            <Link href="/category/outerwear" className="group relative aspect-[3/4] overflow-hidden rounded-2xl bg-white dark:bg-slate-900/40 border border-pink-50 dark:border-pink-900/10 hover:border-pink-500/30 transition-all">
-              <img
-                src="https://images.unsplash.com/photo-1551028719-00167b16eac5?w=600&q=80"
-                alt="Outerwear"
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent group-hover:from-black/70 transition-colors"></div>
-              <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                <h3 className="text-xl font-bold tracking-wide">OUTERWEAR</h3>
-                <p className="text-sm opacity-0 group-hover:opacity-100 transition-opacity mt-2 text-pink-300">Shop the collection →</p>
-              </div>
-            </Link>
-
-            {/* Accessories */}
-            <Link href="/category/accessories" className="group relative aspect-[3/4] overflow-hidden rounded-2xl bg-white dark:bg-slate-900/40 border border-pink-50 dark:border-pink-900/10 hover:border-pink-500/30 transition-all">
-              <img
-                src="https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?w=600&q=80"
-                alt="Accessories"
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent group-hover:from-black/70 transition-colors"></div>
-              <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                <h3 className="text-xl font-bold tracking-wide">ACCESSORIES</h3>
-                <p className="text-sm opacity-0 group-hover:opacity-100 transition-opacity mt-2 text-pink-300">Shop the collection →</p>
-              </div>
-            </Link>
+            {loading ? (
+              // Loading skeleton
+              Array(4).fill(0).map((_, idx) => (
+                <div key={idx} className="aspect-[3/4] rounded-2xl bg-slate-200 dark:bg-slate-800 animate-pulse"></div>
+              ))
+            ) : (
+              categories.slice(0, 4).map((category) => (
+                <Link 
+                  key={category.id} 
+                  href={`/category/${category.slug}`} 
+                  className="group relative aspect-[3/4] overflow-hidden rounded-2xl bg-white dark:bg-slate-900/40 border border-pink-50 dark:border-pink-900/10 hover:border-pink-500/30 transition-all"
+                >
+                  <img
+                    src={category.image_url || 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=600&q=80'}
+                    alt={category.name}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent group-hover:from-black/70 transition-colors"></div>
+                  <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                    <h3 className="text-xl font-bold tracking-wide">{category.name.toUpperCase()}</h3>
+                    <p className="text-sm opacity-0 group-hover:opacity-100 transition-opacity mt-2 text-pink-300">Shop the collection →</p>
+                  </div>
+                </Link>
+              ))
+            )}
           </div>
         </div>
       </section>
@@ -317,7 +278,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Featured Brands */}
+      {/* Featured Brands Section */}
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
@@ -328,30 +289,29 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-            {/* Lumina */}
-            <Link href="/brand/lumina" className="group p-8 lg:p-12 bg-white dark:bg-slate-800 rounded-2xl border border-pink-100 dark:border-pink-900/30 hover:border-pink-500 hover:shadow-lg transition-all text-center">
-              <h3 className="text-2xl font-bold tracking-[0.2em] mb-2 text-slate-900 dark:text-white group-hover:text-pink-500 transition-colors italic">LUMINA</h3>
-              <p className="text-sm text-slate-500">Elegance Redefined</p>
-            </Link>
-
-            {/* Velvet */}
-            <Link href="/brand/velvet" className="group p-8 lg:p-12 bg-white dark:bg-slate-800 rounded-2xl border border-pink-100 dark:border-pink-900/30 hover:border-pink-500 hover:shadow-lg transition-all text-center">
-              <h3 className="text-2xl font-bold tracking-[0.2em] mb-2 text-slate-900 dark:text-white group-hover:text-pink-500 transition-colors">VELVET</h3>
-              <p className="text-sm text-slate-500">Soft Luxury</p>
-            </Link>
-
-            {/* Aura */}
-            <Link href="/brand/aura" className="group p-8 lg:p-12 bg-white dark:bg-slate-800 rounded-2xl border border-pink-100 dark:border-pink-900/30 hover:border-pink-500 hover:shadow-lg transition-all text-center">
-              <h3 className="text-2xl font-bold tracking-[0.2em] mb-2 text-slate-900 dark:text-white group-hover:text-pink-500 transition-colors underline decoration-pink-500">AURA</h3>
-              <p className="text-sm text-slate-500">Modern Minimalism</p>
-            </Link>
-
-            {/* Nova */}
-            <Link href="/brand/nova" className="group p-8 lg:p-12 bg-pink-500 dark:bg-pink-600 rounded-2xl text-white text-center hover:bg-pink-600 dark:hover:bg-pink-500 hover:shadow-lg transition-all">
-              <h3 className="text-2xl font-bold tracking-[0.2em] mb-2 italic">NOVA</h3>
-              <p className="text-sm opacity-80">Limited Edition</p>
-            </Link>
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 lg:gap-6">
+            {brands.slice(0, 5).map((brand, index) => (
+              <Link 
+                key={brand.id} 
+                href={`/brand/${brand.slug}`} 
+                className={`group p-6 lg:p-8 rounded-2xl border text-center transition-all ${
+                  index === brands.length - 1 
+                    ? 'bg-pink-500 dark:bg-pink-600 text-white hover:bg-pink-600 dark:hover:bg-pink-500 border-transparent hover:shadow-lg' 
+                    : 'bg-white dark:bg-slate-800 border-pink-100 dark:border-pink-900/30 hover:border-pink-500 hover:shadow-lg'
+                }`}
+              >
+                <h3 className={`text-xl lg:text-2xl font-bold tracking-[0.2em] mb-2 transition-colors ${
+                  index === brands.length - 1 
+                    ? '' 
+                    : 'text-slate-900 dark:text-white group-hover:text-pink-500'
+                } ${brand.style === 'italic' ? 'italic' : ''} ${brand.style === 'underline' ? 'underline decoration-pink-500' : ''}`}>
+                  {brand.logo_text || brand.name}
+                </h3>
+                <p className={`text-sm ${index === brands.length - 1 ? 'opacity-80' : 'text-slate-500'}`}>
+                  {brand.tagline || 'Exclusive Collection'}
+                </p>
+              </Link>
+            ))}
           </div>
         </div>
       </section>

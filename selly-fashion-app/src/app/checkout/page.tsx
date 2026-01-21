@@ -1,44 +1,316 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useCartStore, useAuthStore } from '@/lib/store'
 import { api } from '@/lib/supabase'
+import { 
+  BANK_ACCOUNTS, 
+  SHIPPING_COST, 
+  FREE_SHIPPING_THRESHOLD,
+  generatePaymentRef, 
+  formatPrice, 
+  copyToClipboard 
+} from '@/lib/constants'
+
+// Confetti component with pre-generated values
+const confettiData = Array.from({ length: 50 }, (_, i) => ({
+  id: i,
+  left: (i * 2) % 100,
+  delay: (i * 0.06) % 3,
+  colorIndex: i % 6
+}))
+
+const confettiColors = ['#ec4899', '#f43f5e', '#f97316', '#eab308', '#22c55e', '#06b6d4']
+
+function Confetti() {
+  return (
+    <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+      {confettiData.map((item) => (
+        <div
+          key={item.id}
+          className="absolute animate-confetti"
+          style={{
+            left: `${item.left}%`,
+            animationDelay: `${item.delay}s`,
+            backgroundColor: confettiColors[item.colorIndex]
+          }}
+        />
+      ))}
+      <style jsx>{`
+        @keyframes confetti {
+          0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+          100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+        .animate-confetti {
+          width: 10px;
+          height: 10px;
+          animation: confetti 3s ease-in-out forwards;
+        }
+      `}</style>
+    </div>
+  )
+}
+
+// Payment Modal Component
+interface PaymentModalProps {
+  isOpen: boolean
+  onClose: () => void
+  orderId: string
+  paymentRef: string
+  totalAmount: number
+  onPaymentSuccess: () => void
+}
+
+function PaymentModal({ isOpen, onClose, orderId, paymentRef, totalAmount, onPaymentSuccess }: PaymentModalProps) {
+  const [copied, setCopied] = useState<string | null>(null)
+  const [paymentStatus, setPaymentStatus] = useState<string>('Pending')
+  const [showConfetti, setShowConfetti] = useState(false)
+
+  // Poll for payment status
+  useEffect(() => {
+    if (!isOpen || !orderId) return
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/payment/status/${orderId}`, {
+          cache: 'no-store'
+        })
+        const data = await res.json()
+        
+        if (data.success && data.paymentStatus) {
+          setPaymentStatus(data.paymentStatus)
+          
+          if (data.paymentStatus === 'Paid') {
+            setShowConfetti(true)
+            clearInterval(pollInterval)
+            
+            // Wait for animation, then callback
+            setTimeout(() => {
+              onPaymentSuccess()
+            }, 3000)
+          }
+        }
+      } catch (error) {
+        console.error('Payment status check failed:', error)
+      }
+    }, 5000) // Poll every 5 seconds
+
+    return () => clearInterval(pollInterval)
+  }, [isOpen, orderId, onPaymentSuccess])
+
+  const handleCopy = async (text: string, type: string) => {
+    const success = await copyToClipboard(text)
+    if (success) {
+      setCopied(type)
+      setTimeout(() => setCopied(null), 2000)
+    }
+  }
+
+  if (!isOpen) return null
+
+  const bank = BANK_ACCOUNTS.khan
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {showConfetti && <Confetti />}
+      
+      {/* Backdrop */}
+      <div 
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        onClick={paymentStatus === 'Paid' ? undefined : onClose}
+      />
+      
+      {/* Modal */}
+      <div className="relative bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
+        {paymentStatus === 'Paid' ? (
+          // Success State
+          <div className="p-8 text-center">
+            <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-10 h-10 text-green-500">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
+              Төлбөр амжилттай!
+            </h2>
+            <p className="text-slate-500 mb-6">
+              Таны захиалга баталгаажлаа. Бид таны захиалгыг бэлтгэж эхэлнэ.
+            </p>
+            <div className="animate-pulse text-sm text-slate-400">
+              Хуудас автоматаар шилжих болно...
+            </div>
+          </div>
+        ) : (
+          // Waiting for Payment State
+          <>
+            {/* Header */}
+            <div className="bg-gradient-to-r from-pink-500 to-rose-500 p-6 text-white">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold">Банкны шилжүүлэг</h2>
+                <button 
+                  onClick={onClose}
+                  className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div className="text-center">
+                <p className="text-white/80 text-sm mb-1">Төлөх дүн</p>
+                <p className="text-4xl font-bold">{formatPrice(totalAmount)}</p>
+              </div>
+            </div>
+
+            {/* Bank Details */}
+            <div className="p-6 space-y-4">
+              {/* Bank Name */}
+              <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4">
+                <p className="text-xs text-slate-500 mb-1">Банк</p>
+                <p className="font-semibold text-lg">{bank.bankLogo} {bank.bankName}</p>
+              </div>
+
+              {/* Account Number */}
+              <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-slate-500 mb-1">Дансны дугаар</p>
+                  <p className="font-mono font-bold text-lg tracking-wider">{bank.accountNumber}</p>
+                </div>
+                <button
+                  onClick={() => handleCopy(bank.accountNumber, 'account')}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                    copied === 'account' 
+                      ? 'bg-green-500 text-white' 
+                      : 'bg-pink-100 dark:bg-pink-900/30 text-pink-600 hover:bg-pink-200'
+                  }`}
+                >
+                  {copied === 'account' ? '✓ Хуулсан' : 'Хуулах'}
+                </button>
+              </div>
+
+              {/* Account Name */}
+              <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-slate-500 mb-1">Дансны нэр</p>
+                  <p className="font-semibold">{bank.accountName}</p>
+                </div>
+                <button
+                  onClick={() => handleCopy(bank.accountName, 'name')}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                    copied === 'name' 
+                      ? 'bg-green-500 text-white' 
+                      : 'bg-pink-100 dark:bg-pink-900/30 text-pink-600 hover:bg-pink-200'
+                  }`}
+                >
+                  {copied === 'name' ? '✓ Хуулсан' : 'Хуулах'}
+                </button>
+              </div>
+
+              {/* Payment Reference - IMPORTANT */}
+              <div className="bg-pink-50 dark:bg-pink-900/20 border-2 border-pink-200 dark:border-pink-800 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-pink-500">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                  </svg>
+                  <p className="text-sm font-semibold text-pink-600">Гүйлгээний утга (ЗААВАЛ)</p>
+                </div>
+                <div className="flex items-center justify-between">
+                  <p className="font-mono font-bold text-2xl text-pink-600 tracking-widest">{paymentRef}</p>
+                  <button
+                    onClick={() => handleCopy(paymentRef, 'ref')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                      copied === 'ref' 
+                        ? 'bg-green-500 text-white' 
+                        : 'bg-pink-500 text-white hover:bg-pink-600'
+                    }`}
+                  >
+                    {copied === 'ref' ? '✓ Хуулсан' : 'Хуулах'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Amount */}
+              <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-slate-500 mb-1">Мөнгөн дүн</p>
+                  <p className="font-bold text-lg">{formatPrice(totalAmount)}</p>
+                </div>
+                <button
+                  onClick={() => handleCopy(totalAmount.toString(), 'amount')}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                    copied === 'amount' 
+                      ? 'bg-green-500 text-white' 
+                      : 'bg-pink-100 dark:bg-pink-900/30 text-pink-600 hover:bg-pink-200'
+                  }`}
+                >
+                  {copied === 'amount' ? '✓ Хуулсан' : 'Хуулах'}
+                </button>
+              </div>
+
+              {/* Waiting Indicator */}
+              <div className="flex items-center justify-center gap-3 py-4 text-slate-500">
+                <div className="relative">
+                  <div className="w-6 h-6 border-2 border-pink-200 rounded-full"></div>
+                  <div className="absolute inset-0 w-6 h-6 border-2 border-pink-500 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+                <span className="text-sm">Төлбөр хүлээж байна...</span>
+              </div>
+
+              <p className="text-xs text-center text-slate-400">
+                Шилжүүлэг хийсний дараа автоматаар баталгаажна
+              </p>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
 
 export default function CheckoutPage() {
   const { items, getTotalPrice, clearCart } = useCartStore()
   const { user, isAuthenticated } = useAuthStore()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [orderId, setOrderId] = useState('')
+  const [paymentRef, setPaymentRef] = useState('')
+  const [orderTotal, setOrderTotal] = useState(0)
+  
   const [formData, setFormData] = useState({
     name: user?.full_name || '',
     phone: user?.phone || '',
     city: '',
     address: '',
-    notes: '',
-    paymentMethod: 'card'
+    notes: ''
   })
 
-  const total = getTotalPrice()
-  const shipping = total >= 100 ? 0 : 10
-  const grandTotal = total + shipping
+  const subtotal = getTotalPrice()
+  const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST
+  const grandTotal = subtotal + shipping
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
 
     try {
+      // Generate unique payment reference
+      const newPaymentRef = generatePaymentRef()
+      
       const orderData = {
         user_id: user?.id,
         status: 'pending' as const,
+        payment_status: 'Pending' as const,
+        payment_ref: newPaymentRef,
+        payment_method: 'bank_transfer',
         total_amount: grandTotal,
         shipping_name: formData.name,
         shipping_phone: formData.phone,
         shipping_city: formData.city,
         shipping_address: formData.address,
-        notes: formData.notes,
-        payment_method: formData.paymentMethod
+        notes: formData.notes
       }
 
       const orderItems = items.map(item => ({
@@ -53,8 +325,12 @@ export default function CheckoutPage() {
       
       if (error) throw error
 
-      clearCart()
-      router.push(`/order-success?id=${data?.id}`)
+      // Store order info and show payment modal
+      setOrderId(data?.id || '')
+      setPaymentRef(newPaymentRef)
+      setOrderTotal(grandTotal)
+      setShowPaymentModal(true)
+
     } catch (error) {
       console.error('Order error:', error)
       alert('Захиалга үүсгэхэд алдаа гарлаа. Дахин оролдоно уу.')
@@ -63,7 +339,12 @@ export default function CheckoutPage() {
     }
   }
 
-  if (items.length === 0) {
+  const handlePaymentSuccess = useCallback(() => {
+    clearCart()
+    router.push(`/order-success?id=${orderId}`)
+  }, [clearCart, router, orderId])
+
+  if (items.length === 0 && !showPaymentModal) {
     return (
       <main className="min-h-screen pt-[104px] flex items-center justify-center">
         <div className="text-center">
@@ -84,6 +365,16 @@ export default function CheckoutPage() {
 
   return (
     <main className="min-h-screen pt-[104px] bg-slate-50 dark:bg-slate-950">
+      {/* Payment Modal */}
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        orderId={orderId}
+        paymentRef={paymentRef}
+        totalAmount={orderTotal}
+        onPaymentSuccess={handlePaymentSuccess}
+      />
+
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
@@ -181,59 +472,34 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            {/* Payment */}
+            {/* Payment Method - Bank Transfer Only */}
             <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
               <h2 className="font-bold text-lg mb-6">Төлбөрийн хэлбэр</h2>
               
-              <div className="space-y-3">
-                <label className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-800 rounded-xl cursor-pointer border-2 border-transparent has-[:checked]:border-pink-500">
-                  <input
-                    type="radio"
-                    name="payment"
-                    value="card"
-                    checked={formData.paymentMethod === 'card'}
-                    onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
-                    className="w-5 h-5 text-pink-500"
-                  />
+              <div className="bg-pink-50 dark:bg-pink-900/20 border-2 border-pink-200 dark:border-pink-800 rounded-xl p-5">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-pink-500 rounded-xl flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-white">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z" />
+                    </svg>
+                  </div>
                   <div className="flex-1">
-                    <p className="font-medium">Карт</p>
-                    <p className="text-sm text-slate-500">Visa, MasterCard</p>
+                    <p className="font-bold text-lg text-slate-900 dark:text-white">Банкны шилжүүлэг</p>
+                    <p className="text-sm text-slate-500">Хаан банкны дансруу шилжүүлэг хийнэ</p>
                   </div>
-                  <div className="flex gap-2">
-                    <div className="w-10 h-6 bg-blue-600 rounded flex items-center justify-center text-white text-xs font-bold">VISA</div>
-                    <div className="w-10 h-6 bg-orange-500 rounded flex items-center justify-center text-white text-xs font-bold">MC</div>
+                  <div className="w-6 h-6 bg-pink-500 rounded-full flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-4 h-4 text-white">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                    </svg>
                   </div>
-                </label>
+                </div>
                 
-                <label className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-800 rounded-xl cursor-pointer border-2 border-transparent has-[:checked]:border-pink-500">
-                  <input
-                    type="radio"
-                    name="payment"
-                    value="qpay"
-                    checked={formData.paymentMethod === 'qpay'}
-                    onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
-                    className="w-5 h-5 text-pink-500"
-                  />
-                  <div className="flex-1">
-                    <p className="font-medium">QPay</p>
-                    <p className="text-sm text-slate-500">Банкны аппаар төлөх</p>
-                  </div>
-                </label>
-
-                <label className="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-800 rounded-xl cursor-pointer border-2 border-transparent has-[:checked]:border-pink-500">
-                  <input
-                    type="radio"
-                    name="payment"
-                    value="cash"
-                    checked={formData.paymentMethod === 'cash'}
-                    onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
-                    className="w-5 h-5 text-pink-500"
-                  />
-                  <div className="flex-1">
-                    <p className="font-medium">Бэлнээр</p>
-                    <p className="text-sm text-slate-500">Хүргэлтийн үед төлөх</p>
-                  </div>
-                </label>
+                <div className="mt-4 pt-4 border-t border-pink-200 dark:border-pink-800">
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    Захиалга баталгаажуулсны дараа банкны данс болон гүйлгээний утга харагдана. 
+                    Төлбөр хийсний дараа автоматаар баталгаажна.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -253,7 +519,7 @@ export default function CheckoutPage() {
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-sm truncate">{item.product.name}</p>
                       <p className="text-xs text-slate-500">{item.size} • {item.color} • x{item.quantity}</p>
-                      <p className="font-semibold text-pink-500 mt-1">${item.product.price * item.quantity}</p>
+                      <p className="font-semibold text-pink-500 mt-1">{formatPrice(item.product.price * item.quantity)}</p>
                     </div>
                   </div>
                 ))}
@@ -263,26 +529,38 @@ export default function CheckoutPage() {
               <div className="space-y-3 border-t border-slate-100 dark:border-slate-800 pt-4">
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-500">Дүн</span>
-                  <span>${total.toFixed(2)}</span>
+                  <span>{formatPrice(subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-500">Хүргэлт</span>
                   <span className={shipping === 0 ? 'text-green-500' : ''}>
-                    {shipping === 0 ? 'Үнэгүй' : `$${shipping}`}
+                    {shipping === 0 ? 'Үнэгүй' : formatPrice(shipping)}
                   </span>
                 </div>
+                {shipping > 0 && (
+                  <p className="text-xs text-slate-400">
+                    {formatPrice(FREE_SHIPPING_THRESHOLD)}-аас дээш захиалгад үнэгүй хүргэлт
+                  </p>
+                )}
                 <div className="flex justify-between font-bold text-lg border-t border-slate-100 dark:border-slate-800 pt-3">
                   <span>Нийт</span>
-                  <span className="text-pink-500">${grandTotal.toFixed(2)}</span>
+                  <span className="text-pink-500">{formatPrice(grandTotal)}</span>
                 </div>
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full mt-6 py-4 bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold rounded-xl hover:from-pink-600 hover:to-rose-600 transition-all shadow-lg shadow-pink-500/25 disabled:opacity-50"
+                className="w-full mt-6 py-4 bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold rounded-xl hover:from-pink-600 hover:to-rose-600 transition-all shadow-lg shadow-pink-500/25 disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {loading ? 'Түр хүлээнэ үү...' : 'Захиалга баталгаажуулах'}
+                {loading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Түр хүлээнэ үү...
+                  </>
+                ) : (
+                  'Захиалга баталгаажуулах'
+                )}
               </button>
 
               <p className="text-xs text-slate-500 text-center mt-4">

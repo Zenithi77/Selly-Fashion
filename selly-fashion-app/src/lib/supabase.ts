@@ -73,6 +73,9 @@ export interface Brand {
   logo_text: string
   tagline: string
   style: string
+  image_url: string
+  is_featured: boolean
+  featured_order: number
   created_at: string
   updated_at: string
 }
@@ -85,6 +88,8 @@ export interface ClothingType {
   icon: string
   image_url: string
   subcategories: string[]
+  is_featured: boolean
+  featured_order: number
   created_at: string
   updated_at: string
 }
@@ -142,12 +147,16 @@ export interface Order {
   id: string
   user_id: string
   status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
+  payment_status: 'Pending' | 'Paid' | 'Failed' | 'Refunded'
+  payment_method: string
+  payment_ref: string
+  paid_amount: number
+  payment_note: string
   total_amount: number
   shipping_address: string
   shipping_city: string
   shipping_phone: string
   shipping_name: string
-  payment_method: string
   notes: string
   created_at: string
   updated_at: string
@@ -232,6 +241,16 @@ export const api = {
     return { data: data as Brand[], error }
   },
 
+  async getFeaturedBrands(limit: number = 5) {
+    const { data, error } = await supabase
+      .from('brands')
+      .select('*')
+      .eq('is_featured', true)
+      .order('featured_order', { ascending: true })
+      .limit(limit)
+    return { data: data as Brand[], error }
+  },
+
   async getBrandBySlug(slug: string) {
     const { data, error } = await supabase
       .from('brands')
@@ -247,6 +266,16 @@ export const api = {
       .from('clothing_types')
       .select('*')
       .order('name')
+    return { data: data as ClothingType[], error }
+  },
+
+  async getFeaturedCategories(limit: number = 4) {
+    const { data, error } = await supabase
+      .from('clothing_types')
+      .select('*')
+      .eq('is_featured', true)
+      .order('featured_order', { ascending: true })
+      .limit(limit)
     return { data: data as ClothingType[], error }
   },
 

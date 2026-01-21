@@ -15,7 +15,9 @@ export default function AdminCategoriesPage() {
     description: '',
     icon: '',
     image_url: '',
-    subcategories: [] as string[]
+    subcategories: [] as string[],
+    is_featured: false,
+    featured_order: 0
   })
 
   const fetchCategories = async () => {
@@ -52,7 +54,9 @@ export default function AdminCategoriesPage() {
       description: category.description || '',
       icon: category.icon || '',
       image_url: category.image_url || '',
-      subcategories: category.subcategories || []
+      subcategories: category.subcategories || [],
+      is_featured: category.is_featured || false,
+      featured_order: category.featured_order || 0
     })
     setShowModal(true)
   }
@@ -71,7 +75,9 @@ export default function AdminCategoriesPage() {
       description: '',
       icon: '',
       image_url: '',
-      subcategories: []
+      subcategories: [],
+      is_featured: false,
+      featured_order: 0
     })
   }
 
@@ -121,9 +127,26 @@ export default function AdminCategoriesPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {categories.map((category) => (
             <div key={category.id} className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
+              {category.image_url && (
+                <div className="relative w-full h-32 rounded-xl overflow-hidden mb-4 bg-slate-100 dark:bg-slate-800">
+                  <img src={category.image_url} alt={category.name} className="w-full h-full object-cover" />
+                  {category.is_featured && (
+                    <span className="absolute top-2 right-2 px-2 py-1 bg-pink-500 text-white text-xs rounded-full font-medium">
+                      #{category.featured_order}
+                    </span>
+                  )}
+                </div>
+              )}
               <div className="flex items-start justify-between mb-4">
-                <div className="w-12 h-12 bg-pink-100 dark:bg-pink-900/30 rounded-xl flex items-center justify-center">
-                  <span className="text-2xl">{category.icon || '📦'}</span>
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-pink-100 dark:bg-pink-900/30 rounded-xl flex items-center justify-center">
+                    <span className="text-2xl">{category.icon || '📦'}</span>
+                  </div>
+                  {category.is_featured && !category.image_url && (
+                    <span className="px-2 py-0.5 bg-pink-100 dark:bg-pink-900/30 text-pink-600 text-xs rounded-full font-medium">
+                      Featured #{category.featured_order}
+                    </span>
+                  )}
                 </div>
                 <div className="flex gap-2">
                   <button
@@ -243,6 +266,40 @@ export default function AdminCategoriesPage() {
                     className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
                   />
                 </div>
+
+                {formData.image_url && (
+                  <div className="relative w-full h-32 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800">
+                    <img src={formData.image_url} alt="Preview" className="w-full h-full object-cover" />
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
+                  <div>
+                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Нүүр хуудсанд харуулах</label>
+                    <p className="text-xs text-slate-500">Shop by Category хэсэгт гарах эсэх</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, is_featured: !formData.is_featured })}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.is_featured ? 'bg-pink-500' : 'bg-slate-300 dark:bg-slate-600'}`}
+                  >
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.is_featured ? 'translate-x-6' : 'translate-x-1'}`} />
+                  </button>
+                </div>
+
+                {formData.is_featured && (
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Дараалал (1-4)</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="4"
+                      value={formData.featured_order}
+                      onChange={(e) => setFormData({ ...formData, featured_order: parseInt(e.target.value) || 0 })}
+                      className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
+                    />
+                  </div>
+                )}
 
                 <div className="flex gap-3 pt-4">
                   <button
