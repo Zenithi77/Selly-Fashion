@@ -83,7 +83,7 @@ export default function Home() {
                 <div key={idx} className="aspect-[3/4] rounded-2xl bg-white/5 animate-pulse"></div>
               ))
             ) : (
-              brands.slice(0, 5).map((brand, index) => (
+              brands.slice(0, 5).map((brand) => (
                 <Link 
                   key={brand.id} 
                   href={`/brand/${brand.slug}`} 
@@ -94,14 +94,7 @@ export default function Home() {
                     alt={`${brand.name} Collection`}
                     className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
                   />
-                  <div className={`absolute inset-0 bg-gradient-to-t ${index === brands.length - 1 ? 'from-pink-900 via-pink-900/50' : 'from-black via-black/40'} to-transparent opacity-70 group-hover:opacity-90 transition-opacity`}></div>
-                  
-                  {/* Special Badge for last brand */}
-                  {index === brands.length - 1 && (
-                    <div className="absolute top-4 right-4 px-3 py-1 bg-pink-500 text-white text-[10px] tracking-widest rounded-full font-semibold">
-                      LIMITED
-                    </div>
-                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-70 group-hover:opacity-90 transition-opacity"></div>
                   
                   <div className="absolute inset-0 flex flex-col items-center justify-end p-4 lg:p-6 text-white">
                     <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
