@@ -16,14 +16,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="scroll-smooth">
+    <html lang="en" className="scroll-smooth light" style={{ colorScheme: 'light' }}>
       <head>
+        <meta name="color-scheme" content="light only" />
+        <meta name="theme-color" content="#fff1f2" />
         <link
           href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap"
           rel="stylesheet"
         />
       </head>
-      <body className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-sans transition-colors duration-300">
+      <body className="bg-rose-50 text-slate-900 font-sans">
         <Header />
         {children}
         <Footer />

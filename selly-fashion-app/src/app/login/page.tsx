@@ -112,7 +112,7 @@ export default function LoginPage() {
     <main className="min-h-screen pt-[104px] flex items-center justify-center px-4 py-12">
       {/* Background */}
       <div className="fixed inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-pink-100 via-white to-rose-100 dark:from-slate-950 dark:via-pink-950/20 dark:to-slate-900"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-pink-100 via-white to-rose-100"></div>
         <div className="absolute top-20 left-10 w-72 h-72 bg-pink-300/30 rounded-full blur-3xl"></div>
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-rose-300/20 rounded-full blur-3xl"></div>
       </div>
@@ -121,22 +121,22 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-block">
-            <h1 className="text-3xl font-bold tracking-wider text-slate-900 dark:text-white">
+            <h1 className="text-3xl font-bold tracking-wider text-slate-900">
               SELLY <span className="text-pink-500">FASHION</span>
             </h1>
           </Link>
         </div>
 
         {/* Card */}
-        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl shadow-2xl shadow-pink-500/10 p-8 border border-pink-100 dark:border-pink-900/30">
+        <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl shadow-pink-500/10 p-8 border border-pink-100">
           {/* Tabs */}
-          <div className="flex mb-8 bg-slate-100 dark:bg-slate-800 rounded-xl p-1">
+          <div className="flex mb-8 bg-slate-100 rounded-xl p-1">
             <button
               onClick={() => setIsLogin(true)}
               className={`flex-1 py-3 rounded-lg font-semibold transition-all ${
                 isLogin 
-                  ? 'bg-white dark:bg-slate-700 text-pink-500 shadow-md' 
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  ? 'bg-white text-pink-500 shadow-md' 
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               Нэвтрэх
@@ -145,8 +145,8 @@ export default function LoginPage() {
               onClick={() => setIsLogin(false)}
               className={`flex-1 py-3 rounded-lg font-semibold transition-all ${
                 !isLogin 
-                  ? 'bg-white dark:bg-slate-700 text-pink-500 shadow-md' 
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  ? 'bg-white text-pink-500 shadow-md' 
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               Бүртгүүлэх
@@ -155,12 +155,12 @@ export default function LoginPage() {
 
           {/* Error/Success Messages */}
           {error && (
-            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400 text-sm">
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
               {error}
             </div>
           )}
           {success && (
-            <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl text-green-600 dark:text-green-400 text-sm">
+            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl text-green-600 text-sm">
               {success}
             </div>
           )}
@@ -169,7 +169,7 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
             {!isLogin && (
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                <label className="block text-sm font-medium text-slate-700 mb-2">
                   Нэр
                 </label>
                 <div className="relative">
@@ -180,7 +180,7 @@ export default function LoginPage() {
                     type="text"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none transition-all"
+                    className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none transition-all"
                     placeholder="Таны нэр"
                     required={!isLogin}
                   />
@@ -189,7 +189,7 @@ export default function LoginPage() {
             )}
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
                 Имэйл
               </label>
               <div className="relative">
@@ -200,7 +200,7 @@ export default function LoginPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none transition-all"
+                  className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none transition-all"
                   placeholder="your@email.com"
                   required
                 />
@@ -208,7 +208,7 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
                 Нууц үг
               </label>
               <div className="relative">
@@ -219,7 +219,7 @@ export default function LoginPage() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none transition-all"
+                  className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none transition-all"
                   placeholder="••••••••"
                   required
                   minLength={6}
@@ -256,15 +256,15 @@ export default function LoginPage() {
 
           {/* Divider */}
           <div className="flex items-center my-6">
-            <div className="flex-1 border-t border-slate-200 dark:border-slate-700"></div>
+            <div className="flex-1 border-t border-slate-200"></div>
             <span className="px-4 text-sm text-slate-500">эсвэл</span>
-            <div className="flex-1 border-t border-slate-200 dark:border-slate-700"></div>
+            <div className="flex-1 border-t border-slate-200"></div>
           </div>
 
           {/* Social Login */}
           <button
             onClick={handleGoogleLogin}
-            className="w-full py-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-3"
+            className="w-full py-3.5 bg-white border border-slate-200 rounded-xl font-medium text-slate-700 hover:bg-slate-50 transition-colors flex items-center justify-center gap-3"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -277,7 +277,7 @@ export default function LoginPage() {
         </div>
 
         {/* Footer */}
-        <p className="text-center mt-8 text-sm text-slate-600 dark:text-slate-400">
+        <p className="text-center mt-8 text-sm text-slate-600">
           {isLogin ? "Бүртгэлгүй юу? " : "Бүртгэлтэй юу? "}
           <button 
             onClick={() => setIsLogin(!isLogin)}

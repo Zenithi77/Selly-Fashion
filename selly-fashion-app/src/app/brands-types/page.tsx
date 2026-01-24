@@ -12,7 +12,7 @@ export default function BrandsTypesPage() {
           <h1 className="font-display text-4xl lg:text-6xl font-bold mb-6">
             Explore the <span className="text-primary italic">Selly</span> Universe
           </h1>
-          <p className="text-lg text-slate-600 dark:text-slate-400">
+          <p className="text-lg text-slate-600">
             A structured directory of our premium brand partners and curated clothing categories.
           </p>
         </div>
@@ -23,7 +23,7 @@ export default function BrandsTypesPage() {
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-24">
           {/* Featured Brands */}
           <div className="space-y-8">
-            <div className="flex items-center justify-between border-b border-pink-100 dark:border-pink-900/30 pb-4">
+            <div className="flex items-center justify-between border-b border-pink-100 pb-4">
               <h2 className="font-display text-3xl font-bold flex items-center gap-3">
                 <span className="material-symbols-outlined text-primary">verified</span>
                 Featured Brands
@@ -35,7 +35,7 @@ export default function BrandsTypesPage() {
 
             {/* Brand Cards */}
             <div className="grid grid-cols-2 gap-4">
-              <Link href="/brand/lumina" className="group bg-white dark:bg-slate-900/40 p-6 rounded-2xl border border-pink-50 dark:border-pink-900/10 hover:border-primary/30 transition-all flex flex-col items-center justify-center text-center">
+              <Link href="/brand/lumina" className="group bg-white p-6 rounded-2xl border border-pink-50 hover:border-primary/30 transition-all flex flex-col items-center justify-center text-center">
                 <div className="w-16 h-16 mb-4 flex items-center justify-center">
                   <span className="text-2xl font-bold tracking-widest italic opacity-60 group-hover:opacity-100 group-hover:text-primary transition-all">LUMINA</span>
                 </div>
@@ -43,7 +43,7 @@ export default function BrandsTypesPage() {
                 <p className="text-xs text-slate-400 mt-1">High-End Silhouettes</p>
               </Link>
 
-              <Link href="/brand/velvet" className="group bg-white dark:bg-slate-900/40 p-6 rounded-2xl border border-pink-50 dark:border-pink-900/10 hover:border-primary/30 transition-all flex flex-col items-center justify-center text-center">
+              <Link href="/brand/velvet" className="group bg-white p-6 rounded-2xl border border-pink-50 hover:border-primary/30 transition-all flex flex-col items-center justify-center text-center">
                 <div className="w-16 h-16 mb-4 flex items-center justify-center">
                   <span className="text-2xl font-bold tracking-widest opacity-60 group-hover:opacity-100 group-hover:text-primary transition-all">VELVET</span>
                 </div>
@@ -51,7 +51,7 @@ export default function BrandsTypesPage() {
                 <p className="text-xs text-slate-400 mt-1">Organic Textiles</p>
               </Link>
 
-              <Link href="/brand/aura" className="group bg-white dark:bg-slate-900/40 p-6 rounded-2xl border border-pink-50 dark:border-pink-900/10 hover:border-primary/30 transition-all flex flex-col items-center justify-center text-center">
+              <Link href="/brand/aura" className="group bg-white p-6 rounded-2xl border border-pink-50 hover:border-primary/30 transition-all flex flex-col items-center justify-center text-center">
                 <div className="w-16 h-16 mb-4 flex items-center justify-center">
                   <span className="text-2xl font-bold tracking-widest underline decoration-primary opacity-60 group-hover:opacity-100 group-hover:text-primary transition-all">AURA</span>
                 </div>
@@ -59,7 +59,7 @@ export default function BrandsTypesPage() {
                 <p className="text-xs text-slate-400 mt-1">Modern Minimalism</p>
               </Link>
 
-              <Link href="/brand/nova" className="group bg-white dark:bg-slate-900/40 p-6 rounded-2xl border border-pink-50 dark:border-pink-900/10 hover:border-primary/30 transition-all flex flex-col items-center justify-center text-center">
+              <Link href="/brand/nova" className="group bg-white p-6 rounded-2xl border border-pink-50 hover:border-primary/30 transition-all flex flex-col items-center justify-center text-center">
                 <div className="w-16 h-16 mb-4 flex items-center justify-center">
                   <span className="text-2xl font-bold tracking-widest italic text-primary">NOVA</span>
                 </div>
@@ -69,7 +69,7 @@ export default function BrandsTypesPage() {
             </div>
 
             {/* A-Z Partners */}
-            <div className="bg-pink-50/50 dark:bg-pink-900/10 p-6 rounded-2xl">
+            <div className="bg-pink-50/50 p-6 rounded-2xl">
               <h4 className="font-bold text-sm uppercase tracking-wider text-slate-500 mb-4">A-Z Partners</h4>
               <div className="grid grid-cols-2 gap-y-3">
                 <Link href="#" className="text-sm hover:text-primary flex items-center gap-2">
@@ -96,7 +96,7 @@ export default function BrandsTypesPage() {
 
           {/* Clothing Types */}
           <div className="space-y-8">
-            <div className="flex items-center justify-between border-b border-pink-100 dark:border-pink-900/30 pb-4">
+            <div className="flex items-center justify-between border-b border-pink-100 pb-4">
               <h2 className="font-display text-3xl font-bold flex items-center gap-3">
                 <span className="material-symbols-outlined text-primary">apparel</span>
                 Clothing Types
@@ -187,7 +187,7 @@ export default function BrandsTypesPage() {
       </section>
 
       {/* Shuffle Section */}
-      <section className="py-20 bg-white dark:bg-slate-900/30 overflow-hidden relative">
+      <section className="py-20 bg-white overflow-hidden relative">
         <div className="absolute top-0 right-0 p-20 opacity-10 pointer-events-none">
           <img
             src="https://lh3.googleusercontent.com/aida-public/AB6AXuCUhqIVUxrspQkW8ScdnzwVV9EMpgEPAgo2L7bu23SwwNg8qD-CnNhEC3itMmcueMcm_dv7Mmptg_RwKBkZEUBgYMNxsmgZc75T19_HCifcEiO-CWOvOc2l15GnxUk7JuAnzoZCR2e8MExYX2-kYP0F1OxzhpnM_iDJTSJp65l8-0BCiUMYD4kJhTHjzs4v0lhfXtNVSDxSzj1-J8FheN1R9iiAbfgRGr_PKRGONBFel1GAkTfpgPOVv5XrijdDLyuqKgMVG0wLVaqD"
@@ -197,7 +197,7 @@ export default function BrandsTypesPage() {
         </div>
         <div className="max-w-7xl mx-auto px-6 flex flex-col items-center text-center">
           <h2 className="font-display text-4xl font-bold mb-6">Can&apos;t decide where to start?</h2>
-          <p className="text-slate-500 dark:text-slate-400 mb-10 max-w-2xl">
+          <p className="text-slate-500 mb-10 max-w-2xl">
             Use our signature brand shuffle to get a curated selection of styles from our diverse partner network.
           </p>
           <button className="flex items-center gap-3 bg-primary hover:bg-pink-600 text-white px-10 py-5 rounded-full font-bold shadow-xl shadow-pink-500/20 transition-all transform hover:-translate-y-1">

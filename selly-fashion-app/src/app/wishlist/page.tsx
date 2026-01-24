@@ -41,30 +41,30 @@ export default function WishlistPage() {
     <main className="min-h-screen pt-[104px]">
       {/* Background */}
       <div className="fixed inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-pink-50 via-white to-rose-50 dark:from-slate-950 dark:via-pink-950/10 dark:to-slate-900"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-pink-50 via-white to-rose-50"></div>
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-3xl font-bold text-gray-900">
             Хадгалсан бараа
           </h1>
           {wishlist.length > 0 && (
-            <span className="px-4 py-2 bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 rounded-full text-sm font-medium">
+            <span className="px-4 py-2 bg-pink-100 text-pink-600 rounded-full text-sm font-medium">
               {wishlist.length} бараа
             </span>
           )}
         </div>
 
         {wishlist.length === 0 ? (
-          <div className="text-center py-20 bg-white dark:bg-slate-800 rounded-3xl shadow-sm">
-            <div className="w-24 h-24 bg-pink-50 dark:bg-pink-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
+          <div className="text-center py-20 bg-white rounded-3xl shadow-sm">
+            <div className="w-24 h-24 bg-pink-50 rounded-full flex items-center justify-center mx-auto mb-6">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="w-12 h-12 text-pink-300">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">Хадгалсан бараа байхгүй</h2>
-            <p className="text-slate-500 dark:text-slate-400 mb-8 max-w-md mx-auto">
+            <h2 className="text-2xl font-bold text-slate-900 mb-3">Хадгалсан бараа байхгүй</h2>
+            <p className="text-slate-500 mb-8 max-w-md mx-auto">
               Таалагдсан бараагаа зүрхэн дээр дарж хадгалаарай
             </p>
             <Link href="/shop" className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-full font-semibold hover:from-pink-600 hover:to-rose-600 transition-all shadow-lg shadow-pink-500/25">
@@ -74,7 +74,7 @@ export default function WishlistPage() {
         ) : (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
             {wishlist.map((product) => (
-              <div key={product.id} className="group relative bg-white dark:bg-slate-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow">
+              <div key={product.id} className="group relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow">
                 <Link href={`/product/${product.slug}`}>
                   <div className="relative aspect-[3/4] overflow-hidden">
                     <img
@@ -94,7 +94,7 @@ export default function WishlistPage() {
                 <div className="absolute top-3 right-3 flex flex-col gap-2">
                   <button 
                     onClick={() => removeItem(product.id)}
-                    className="w-10 h-10 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center shadow-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                    className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-50 transition-colors"
                     title="Хасах"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-red-500">
@@ -120,12 +120,12 @@ export default function WishlistPage() {
                     </p>
                   )}
                   <Link href={`/product/${product.slug}`}>
-                    <h3 className="font-bold text-gray-900 dark:text-white mb-2 group-hover:text-pink-500 transition-colors line-clamp-2">
+                    <h3 className="font-bold text-gray-900 mb-2 group-hover:text-pink-500 transition-colors line-clamp-2">
                       {product.name}
                     </h3>
                   </Link>
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-lg text-gray-900 dark:text-white">
+                    <span className="font-bold text-lg text-gray-900">
                       {product.price.toLocaleString()}₮
                     </span>
                     {product.original_price && product.original_price > product.price && (

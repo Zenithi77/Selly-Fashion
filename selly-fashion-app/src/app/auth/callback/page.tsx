@@ -57,7 +57,7 @@ export default function AuthCallbackPage() {
     <main className="min-h-screen flex items-center justify-center">
       <div className="text-center">
         <div className="w-16 h-16 border-4 border-pink-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-slate-600 dark:text-slate-400">Нэвтэрч байна...</p>
+        <p className="text-slate-600">Нэвтэрч байна...</p>
       </div>
     </main>
   )

@@ -62,27 +62,27 @@ export default function ShopPage() {
   return (
     <main className="pt-20">
       {/* Header */}
-      <header className="py-12 px-6 bg-gradient-to-r from-pink-50 to-transparent dark:from-pink-950/10 dark:to-transparent">
+      <header className="py-12 px-6 bg-gradient-to-r from-pink-50 to-transparent">
         <div className="max-w-7xl mx-auto">
           <h1 className="font-display text-4xl lg:text-5xl font-bold mb-4">Shop All</h1>
-          <p className="text-slate-600 dark:text-slate-400">Discover our curated collection of patriotic fashion</p>
+          <p className="text-slate-600">Discover our curated collection of patriotic fashion</p>
         </div>
       </header>
 
       {/* Filters & Products */}
       <section className="max-w-7xl mx-auto px-6 py-12">
         {/* Filter Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-10 pb-6 border-b border-pink-100 dark:border-pink-900/30">
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-10 pb-6 border-b border-pink-100">
           <div className="flex flex-wrap gap-3">
             <button className="px-4 py-2 rounded-full bg-primary text-white font-medium text-sm">All</button>
-            <button className="px-4 py-2 rounded-full bg-white dark:bg-slate-800 border border-pink-100 dark:border-pink-900/30 hover:border-primary transition-colors font-medium text-sm">Dresses</button>
-            <button className="px-4 py-2 rounded-full bg-white dark:bg-slate-800 border border-pink-100 dark:border-pink-900/30 hover:border-primary transition-colors font-medium text-sm">Tops</button>
-            <button className="px-4 py-2 rounded-full bg-white dark:bg-slate-800 border border-pink-100 dark:border-pink-900/30 hover:border-primary transition-colors font-medium text-sm">Outerwear</button>
-            <button className="px-4 py-2 rounded-full bg-white dark:bg-slate-800 border border-pink-100 dark:border-pink-900/30 hover:border-primary transition-colors font-medium text-sm">Accessories</button>
+            <button className="px-4 py-2 rounded-full bg-white border border-pink-100 hover:border-primary transition-colors font-medium text-sm">Dresses</button>
+            <button className="px-4 py-2 rounded-full bg-white border border-pink-100 hover:border-primary transition-colors font-medium text-sm">Tops</button>
+            <button className="px-4 py-2 rounded-full bg-white border border-pink-100 hover:border-primary transition-colors font-medium text-sm">Outerwear</button>
+            <button className="px-4 py-2 rounded-full bg-white border border-pink-100 hover:border-primary transition-colors font-medium text-sm">Accessories</button>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-sm text-slate-500">Sort by:</span>
-            <select className="bg-white dark:bg-slate-800 border border-pink-100 dark:border-pink-900/30 rounded-lg px-3 py-2 text-sm">
+            <select className="bg-white border border-pink-100 rounded-lg px-3 py-2 text-sm">
               <option>Featured</option>
               <option>Price: Low to High</option>
               <option>Price: High to Low</option>
@@ -106,14 +106,14 @@ export default function ShopPage() {
                     NEW
                   </span>
                 )}
-                <button className="absolute bottom-4 right-4 w-10 h-10 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
+                <button className="absolute bottom-4 right-4 w-10 h-10 bg-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
                   <span className="material-symbols-outlined text-primary">favorite</span>
                 </button>
               </div>
               <div>
                 <p className="text-xs text-primary font-semibold mb-1">{product.brand}</p>
                 <h3 className="font-bold mb-2 group-hover:text-primary transition-colors">{product.name}</h3>
-                <p className="text-slate-600 dark:text-slate-400">${product.price}</p>
+                <p className="text-slate-600">${product.price}</p>
               </div>
             </Link>
           ))}

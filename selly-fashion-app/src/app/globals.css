@@ -26,11 +26,6 @@ body {
   color: #0f172a;
 }
 
-.dark body {
-  background-color: #1a1114;
-  color: #f1f5f9;
-}
-
 .font-display {
   font-family: "Playfair Display", serif;
 }
@@ -41,10 +36,6 @@ body {
   background-color: rgba(255, 255, 255, 0.95);
 }
 
-.dark .glass-effect {
-  background-color: rgba(26, 17, 20, 0.95);
-}
-
 /* Navigation text color fix for light mode */
 .nav-link {
   color: #1e293b !important;
@@ -52,14 +43,6 @@ body {
 
 .nav-link:hover {
   color: #ec4899 !important;
-}
-
-.dark .nav-link {
-  color: #ffffff !important;
-}
-
-.dark .nav-link:hover {
-  color: #f472b6 !important;
 }
 
 /* Custom Scrollbar */
@@ -76,25 +59,13 @@ body {
   border-radius: 10px;
 }
 
-.dark .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #be185d;
-}
-
 /* Primary Color Utilities - Pink Theme */
 .text-primary {
   color: #ec4899;
 }
 
-.dark .text-primary {
-  color: #f472b6;
-}
-
 .bg-primary {
   background-color: #ec4899;
-}
-
-.dark .bg-primary {
-  background-color: #db2777;
 }
 
 .border-primary {
@@ -103,10 +74,6 @@ body {
 
 .hover\:bg-primary:hover {
   background-color: #ec4899;
-}
-
-.dark .hover\:bg-primary:hover {
-  background-color: #db2777;
 }
 
 .hover\:text-primary:hover {

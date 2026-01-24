@@ -34,21 +34,21 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <main className="min-h-screen pt-[104px] bg-slate-50 dark:bg-slate-950">
+    <main className="min-h-screen pt-[104px] bg-slate-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div className="flex items-center gap-4">
             <Link 
               href="/admin"
-              className="w-10 h-10 bg-white dark:bg-slate-800 rounded-lg flex items-center justify-center shadow-sm hover:shadow-md transition-shadow"
+              className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-sm hover:shadow-md transition-shadow"
             >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
               </svg>
             </Link>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Хэрэглэгчид</h1>
+              <h1 className="text-2xl font-bold text-slate-900">Хэрэглэгчид</h1>
               <p className="text-sm text-slate-500">{users.length} хэрэглэгч</p>
             </div>
           </div>
@@ -63,27 +63,27 @@ export default function AdminUsersPage() {
               placeholder="Хайх..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none w-64"
+              className="pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none w-64"
             />
           </div>
         </div>
 
         {/* Users Table */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-slate-50 dark:bg-slate-800/50">
+              <thead className="bg-slate-50">
                 <tr>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-slate-600 dark:text-slate-300">Хэрэглэгч</th>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-slate-600 dark:text-slate-300">Утас</th>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-slate-600 dark:text-slate-300">Хаяг</th>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-slate-600 dark:text-slate-300">Статус</th>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-slate-600 dark:text-slate-300">Бүртгүүлсэн</th>
+                  <th className="text-left px-6 py-4 text-sm font-semibold text-slate-600">Хэрэглэгч</th>
+                  <th className="text-left px-6 py-4 text-sm font-semibold text-slate-600">Утас</th>
+                  <th className="text-left px-6 py-4 text-sm font-semibold text-slate-600">Хаяг</th>
+                  <th className="text-left px-6 py-4 text-sm font-semibold text-slate-600">Статус</th>
+                  <th className="text-left px-6 py-4 text-sm font-semibold text-slate-600">Бүртгүүлсэн</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              <tbody className="divide-y divide-slate-100">
                 {filteredUsers.map((user) => (
-                  <tr key={user.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                  <tr key={user.id} className="hover:bg-slate-50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-pink-400 to-rose-500 flex items-center justify-center text-white font-bold flex-shrink-0">
@@ -94,27 +94,27 @@ export default function AdminUsersPage() {
                           )}
                         </div>
                         <div>
-                          <p className="font-medium text-slate-900 dark:text-white">{user.full_name || 'Нэргүй'}</p>
+                          <p className="font-medium text-slate-900">{user.full_name || 'Нэргүй'}</p>
                           <p className="text-sm text-slate-500">{user.id.slice(0, 8)}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-slate-600 dark:text-slate-400">
+                    <td className="px-6 py-4 text-slate-600">
                       {user.phone || '-'}
                     </td>
-                    <td className="px-6 py-4 text-slate-600 dark:text-slate-400 max-w-[200px] truncate">
+                    <td className="px-6 py-4 text-slate-600 max-w-[200px] truncate">
                       {user.address || '-'}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex gap-2">
                         {user.is_admin && (
-                          <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 text-xs rounded-full">Админ</span>
+                          <span className="px-2 py-1 bg-purple-100 text-purple-600 text-xs rounded-full">Админ</span>
                         )}
                         {user.is_vip && (
-                          <span className="px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 text-xs rounded-full">VIP</span>
+                          <span className="px-2 py-1 bg-yellow-100 text-yellow-600 text-xs rounded-full">VIP</span>
                         )}
                         {!user.is_admin && !user.is_vip && (
-                          <span className="px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs rounded-full">Хэрэглэгч</span>
+                          <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded-full">Хэрэглэгч</span>
                         )}
                       </div>
                     </td>

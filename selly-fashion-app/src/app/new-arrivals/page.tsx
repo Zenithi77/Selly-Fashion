@@ -40,7 +40,7 @@ export default function NewArrivalsPage() {
   return (
     <main className="pt-20">
       {/* Hero */}
-      <section className="py-16 px-6 bg-gradient-to-r from-pink-100 to-transparent dark:from-pink-950/20 dark:to-transparent">
+      <section className="py-16 px-6 bg-gradient-to-r from-pink-100 to-transparent">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center gap-3 mb-4">
             <span className="material-symbols-outlined text-primary animate-pulse">new_releases</span>
@@ -49,7 +49,7 @@ export default function NewArrivalsPage() {
           <h1 className="font-display text-4xl lg:text-6xl font-bold mb-6">
             New <span className="text-primary italic">Arrivals</span>
           </h1>
-          <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl">
+          <p className="text-lg text-slate-600 max-w-2xl">
             Be the first to discover our latest additions. Fresh styles from our partner brands, updated weekly.
           </p>
         </div>
@@ -70,14 +70,14 @@ export default function NewArrivalsPage() {
                   <span className="material-symbols-outlined text-sm">schedule</span>
                   {product.addedDate}
                 </span>
-                <button className="absolute bottom-4 right-4 w-10 h-10 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
+                <button className="absolute bottom-4 right-4 w-10 h-10 bg-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
                   <span className="material-symbols-outlined text-primary">add_shopping_cart</span>
                 </button>
               </div>
               <div>
                 <p className="text-xs text-primary font-semibold mb-1">{product.brand}</p>
                 <h3 className="font-bold mb-2 group-hover:text-primary transition-colors">{product.name}</h3>
-                <p className="text-slate-600 dark:text-slate-400">${product.price}</p>
+                <p className="text-slate-600">${product.price}</p>
               </div>
             </Link>
           ))}
@@ -85,18 +85,18 @@ export default function NewArrivalsPage() {
       </section>
 
       {/* Newsletter CTA */}
-      <section className="py-20 px-6 bg-white dark:bg-slate-900/30">
+      <section className="py-20 px-6 bg-white">
         <div className="max-w-2xl mx-auto text-center">
           <span className="material-symbols-outlined text-primary text-4xl mb-4">notifications_active</span>
           <h2 className="font-display text-3xl font-bold mb-4">Never Miss a Drop</h2>
-          <p className="text-slate-600 dark:text-slate-400 mb-8">
+          <p className="text-slate-600 mb-8">
             Subscribe to get notified when new items arrive from your favorite brands.
           </p>
           <form className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
             <input
               type="email"
               placeholder="Your email"
-              className="flex-1 bg-white dark:bg-slate-800 border border-pink-100 dark:border-pink-900/30 rounded-full py-3 px-6"
+              className="flex-1 bg-white border border-pink-100 rounded-full py-3 px-6"
             />
             <button className="bg-primary hover:bg-pink-600 text-white px-8 py-3 rounded-full font-bold transition-colors">
               Notify Me

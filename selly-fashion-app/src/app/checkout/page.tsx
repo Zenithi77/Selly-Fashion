@@ -123,16 +123,16 @@ function PaymentModal({ isOpen, onClose, orderId, paymentRef, totalAmount, onPay
       />
       
       {/* Modal */}
-      <div className="relative bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
+      <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
         {paymentStatus === 'Paid' ? (
           // Success State
           <div className="p-8 text-center">
-            <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-10 h-10 text-green-500">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">
               Төлбөр амжилттай!
             </h2>
             <p className="text-slate-500 mb-6">
@@ -167,13 +167,13 @@ function PaymentModal({ isOpen, onClose, orderId, paymentRef, totalAmount, onPay
             {/* Bank Details */}
             <div className="p-6 space-y-4">
               {/* Bank Name */}
-              <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4">
+              <div className="bg-slate-50 rounded-xl p-4">
                 <p className="text-xs text-slate-500 mb-1">Банк</p>
                 <p className="font-semibold text-lg">{bank.bankLogo} {bank.bankName}</p>
               </div>
 
               {/* Account Number */}
-              <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 flex items-center justify-between">
+              <div className="bg-slate-50 rounded-xl p-4 flex items-center justify-between">
                 <div>
                   <p className="text-xs text-slate-500 mb-1">Дансны дугаар</p>
                   <p className="font-mono font-bold text-lg tracking-wider">{bank.accountNumber}</p>
@@ -183,7 +183,7 @@ function PaymentModal({ isOpen, onClose, orderId, paymentRef, totalAmount, onPay
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                     copied === 'account' 
                       ? 'bg-green-500 text-white' 
-                      : 'bg-pink-100 dark:bg-pink-900/30 text-pink-600 hover:bg-pink-200'
+                      : 'bg-pink-100 text-pink-600 hover:bg-pink-200'
                   }`}
                 >
                   {copied === 'account' ? '✓ Хуулсан' : 'Хуулах'}
@@ -191,7 +191,7 @@ function PaymentModal({ isOpen, onClose, orderId, paymentRef, totalAmount, onPay
               </div>
 
               {/* Account Name */}
-              <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 flex items-center justify-between">
+              <div className="bg-slate-50 rounded-xl p-4 flex items-center justify-between">
                 <div>
                   <p className="text-xs text-slate-500 mb-1">Дансны нэр</p>
                   <p className="font-semibold">{bank.accountName}</p>
@@ -201,7 +201,7 @@ function PaymentModal({ isOpen, onClose, orderId, paymentRef, totalAmount, onPay
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                     copied === 'name' 
                       ? 'bg-green-500 text-white' 
-                      : 'bg-pink-100 dark:bg-pink-900/30 text-pink-600 hover:bg-pink-200'
+                      : 'bg-pink-100 text-pink-600 hover:bg-pink-200'
                   }`}
                 >
                   {copied === 'name' ? '✓ Хуулсан' : 'Хуулах'}
@@ -209,7 +209,7 @@ function PaymentModal({ isOpen, onClose, orderId, paymentRef, totalAmount, onPay
               </div>
 
               {/* Payment Reference - IMPORTANT */}
-              <div className="bg-pink-50 dark:bg-pink-900/20 border-2 border-pink-200 dark:border-pink-800 rounded-xl p-4">
+              <div className="bg-pink-50 border-2 border-pink-200 rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-pink-500">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
@@ -232,7 +232,7 @@ function PaymentModal({ isOpen, onClose, orderId, paymentRef, totalAmount, onPay
               </div>
 
               {/* Amount */}
-              <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 flex items-center justify-between">
+              <div className="bg-slate-50 rounded-xl p-4 flex items-center justify-between">
                 <div>
                   <p className="text-xs text-slate-500 mb-1">Мөнгөн дүн</p>
                   <p className="font-bold text-lg">{formatPrice(totalAmount)}</p>
@@ -242,7 +242,7 @@ function PaymentModal({ isOpen, onClose, orderId, paymentRef, totalAmount, onPay
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                     copied === 'amount' 
                       ? 'bg-green-500 text-white' 
-                      : 'bg-pink-100 dark:bg-pink-900/30 text-pink-600 hover:bg-pink-200'
+                      : 'bg-pink-100 text-pink-600 hover:bg-pink-200'
                   }`}
                 >
                   {copied === 'amount' ? '✓ Хуулсан' : 'Хуулах'}
@@ -348,12 +348,12 @@ export default function CheckoutPage() {
     return (
       <main className="min-h-screen pt-[104px] flex items-center justify-center">
         <div className="text-center">
-          <div className="w-20 h-20 bg-pink-50 dark:bg-pink-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
+          <div className="w-20 h-20 bg-pink-50 rounded-full flex items-center justify-center mx-auto mb-6">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="w-10 h-10 text-pink-300">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Сагс хоосон байна</h1>
+          <h1 className="text-2xl font-bold text-slate-900 mb-2">Сагс хоосон байна</h1>
           <p className="text-slate-500 mb-6">Захиалга хийхийн тулд эхлээд бараа нэмнэ үү</p>
           <Link href="/shop" className="px-6 py-3 bg-pink-500 text-white rounded-full font-medium hover:bg-pink-600 transition-colors">
             Дэлгүүр үзэх
@@ -364,7 +364,7 @@ export default function CheckoutPage() {
   }
 
   return (
-    <main className="min-h-screen pt-[104px] bg-slate-50 dark:bg-slate-950">
+    <main className="min-h-screen pt-[104px] bg-slate-50">
       {/* Payment Modal */}
       <PaymentModal
         isOpen={showPaymentModal}
@@ -380,25 +380,25 @@ export default function CheckoutPage() {
         <div className="flex items-center gap-4 mb-8">
           <Link 
             href="/shop"
-            className="w-10 h-10 bg-white dark:bg-slate-800 rounded-lg flex items-center justify-center shadow-sm hover:shadow-md transition-shadow"
+            className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-sm hover:shadow-md transition-shadow"
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
             </svg>
           </Link>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Төлбөр төлөх</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Төлбөр төлөх</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="grid lg:grid-cols-3 gap-8">
           {/* Form */}
           <div className="lg:col-span-2 space-y-6">
             {/* Contact Info */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
+            <div className="bg-white rounded-2xl p-6 border border-slate-100">
               <h2 className="font-bold text-lg mb-6">Холбоо барих мэдээлэл</h2>
               
               {!isAuthenticated && (
-                <div className="bg-pink-50 dark:bg-pink-900/20 rounded-xl p-4 mb-6">
-                  <p className="text-sm text-pink-600 dark:text-pink-400">
+                <div className="bg-pink-50 rounded-xl p-4 mb-6">
+                  <p className="text-sm text-pink-600">
                     <Link href="/login" className="font-semibold underline">Нэвтэрч</Link> ороход таны мэдээлэл автоматаар бөглөгдөнө
                   </p>
                 </div>
@@ -406,22 +406,22 @@ export default function CheckoutPage() {
 
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Нэр</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Нэр</label>
                   <input
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Утасны дугаар</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Утасны дугаар</label>
                   <input
                     type="tel"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
                     required
                   />
                 </div>
@@ -429,16 +429,16 @@ export default function CheckoutPage() {
             </div>
 
             {/* Shipping */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
+            <div className="bg-white rounded-2xl p-6 border border-slate-100">
               <h2 className="font-bold text-lg mb-6">Хүргэлтийн хаяг</h2>
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Хот/Аймаг</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Хот/Аймаг</label>
                   <select
                     value={formData.city}
                     onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
                     required
                   >
                     <option value="">Сонгох...</option>
@@ -449,34 +449,34 @@ export default function CheckoutPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Дэлгэрэнгүй хаяг</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Дэлгэрэнгүй хаяг</label>
                   <textarea
                     value={formData.address}
                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                     rows={3}
                     placeholder="Дүүрэг, хороо, байр, тоот..."
-                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none resize-none"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none resize-none"
                     required
                   ></textarea>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Нэмэлт тайлбар</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Нэмэлт тайлбар</label>
                   <input
                     type="text"
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     placeholder="Хүргэлтийн талаар нэмэлт мэдээлэл..."
-                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
                   />
                 </div>
               </div>
             </div>
 
             {/* Payment Method - Bank Transfer Only */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
+            <div className="bg-white rounded-2xl p-6 border border-slate-100">
               <h2 className="font-bold text-lg mb-6">Төлбөрийн хэлбэр</h2>
               
-              <div className="bg-pink-50 dark:bg-pink-900/20 border-2 border-pink-200 dark:border-pink-800 rounded-xl p-5">
+              <div className="bg-pink-50 border-2 border-pink-200 rounded-xl p-5">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-pink-500 rounded-xl flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-white">
@@ -484,7 +484,7 @@ export default function CheckoutPage() {
                     </svg>
                   </div>
                   <div className="flex-1">
-                    <p className="font-bold text-lg text-slate-900 dark:text-white">Банкны шилжүүлэг</p>
+                    <p className="font-bold text-lg text-slate-900">Банкны шилжүүлэг</p>
                     <p className="text-sm text-slate-500">Хаан банкны дансруу шилжүүлэг хийнэ</p>
                   </div>
                   <div className="w-6 h-6 bg-pink-500 rounded-full flex items-center justify-center">
@@ -494,8 +494,8 @@ export default function CheckoutPage() {
                   </div>
                 </div>
                 
-                <div className="mt-4 pt-4 border-t border-pink-200 dark:border-pink-800">
-                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                <div className="mt-4 pt-4 border-t border-pink-200">
+                  <p className="text-sm text-slate-600">
                     Захиалга баталгаажуулсны дараа банкны данс болон гүйлгээний утга харагдана. 
                     Төлбөр хийсний дараа автоматаар баталгаажна.
                   </p>
@@ -506,14 +506,14 @@ export default function CheckoutPage() {
 
           {/* Order Summary */}
           <div className="lg:col-span-1">
-            <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 sticky top-28">
+            <div className="bg-white rounded-2xl p-6 border border-slate-100 sticky top-28">
               <h2 className="font-bold text-lg mb-6">Захиалгын дүн</h2>
               
               {/* Items */}
               <div className="space-y-4 mb-6">
                 {items.map((item) => (
                   <div key={item.id} className="flex gap-3">
-                    <div className="w-16 h-20 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 flex-shrink-0">
+                    <div className="w-16 h-20 rounded-lg overflow-hidden bg-slate-100 flex-shrink-0">
                       <img src={item.product.image_url || ''} alt="" className="w-full h-full object-cover" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -526,7 +526,7 @@ export default function CheckoutPage() {
               </div>
 
               {/* Totals */}
-              <div className="space-y-3 border-t border-slate-100 dark:border-slate-800 pt-4">
+              <div className="space-y-3 border-t border-slate-100 pt-4">
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-500">Дүн</span>
                   <span>{formatPrice(subtotal)}</span>
@@ -542,7 +542,7 @@ export default function CheckoutPage() {
                     {formatPrice(FREE_SHIPPING_THRESHOLD)}-аас дээш захиалгад үнэгүй хүргэлт
                   </p>
                 )}
-                <div className="flex justify-between font-bold text-lg border-t border-slate-100 dark:border-slate-800 pt-3">
+                <div className="flex justify-between font-bold text-lg border-t border-slate-100 pt-3">
                   <span>Нийт</span>
                   <span className="text-pink-500">{formatPrice(grandTotal)}</span>
                 </div>

@@ -133,7 +133,22 @@ export default function AdminHeroPage() {
   const handleSaveBrand = async (e: React.FormEvent) => {
     e.preventDefault()
     if (editingItem) {
-      await api.updateBrand(editingItem.id, brandForm)
+      const updateData = {
+        name: brandForm.name,
+        slug: brandForm.slug,
+        logo_text: brandForm.logo_text,
+        tagline: brandForm.tagline,
+        style: brandForm.style,
+        image_url: brandForm.image_url,
+        is_featured: Boolean(brandForm.is_featured),
+        featured_order: Number(brandForm.featured_order) || 0
+      }
+      const result = await api.updateBrand(editingItem.id, updateData)
+      if (result.error) {
+        console.error('Update error:', result.error)
+        alert('Хадгалахад алдаа гарлаа: ' + result.error.message)
+        return
+      }
     }
     setShowModal(false)
     setEditingItem(null)
@@ -143,7 +158,20 @@ export default function AdminHeroPage() {
   const handleSaveCategory = async (e: React.FormEvent) => {
     e.preventDefault()
     if (editingItem) {
-      await api.updateClothingType(editingItem.id, categoryForm)
+      const updateData = {
+        name: categoryForm.name,
+        slug: categoryForm.slug,
+        icon: categoryForm.icon,
+        image_url: categoryForm.image_url,
+        is_featured: Boolean(categoryForm.is_featured),
+        featured_order: Number(categoryForm.featured_order) || 0
+      }
+      const result = await api.updateClothingType(editingItem.id, updateData)
+      if (result.error) {
+        console.error('Update error:', result.error)
+        alert('Хадгалахад алдаа гарлаа: ' + result.error.message)
+        return
+      }
     }
     setShowModal(false)
     setEditingItem(null)
@@ -163,26 +191,26 @@ export default function AdminHeroPage() {
   }
 
   return (
-    <main className="min-h-screen pt-[104px] bg-slate-50 dark:bg-slate-950">
+    <main className="min-h-screen pt-[104px] bg-slate-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
           <Link 
             href="/admin"
-            className="w-10 h-10 bg-white dark:bg-slate-800 rounded-lg flex items-center justify-center shadow-sm hover:shadow-md transition-shadow"
+            className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-sm hover:shadow-md transition-shadow"
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
             </svg>
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Нүүр хуудас удирдах</h1>
+            <h1 className="text-2xl font-bold text-slate-900">Нүүр хуудас удирдах</h1>
             <p className="text-sm text-slate-500">Hero section болон Shop by Category</p>
           </div>
         </div>
 
         {/* Info Box */}
-        <div className="bg-gradient-to-r from-pink-50 to-rose-50 dark:from-pink-900/20 dark:to-rose-900/20 rounded-2xl p-6 mb-8 border border-pink-100 dark:border-pink-900/30">
+        <div className="bg-gradient-to-r from-pink-50 to-rose-50 rounded-2xl p-6 mb-8 border border-pink-100">
           <div className="flex items-start gap-4">
             <div className="w-12 h-12 bg-pink-500 rounded-xl flex items-center justify-center flex-shrink-0">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-white">
@@ -190,11 +218,11 @@ export default function AdminHeroPage() {
               </svg>
             </div>
             <div>
-              <h3 className="font-bold text-slate-900 dark:text-white mb-1">Зургийн хэмжээ</h3>
-              <p className="text-sm text-slate-600 dark:text-slate-400">
+              <h3 className="font-bold text-slate-900 mb-1">Зургийн хэмжээ</h3>
+              <p className="text-sm text-slate-600">
                 Hero section-д гарах зургийн хэмжээ: <span className="font-bold text-pink-500">600 x 800 px</span> (3:4 харьцаа)
               </p>
-              <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+              <p className="text-sm text-slate-600 mt-1">
                 Shop by Category зургийн хэмжээ: <span className="font-bold text-pink-500">400 x 500 px</span>
               </p>
             </div>
@@ -208,7 +236,7 @@ export default function AdminHeroPage() {
             className={`px-6 py-3 rounded-xl font-medium transition-all ${
               activeTab === 'brands'
                 ? 'bg-pink-500 text-white shadow-lg shadow-pink-500/25'
-                : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                : 'bg-white text-slate-700 hover:bg-slate-50'
             }`}
           >
             Hero Brands ({featuredBrands.length}/5)
@@ -218,7 +246,7 @@ export default function AdminHeroPage() {
             className={`px-6 py-3 rounded-xl font-medium transition-all ${
               activeTab === 'categories'
                 ? 'bg-pink-500 text-white shadow-lg shadow-pink-500/25'
-                : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                : 'bg-white text-slate-700 hover:bg-slate-50'
             }`}
           >
             Shop by Category ({featuredCategories.length})
@@ -233,8 +261,8 @@ export default function AdminHeroPage() {
             </p>
             
             {/* Featured Brands Preview */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 mb-6">
-              <h3 className="font-bold mb-4 text-slate-900 dark:text-white">Hero Section Preview</h3>
+            <div className="bg-white rounded-2xl p-6 border border-slate-100 mb-6">
+              <h3 className="font-bold mb-4 text-slate-900">Hero Section Preview</h3>
               <div className="grid grid-cols-5 gap-3">
                 {[1, 2, 3, 4, 5].map((order) => {
                   const brand = featuredBrands.find(b => b.featured_order === order)
@@ -242,7 +270,7 @@ export default function AdminHeroPage() {
                     <div
                       key={order}
                       className={`aspect-[3/4] rounded-xl overflow-hidden relative ${
-                        brand ? 'cursor-pointer group' : 'bg-slate-100 dark:bg-slate-800 border-2 border-dashed border-slate-300 dark:border-slate-600'
+                        brand ? 'cursor-pointer group' : 'bg-slate-100 border-2 border-dashed border-slate-300'
                       }`}
                       onClick={() => brand && handleEditBrand(brand)}
                     >
@@ -277,14 +305,14 @@ export default function AdminHeroPage() {
             </div>
 
             {/* All Brands List */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
-              <div className="p-4 border-b border-slate-100 dark:border-slate-800">
-                <h3 className="font-bold text-slate-900 dark:text-white">Бүх брэндүүд</h3>
+            <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
+              <div className="p-4 border-b border-slate-100">
+                <h3 className="font-bold text-slate-900">Бүх брэндүүд</h3>
               </div>
-              <div className="divide-y divide-slate-100 dark:divide-slate-800">
+              <div className="divide-y divide-slate-100">
                 {brands.map((brand) => (
-                  <div key={brand.id} className="p-4 flex items-center gap-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                    <div className="w-16 h-20 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 flex-shrink-0">
+                  <div key={brand.id} className="p-4 flex items-center gap-4 hover:bg-slate-50 transition-colors">
+                    <div className="w-16 h-20 rounded-lg overflow-hidden bg-slate-100 flex-shrink-0">
                       {brand.image_url ? (
                         <img src={brand.image_url} alt={brand.name} className="w-full h-full object-cover" />
                       ) : (
@@ -292,18 +320,18 @@ export default function AdminHeroPage() {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-slate-900 dark:text-white">{brand.name}</h4>
+                      <h4 className="font-semibold text-slate-900">{brand.name}</h4>
                       <p className="text-sm text-slate-500">{brand.tagline || 'Tagline байхгүй'}</p>
                     </div>
                     <div className="flex items-center gap-3">
                       {brand.is_featured && (
-                        <span className="px-3 py-1 bg-pink-100 dark:bg-pink-900/30 text-pink-600 rounded-full text-xs font-medium">
+                        <span className="px-3 py-1 bg-pink-100 text-pink-600 rounded-full text-xs font-medium">
                           #{brand.featured_order}
                         </span>
                       )}
                       <button
                         onClick={() => handleEditBrand(brand)}
-                        className="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-medium hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+                        className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200 transition-colors"
                       >
                         Засах
                       </button>
@@ -323,8 +351,8 @@ export default function AdminHeroPage() {
             </p>
 
             {/* Featured Categories Preview */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 mb-6">
-              <h3 className="font-bold mb-4 text-slate-900 dark:text-white">Shop by Category Preview</h3>
+            <div className="bg-white rounded-2xl p-6 border border-slate-100 mb-6">
+              <h3 className="font-bold mb-4 text-slate-900">Shop by Category Preview</h3>
               <div className="grid grid-cols-4 gap-4">
                 {featuredCategories.slice(0, 4).map((category) => (
                   <div
@@ -352,14 +380,14 @@ export default function AdminHeroPage() {
             </div>
 
             {/* All Categories List */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
-              <div className="p-4 border-b border-slate-100 dark:border-slate-800">
-                <h3 className="font-bold text-slate-900 dark:text-white">Бүх категориуд</h3>
+            <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
+              <div className="p-4 border-b border-slate-100">
+                <h3 className="font-bold text-slate-900">Бүх категориуд</h3>
               </div>
-              <div className="divide-y divide-slate-100 dark:divide-slate-800">
+              <div className="divide-y divide-slate-100">
                 {categories.map((category) => (
-                  <div key={category.id} className="p-4 flex items-center gap-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                    <div className="w-16 h-20 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 flex-shrink-0">
+                  <div key={category.id} className="p-4 flex items-center gap-4 hover:bg-slate-50 transition-colors">
+                    <div className="w-16 h-20 rounded-lg overflow-hidden bg-slate-100 flex-shrink-0">
                       {category.image_url ? (
                         <img src={category.image_url} alt={category.name} className="w-full h-full object-cover" />
                       ) : (
@@ -367,18 +395,18 @@ export default function AdminHeroPage() {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-slate-900 dark:text-white">{category.name}</h4>
+                      <h4 className="font-semibold text-slate-900">{category.name}</h4>
                       <p className="text-sm text-slate-500">{category.slug}</p>
                     </div>
                     <div className="flex items-center gap-3">
                       {category.is_featured && (
-                        <span className="px-3 py-1 bg-pink-100 dark:bg-pink-900/30 text-pink-600 rounded-full text-xs font-medium">
+                        <span className="px-3 py-1 bg-pink-100 text-pink-600 rounded-full text-xs font-medium">
                           #{category.featured_order}
                         </span>
                       )}
                       <button
                         onClick={() => handleEditCategory(category)}
-                        className="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-medium hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+                        className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200 transition-colors"
                       >
                         Засах
                       </button>
@@ -394,12 +422,12 @@ export default function AdminHeroPage() {
         {showModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowModal(false)}></div>
-            <div className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-              <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between sticky top-0 bg-white dark:bg-slate-900">
-                <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+              <div className="p-6 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white">
+                <h2 className="text-xl font-bold text-slate-900">
                   {editType === 'brand' ? 'Брэнд засах' : 'Категори засах'}
                 </h2>
-                <button onClick={() => setShowModal(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+                <button onClick={() => setShowModal(false)} className="p-2 hover:bg-slate-100 rounded-lg">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
                   </svg>
@@ -409,40 +437,40 @@ export default function AdminHeroPage() {
               {editType === 'brand' ? (
                 <form onSubmit={handleSaveBrand} className="p-6 space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Нэр</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Нэр</label>
                     <input
                       type="text"
                       value={brandForm.name}
                       onChange={(e) => setBrandForm({ ...brandForm, name: e.target.value, slug: generateSlug(e.target.value) })}
-                      className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
+                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
                       required
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Logo текст</label>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Logo текст</label>
                       <input
                         type="text"
                         value={brandForm.logo_text}
                         onChange={(e) => setBrandForm({ ...brandForm, logo_text: e.target.value })}
-                        className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Tagline</label>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Tagline</label>
                       <input
                         type="text"
                         value={brandForm.tagline}
                         onChange={(e) => setBrandForm({ ...brandForm, tagline: e.target.value })}
                         placeholder="HAUTE COUTURE"
-                        className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
                       Зураг <span className="text-pink-500">(600x800px)</span>
                     </label>
                     
@@ -454,7 +482,7 @@ export default function AdminHeroPage() {
                         className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
                           imageInputType === 'url'
                             ? 'bg-pink-500 text-white'
-                            : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                         }`}
                       >
                         🔗 URL оруулах
@@ -465,7 +493,7 @@ export default function AdminHeroPage() {
                         className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
                           imageInputType === 'upload'
                             ? 'bg-pink-500 text-white'
-                            : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                         }`}
                       >
                         📤 Зураг upload
@@ -478,7 +506,7 @@ export default function AdminHeroPage() {
                         value={brandForm.image_url}
                         onChange={(e) => setBrandForm({ ...brandForm, image_url: e.target.value })}
                         placeholder="https://example.com/image.jpg"
-                        className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
                       />
                     ) : (
                       <div className="space-y-2">
@@ -493,7 +521,7 @@ export default function AdminHeroPage() {
                           type="button"
                           onClick={() => fileInputRef.current?.click()}
                           disabled={uploading}
-                          className="w-full py-3 px-4 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl hover:border-pink-400 dark:hover:border-pink-500 transition-colors flex items-center justify-center gap-2 text-slate-600 dark:text-slate-300 disabled:opacity-50"
+                          className="w-full py-3 px-4 border-2 border-dashed border-slate-300 rounded-xl hover:border-pink-400 transition-colors flex items-center justify-center gap-2 text-slate-600 disabled:opacity-50"
                         >
                           {uploading ? (
                             <>
@@ -512,7 +540,7 @@ export default function AdminHeroPage() {
                     )}
 
                     {brandForm.image_url && (
-                      <div className="mt-3 relative w-full aspect-[3/4] max-w-[200px] rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800">
+                      <div className="mt-3 relative w-full aspect-[3/4] max-w-[200px] rounded-lg overflow-hidden bg-slate-100">
                         <img src={brandForm.image_url} alt="Preview" className="w-full h-full object-cover" />
                         <button
                           type="button"
@@ -525,15 +553,15 @@ export default function AdminHeroPage() {
                     )}
                   </div>
 
-                  <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
+                  <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
                     <div>
-                      <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Hero-д харуулах</label>
+                      <label className="text-sm font-medium text-slate-700">Hero-д харуулах</label>
                       <p className="text-xs text-slate-500">Нүүр хуудасны Hero хэсэгт гарах эсэх</p>
                     </div>
                     <button
                       type="button"
                       onClick={() => setBrandForm({ ...brandForm, is_featured: !brandForm.is_featured })}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${brandForm.is_featured ? 'bg-pink-500' : 'bg-slate-300 dark:bg-slate-600'}`}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${brandForm.is_featured ? 'bg-pink-500' : 'bg-slate-300'}`}
                     >
                       <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${brandForm.is_featured ? 'translate-x-6' : 'translate-x-1'}`} />
                     </button>
@@ -541,11 +569,11 @@ export default function AdminHeroPage() {
 
                   {brandForm.is_featured && (
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Дараалал (1-5)</label>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Дараалал (1-5)</label>
                       <select
                         value={brandForm.featured_order}
                         onChange={(e) => setBrandForm({ ...brandForm, featured_order: parseInt(e.target.value) })}
-                        className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
                       >
                         {[1, 2, 3, 4, 5].map(n => (
                           <option key={n} value={n}>{n}</option>
@@ -558,7 +586,7 @@ export default function AdminHeroPage() {
                     <button
                       type="button"
                       onClick={() => setShowModal(false)}
-                      className="flex-1 py-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                      className="flex-1 py-3 bg-slate-100 text-slate-700 font-medium rounded-xl hover:bg-slate-200 transition-colors"
                     >
                       Болих
                     </button>
@@ -573,18 +601,18 @@ export default function AdminHeroPage() {
               ) : (
                 <form onSubmit={handleSaveCategory} className="p-6 space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Нэр</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Нэр</label>
                     <input
                       type="text"
                       value={categoryForm.name}
                       onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value, slug: generateSlug(e.target.value) })}
-                      className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
+                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
                       Зураг <span className="text-pink-500">(400x500px)</span>
                     </label>
                     
@@ -596,7 +624,7 @@ export default function AdminHeroPage() {
                         className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
                           imageInputType === 'url'
                             ? 'bg-pink-500 text-white'
-                            : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                         }`}
                       >
                         🔗 URL оруулах
@@ -607,7 +635,7 @@ export default function AdminHeroPage() {
                         className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
                           imageInputType === 'upload'
                             ? 'bg-pink-500 text-white'
-                            : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                         }`}
                       >
                         📤 Зураг upload
@@ -620,7 +648,7 @@ export default function AdminHeroPage() {
                         value={categoryForm.image_url}
                         onChange={(e) => setCategoryForm({ ...categoryForm, image_url: e.target.value })}
                         placeholder="https://example.com/image.jpg"
-                        className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
                       />
                     ) : (
                       <div className="space-y-2">
@@ -635,7 +663,7 @@ export default function AdminHeroPage() {
                           type="button"
                           onClick={() => fileInputRef.current?.click()}
                           disabled={uploading}
-                          className="w-full py-3 px-4 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl hover:border-pink-400 dark:hover:border-pink-500 transition-colors flex items-center justify-center gap-2 text-slate-600 dark:text-slate-300 disabled:opacity-50"
+                          className="w-full py-3 px-4 border-2 border-dashed border-slate-300 rounded-xl hover:border-pink-400 transition-colors flex items-center justify-center gap-2 text-slate-600 disabled:opacity-50"
                         >
                           {uploading ? (
                             <>
@@ -654,7 +682,7 @@ export default function AdminHeroPage() {
                     )}
 
                     {categoryForm.image_url && (
-                      <div className="mt-3 relative w-full aspect-[4/5] max-w-[160px] rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800">
+                      <div className="mt-3 relative w-full aspect-[4/5] max-w-[160px] rounded-lg overflow-hidden bg-slate-100">
                         <img src={categoryForm.image_url} alt="Preview" className="w-full h-full object-cover" />
                         <button
                           type="button"
@@ -667,15 +695,15 @@ export default function AdminHeroPage() {
                     )}
                   </div>
 
-                  <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
+                  <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
                     <div>
-                      <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Онцлох</label>
+                      <label className="text-sm font-medium text-slate-700">Онцлох</label>
                       <p className="text-xs text-slate-500">Shop by Category хэсэгт гарах эсэх</p>
                     </div>
                     <button
                       type="button"
                       onClick={() => setCategoryForm({ ...categoryForm, is_featured: !categoryForm.is_featured })}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${categoryForm.is_featured ? 'bg-pink-500' : 'bg-slate-300 dark:bg-slate-600'}`}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${categoryForm.is_featured ? 'bg-pink-500' : 'bg-slate-300'}`}
                     >
                       <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${categoryForm.is_featured ? 'translate-x-6' : 'translate-x-1'}`} />
                     </button>
@@ -683,11 +711,11 @@ export default function AdminHeroPage() {
 
                   {categoryForm.is_featured && (
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Дараалал</label>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Дараалал</label>
                       <select
                         value={categoryForm.featured_order}
                         onChange={(e) => setCategoryForm({ ...categoryForm, featured_order: parseInt(e.target.value) })}
-                        className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
                       >
                         {[1, 2, 3, 4, 5, 6, 7, 8].map(n => (
                           <option key={n} value={n}>{n}</option>
@@ -700,7 +728,7 @@ export default function AdminHeroPage() {
                     <button
                       type="button"
                       onClick={() => setShowModal(false)}
-                      className="flex-1 py-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                      className="flex-1 py-3 bg-slate-100 text-slate-700 font-medium rounded-xl hover:bg-slate-200 transition-colors"
                     >
                       Болих
                     </button>

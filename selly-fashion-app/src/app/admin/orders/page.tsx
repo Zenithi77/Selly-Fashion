@@ -51,21 +51,21 @@ export default function AdminOrdersPage() {
   }
 
   return (
-    <main className="min-h-screen pt-[104px] bg-slate-50 dark:bg-slate-950">
+    <main className="min-h-screen pt-[104px] bg-slate-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             <Link 
               href="/admin"
-              className="w-10 h-10 bg-white dark:bg-slate-800 rounded-lg flex items-center justify-center shadow-sm hover:shadow-md transition-shadow"
+              className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-sm hover:shadow-md transition-shadow"
             >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
               </svg>
             </Link>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Захиалга</h1>
+              <h1 className="text-2xl font-bold text-slate-900">Захиалга</h1>
               <p className="text-sm text-slate-500">{orders.length} захиалга</p>
             </div>
           </div>
@@ -74,7 +74,7 @@ export default function AdminOrdersPage() {
           <div className="flex gap-2 overflow-x-auto pb-2">
             <button
               onClick={() => setFilter('all')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${filter === 'all' ? 'bg-pink-500 text-white' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${filter === 'all' ? 'bg-pink-500 text-white' : 'bg-white text-slate-600'}`}
             >
               Бүгд
             </button>
@@ -82,7 +82,7 @@ export default function AdminOrdersPage() {
               <button
                 key={key}
                 onClick={() => setFilter(key)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${filter === key ? 'bg-pink-500 text-white' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400'}`}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${filter === key ? 'bg-pink-500 text-white' : 'bg-white text-slate-600'}`}
               >
                 {label}
               </button>
@@ -94,7 +94,7 @@ export default function AdminOrdersPage() {
           {/* Orders List */}
           <div className="lg:col-span-2 space-y-4">
             {filteredOrders.length === 0 ? (
-              <div className="bg-white dark:bg-slate-900 rounded-2xl p-12 text-center">
+              <div className="bg-white rounded-2xl p-12 text-center">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="w-16 h-16 text-slate-300 mx-auto mb-4">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
                 </svg>
@@ -105,20 +105,20 @@ export default function AdminOrdersPage() {
                 <div
                   key={order.id}
                   onClick={() => setSelectedOrder(order)}
-                  className={`bg-white dark:bg-slate-900 rounded-2xl p-6 border-2 cursor-pointer transition-all ${
+                  className={`bg-white rounded-2xl p-6 border-2 cursor-pointer transition-all ${
                     selectedOrder?.id === order.id 
                       ? 'border-pink-500 shadow-lg' 
-                      : 'border-transparent hover:border-pink-200 dark:hover:border-pink-900'
+                      : 'border-transparent hover:border-pink-200'
                   }`}
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div>
                       <p className="text-sm text-slate-500">Захиалга #{order.id.slice(0, 8)}</p>
-                      <p className="font-semibold text-slate-900 dark:text-white mt-1">
+                      <p className="font-semibold text-slate-900 mt-1">
                         {order.user?.full_name || order.shipping_name || 'Unknown'}
                       </p>
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold bg-${statusLabels[order.status]?.color}-100 dark:bg-${statusLabels[order.status]?.color}-900/30 text-${statusLabels[order.status]?.color}-600 dark:text-${statusLabels[order.status]?.color}-400`}>
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold bg-${statusLabels[order.status]?.color}-100${statusLabels[order.status]?.color}-900/30 text-${statusLabels[order.status]?.color}-600${statusLabels[order.status]?.color}-400`}>
                       {statusLabels[order.status]?.label}
                     </span>
                   </div>
@@ -138,7 +138,7 @@ export default function AdminOrdersPage() {
           {/* Order Details */}
           <div className="lg:col-span-1">
             {selectedOrder ? (
-              <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 sticky top-28 border border-slate-100 dark:border-slate-800">
+              <div className="bg-white rounded-2xl p-6 sticky top-28 border border-slate-100">
                 <h2 className="font-bold text-lg mb-6">Захиалгын дэлгэрэнгүй</h2>
                 
                 {/* Order ID & Date */}
@@ -154,7 +154,7 @@ export default function AdminOrdersPage() {
                 </div>
 
                 {/* Customer Info */}
-                <div className="border-t border-slate-100 dark:border-slate-800 pt-4 mb-6">
+                <div className="border-t border-slate-100 pt-4 mb-6">
                   <h3 className="font-semibold mb-3">Хэрэглэгчийн мэдээлэл</h3>
                   <div className="space-y-2 text-sm">
                     <p><span className="text-slate-500">Нэр:</span> {selectedOrder.user?.full_name || selectedOrder.shipping_name}</p>
@@ -167,12 +167,12 @@ export default function AdminOrdersPage() {
                 </div>
 
                 {/* Items */}
-                <div className="border-t border-slate-100 dark:border-slate-800 pt-4 mb-6">
+                <div className="border-t border-slate-100 pt-4 mb-6">
                   <h3 className="font-semibold mb-3">Бүтээгдэхүүн</h3>
                   <div className="space-y-3">
                     {selectedOrder.order_items?.map((item) => (
                       <div key={item.id} className="flex items-center gap-3">
-                        <div className="w-12 h-14 bg-slate-100 dark:bg-slate-800 rounded-lg overflow-hidden flex-shrink-0">
+                        <div className="w-12 h-14 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0">
                           {item.product?.image_url && (
                             <img src={item.product.image_url} alt="" className="w-full h-full object-cover" />
                           )}
@@ -190,7 +190,7 @@ export default function AdminOrdersPage() {
                 </div>
 
                 {/* Total */}
-                <div className="border-t border-slate-100 dark:border-slate-800 pt-4 mb-6">
+                <div className="border-t border-slate-100 pt-4 mb-6">
                   <div className="flex justify-between items-center">
                     <span className="font-semibold">Нийт</span>
                     <span className="text-2xl font-bold text-pink-500">${selectedOrder.total_amount}</span>
@@ -198,12 +198,12 @@ export default function AdminOrdersPage() {
                 </div>
 
                 {/* Status Change */}
-                <div className="border-t border-slate-100 dark:border-slate-800 pt-4">
+                <div className="border-t border-slate-100 pt-4">
                   <h3 className="font-semibold mb-3">Төлөв өөрчлөх</h3>
                   <select
                     value={selectedOrder.status}
                     onChange={(e) => handleStatusChange(selectedOrder.id, e.target.value as Order['status'])}
-                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
                   >
                     {Object.entries(statusLabels).map(([key, { label }]) => (
                       <option key={key} value={key}>{label}</option>
@@ -212,7 +212,7 @@ export default function AdminOrdersPage() {
                 </div>
               </div>
             ) : (
-              <div className="bg-white dark:bg-slate-900 rounded-2xl p-12 text-center sticky top-28">
+              <div className="bg-white rounded-2xl p-12 text-center sticky top-28">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="w-16 h-16 text-slate-300 mx-auto mb-4">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                 </svg>

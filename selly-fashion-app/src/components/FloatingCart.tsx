@@ -32,23 +32,23 @@ export default function FloatingCart() {
       )}
 
       {/* Cart Sidebar */}
-      <div className={`fixed top-0 right-0 h-full w-full max-w-md bg-white dark:bg-slate-900 z-50 transform transition-transform duration-300 shadow-2xl ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+      <div className={`fixed top-0 right-0 h-full w-full max-w-md bg-white z-50 transform transition-transform duration-300 shadow-2xl ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-pink-100 dark:border-pink-900/30">
+        <div className="flex items-center justify-between p-6 border-b border-pink-100">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-pink-100 dark:bg-pink-900/30 rounded-full flex items-center justify-center">
+            <div className="w-10 h-10 bg-pink-100 rounded-full flex items-center justify-center">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-pink-500">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
               </svg>
             </div>
             <div>
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white">Сагс</h2>
+              <h2 className="text-xl font-bold text-slate-900">Сагс</h2>
               <p className="text-sm text-slate-500">{totalItems} бараа</p>
             </div>
           </div>
           <button 
             onClick={closeCart}
-            className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+            className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
@@ -60,12 +60,12 @@ export default function FloatingCart() {
         <div className="flex-1 overflow-y-auto p-6 space-y-4" style={{ maxHeight: 'calc(100vh - 280px)' }}>
           {items.length === 0 ? (
             <div className="text-center py-16">
-              <div className="w-20 h-20 bg-pink-50 dark:bg-pink-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
+              <div className="w-20 h-20 bg-pink-50 rounded-full flex items-center justify-center mx-auto mb-6">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-10 h-10 text-pink-300">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">Сагс хоосон байна</h3>
+              <h3 className="text-lg font-semibold text-slate-900 mb-2">Сагс хоосон байна</h3>
               <p className="text-slate-500 mb-6">Та бүтээгдэхүүн нэмээгүй байна</p>
               <button
                 onClick={closeCart}
@@ -76,7 +76,7 @@ export default function FloatingCart() {
             </div>
           ) : (
             items.map((item) => (
-              <div key={item.id} className="flex gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl">
+              <div key={item.id} className="flex gap-4 p-4 bg-slate-50 rounded-2xl">
                 <div className="w-20 h-24 rounded-xl overflow-hidden flex-shrink-0">
                   <img 
                     src={item.product.image_url || 'https://via.placeholder.com/200'} 
@@ -85,7 +85,7 @@ export default function FloatingCart() {
                   />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-slate-900 dark:text-white truncate">{item.product.name}</h4>
+                  <h4 className="font-semibold text-slate-900 truncate">{item.product.name}</h4>
                   <p className="text-sm text-slate-500 mb-1">
                     {item.size && <span>Хэмжээ: {item.size}</span>}
                     {item.color && <span className="ml-2">Өнгө: {item.color}</span>}
@@ -96,7 +96,7 @@ export default function FloatingCart() {
                     <div className="flex items-center gap-2">
                       <button 
                         onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                        className="w-7 h-7 rounded-full border border-slate-200 dark:border-slate-700 flex items-center justify-center hover:bg-pink-50 dark:hover:bg-pink-900/20 transition-colors"
+                        className="w-7 h-7 rounded-full border border-slate-200 flex items-center justify-center hover:bg-pink-50 transition-colors"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14" />
@@ -105,7 +105,7 @@ export default function FloatingCart() {
                       <span className="w-8 text-center font-medium">{item.quantity}</span>
                       <button 
                         onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        className="w-7 h-7 rounded-full border border-slate-200 dark:border-slate-700 flex items-center justify-center hover:bg-pink-50 dark:hover:bg-pink-900/20 transition-colors"
+                        className="w-7 h-7 rounded-full border border-slate-200 flex items-center justify-center hover:bg-pink-50 transition-colors"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -129,10 +129,10 @@ export default function FloatingCart() {
 
         {/* Footer */}
         {items.length > 0 && (
-          <div className="absolute bottom-0 left-0 right-0 p-6 bg-white dark:bg-slate-900 border-t border-pink-100 dark:border-pink-900/30">
+          <div className="absolute bottom-0 left-0 right-0 p-6 bg-white border-t border-pink-100">
             <div className="flex justify-between items-center mb-4">
-              <span className="text-slate-600 dark:text-slate-400">Нийт дүн</span>
-              <span className="text-2xl font-bold text-slate-900 dark:text-white">${totalPrice.toFixed(2)}</span>
+              <span className="text-slate-600">Нийт дүн</span>
+              <span className="text-2xl font-bold text-slate-900">${totalPrice.toFixed(2)}</span>
             </div>
             <Link 
               href="/checkout"

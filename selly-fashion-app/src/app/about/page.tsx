@@ -4,7 +4,7 @@ export default function AboutPage() {
   return (
     <main className="pt-20">
       {/* Hero */}
-      <section className="py-20 px-6 text-center bg-gradient-to-b from-pink-50 to-transparent dark:from-pink-950/10 dark:to-transparent">
+      <section className="py-20 px-6 text-center bg-gradient-to-b from-pink-50 to-transparent">
         <div className="max-w-4xl mx-auto">
           <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary font-semibold text-sm mb-6">
             <span className="material-symbols-outlined">flutter_dash</span>
@@ -13,7 +13,7 @@ export default function AboutPage() {
           <h1 className="font-display text-4xl lg:text-6xl font-bold mb-6">
             The <span className="text-primary italic">Selly</span> Philosophy
           </h1>
-          <p className="text-xl text-slate-600 dark:text-slate-400 leading-relaxed">
+          <p className="text-xl text-slate-600 leading-relaxed">
             We believe fashion is a form of self-expression that celebrates heritage, elegance, and the transformative power of style.
           </p>
         </div>
@@ -24,12 +24,12 @@ export default function AboutPage() {
         <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
           <div>
             <h2 className="font-display text-3xl font-bold mb-6">Our Mission</h2>
-            <p className="text-lg text-slate-600 dark:text-slate-400 mb-6">
+            <p className="text-lg text-slate-600 mb-6">
               At Selly Fashion, we curate the finest patriotic styles across a structured network of elite brands. 
               Our mission is to bring together diverse fashion houses that share our vision of celebrating American 
               spirit through high-fashion aesthetics.
             </p>
-            <p className="text-lg text-slate-600 dark:text-slate-400 mb-8">
+            <p className="text-lg text-slate-600 mb-8">
               Like the butterfly that symbolizes our brand, we believe in transformation, beauty, and the 
               delicate balance between tradition and innovation.
             </p>
@@ -59,7 +59,7 @@ export default function AboutPage() {
       </section>
 
       {/* Values */}
-      <section className="py-20 px-6 bg-white dark:bg-slate-900/30">
+      <section className="py-20 px-6 bg-white">
         <div className="max-w-6xl mx-auto">
           <h2 className="font-display text-3xl font-bold text-center mb-16">Our Values</h2>
           <div className="grid md:grid-cols-3 gap-8">
@@ -68,7 +68,7 @@ export default function AboutPage() {
                 <span className="material-symbols-outlined text-primary text-3xl">diamond</span>
               </div>
               <h3 className="font-bold text-xl mb-4">Quality First</h3>
-              <p className="text-slate-600 dark:text-slate-400">
+              <p className="text-slate-600">
                 Every piece in our collection meets the highest standards of craftsmanship and design excellence.
               </p>
             </div>
@@ -77,7 +77,7 @@ export default function AboutPage() {
                 <span className="material-symbols-outlined text-primary text-3xl">eco</span>
               </div>
               <h3 className="font-bold text-xl mb-4">Sustainability</h3>
-              <p className="text-slate-600 dark:text-slate-400">
+              <p className="text-slate-600">
                 We partner with brands committed to ethical practices and environmental responsibility.
               </p>
             </div>
@@ -86,7 +86,7 @@ export default function AboutPage() {
                 <span className="material-symbols-outlined text-primary text-3xl">diversity_3</span>
               </div>
               <h3 className="font-bold text-xl mb-4">Inclusivity</h3>
-              <p className="text-slate-600 dark:text-slate-400">
+              <p className="text-slate-600">
                 Fashion for everyone, celebrating diversity in style, size, and expression.
               </p>
             </div>
@@ -98,7 +98,7 @@ export default function AboutPage() {
       <section className="py-20 px-6 text-center">
         <div className="max-w-2xl mx-auto">
           <h2 className="font-display text-3xl font-bold mb-6">Join the Flutter</h2>
-          <p className="text-lg text-slate-600 dark:text-slate-400 mb-10">
+          <p className="text-lg text-slate-600 mb-10">
             Discover our curated collection and become part of the Selly Fashion family.
           </p>
           <Link href="/shop" className="inline-flex items-center gap-3 bg-primary hover:bg-pink-600 text-white px-10 py-5 rounded-full font-bold shadow-xl shadow-pink-500/20 transition-all transform hover:-translate-y-1">
