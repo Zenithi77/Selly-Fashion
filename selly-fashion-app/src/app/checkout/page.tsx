@@ -305,12 +305,9 @@ export default function CheckoutPage() {
       const orderData = {
         user_id: user?.id,
         status: 'pending' as const,
-        payment_status: 'Pending' as 'Pending',
-        payment_ref: newPaymentRef,
         payment_method: 'bank_transfer',
         total_amount: grandTotal,
-        shipping_address: fullShippingAddress,
-        notes: formData.notes || ''
+        shipping_address: fullShippingAddress
       }
 
       const orderItems = items.map(item => ({
