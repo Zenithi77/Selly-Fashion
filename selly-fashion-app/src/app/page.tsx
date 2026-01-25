@@ -134,7 +134,7 @@ export default function Home() {
       </section>
 
       {/* Category Grid */}
-      <section className="py-20">
+      <section className="py-20 bg-gradient-to-b from-slate-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <span className="inline-block px-4 py-1 rounded-full bg-pink-500/10 text-pink-500 font-semibold text-sm mb-4 uppercase tracking-widest">Categories</span>
@@ -142,7 +142,7 @@ export default function Home() {
             <p className="text-slate-600">Find your perfect style</p>
           </div>
           
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5 max-w-5xl mx-auto">
             {loading ? (
               // Loading skeleton
               Array(4).fill(0).map((_, idx) => (
@@ -153,17 +153,28 @@ export default function Home() {
                 <Link 
                   key={category.id} 
                   href={`/category/${category.slug}`} 
-                  className="group relative aspect-[3/4] overflow-hidden rounded-2xl bg-white border border-pink-50 hover:border-pink-500/30 transition-all"
+                  className="group relative aspect-[3/4] rounded-2xl overflow-hidden cursor-pointer"
                 >
                   <img
                     src={category.image_url || 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=600&q=80'}
                     alt={category.name}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent group-hover:from-black/70 transition-colors"></div>
-                  <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                    <h3 className="text-xl font-bold tracking-wide">{category.name.toUpperCase()}</h3>
-                    <p className="text-sm opacity-0 group-hover:opacity-100 transition-opacity mt-2 text-pink-300">Shop the collection →</p>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-70 group-hover:opacity-90 transition-opacity"></div>
+                  
+                  <div className="absolute inset-0 flex flex-col items-center justify-end p-4 lg:p-6 text-white">
+                    <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                      <h3 className="text-xl lg:text-2xl font-bold tracking-[0.15em] mb-1 text-center">
+                        {category.name.toUpperCase()}
+                      </h3>
+                      <div className="h-[2px] w-0 group-hover:w-full bg-gradient-to-r from-pink-500 to-rose-500 transition-all duration-500 mx-auto"></div>
+                    </div>
+                    <span className="mt-4 text-xs tracking-wider opacity-0 group-hover:opacity-100 transition-all duration-300 delay-200 flex items-center gap-2 text-pink-200">
+                      SHOP NOW
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3 h-3">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                      </svg>
+                    </span>
                   </div>
                 </Link>
               ))
@@ -268,66 +279,6 @@ export default function Home() {
               </svg>
             </Link>
           </div>
-        </div>
-      </section>
-
-      {/* Featured Brands Section */}
-      <section className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <span className="inline-block px-4 py-1 rounded-full bg-pink-500/10 text-pink-500 font-semibold text-sm mb-4 uppercase tracking-widest">Partners</span>
-            <h2 className="text-3xl font-bold tracking-tight mb-4 text-slate-900">OUR BRANDS</h2>
-            <p className="text-slate-600 max-w-2xl mx-auto">
-              Partnering with the finest designers to bring you exclusive collections
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 lg:gap-6">
-            {brands.slice(0, 5).map((brand, index) => (
-              <Link 
-                key={brand.id} 
-                href={`/brand/${brand.slug}`} 
-                className={`group p-6 lg:p-8 rounded-2xl border text-center transition-all ${
-                  index === brands.length - 1 
-                    ? 'bg-pink-500 text-white hover:bg-pink-600 border-transparent hover:shadow-lg' 
-                    : 'bg-white border-pink-100 hover:border-pink-500 hover:shadow-lg'
-                }`}
-              >
-                <h3 className={`text-xl lg:text-2xl font-bold tracking-[0.2em] mb-2 transition-colors ${
-                  index === brands.length - 1 
-                    ? '' 
-                    : 'text-slate-900 group-hover:text-pink-500'
-                } ${brand.style === 'italic' ? 'italic' : ''} ${brand.style === 'underline' ? 'underline decoration-pink-500' : ''}`}>
-                  {brand.logo_text || brand.name}
-                </h3>
-                <p className={`text-sm ${index === brands.length - 1 ? 'opacity-80' : 'text-slate-500'}`}>
-                  {brand.tagline || 'Exclusive Collection'}
-                </p>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* VIP Banner */}
-      <section className="relative h-[50vh] min-h-[400px] flex items-center overflow-hidden">
-        <div className="absolute inset-0">
-          <img
-            src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1920&q=80"
-            alt="Banner"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-pink-500/80 to-pink-600/60"></div>
-        </div>
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full text-center text-white">
-          <p className="text-sm font-medium tracking-[0.3em] uppercase mb-4 opacity-90">VIP ACCESS</p>
-          <h2 className="text-4xl lg:text-5xl font-bold mb-6 font-display">GET 20% OFF YOUR FIRST ORDER</h2>
-          <p className="text-lg opacity-90 mb-8 max-w-md mx-auto">
-            Join our exclusive club and enjoy member benefits, early access, and more.
-          </p>
-          <Link href="/login" className="inline-block bg-white text-pink-500 px-8 py-4 rounded-lg font-semibold hover:bg-pink-50 transition-colors">
-            JOIN NOW
-          </Link>
         </div>
       </section>
 

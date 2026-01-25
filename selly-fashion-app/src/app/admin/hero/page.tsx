@@ -353,29 +353,43 @@ export default function AdminHeroPage() {
             {/* Featured Categories Preview */}
             <div className="bg-white rounded-2xl p-6 border border-slate-100 mb-6">
               <h3 className="font-bold mb-4 text-slate-900">Shop by Category Preview</h3>
-              <div className="grid grid-cols-4 gap-4">
-                {featuredCategories.slice(0, 4).map((category) => (
-                  <div
-                    key={category.id}
-                    className="aspect-[4/5] rounded-xl overflow-hidden relative cursor-pointer group"
-                    onClick={() => handleEditCategory(category)}
-                  >
-                    <img
-                      src={category.image_url || 'https://via.placeholder.com/400x500?text=No+Image'}
-                      alt={category.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end p-4">
-                      <span className="text-white font-bold">{category.name}</span>
+              <div className="grid grid-cols-4 gap-3">
+                {[1, 2, 3, 4].map((order) => {
+                  const category = featuredCategories.find(c => c.featured_order === order)
+                  return (
+                    <div
+                      key={order}
+                      className={`aspect-[3/4] rounded-xl overflow-hidden relative ${
+                        category ? 'cursor-pointer group' : 'bg-slate-100 border-2 border-dashed border-slate-300'
+                      }`}
+                      onClick={() => category && handleEditCategory(category)}
+                    >
+                      {category ? (
+                        <>
+                          <img
+                            src={category.image_url || 'https://via.placeholder.com/400x500?text=No+Image'}
+                            alt={category.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col items-center justify-end p-3">
+                            <span className="text-white font-bold text-sm">{category.name}</span>
+                          </div>
+                          <div className="absolute top-2 left-2 w-6 h-6 bg-pink-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                            {order}
+                          </div>
+                          <div className="absolute inset-0 bg-pink-500/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <span className="bg-white px-3 py-1 rounded-full text-xs font-medium text-pink-500">Засах</span>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center h-full text-slate-400">
+                          <span className="text-2xl font-bold">{order}</span>
+                          <span className="text-xs">Хоосон</span>
+                        </div>
+                      )}
                     </div>
-                    <div className="absolute top-2 left-2 w-6 h-6 bg-pink-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                      {category.featured_order}
-                    </div>
-                    <div className="absolute inset-0 bg-pink-500/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <span className="bg-white px-3 py-1 rounded-full text-xs font-medium text-pink-500">Засах</span>
-                    </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
 

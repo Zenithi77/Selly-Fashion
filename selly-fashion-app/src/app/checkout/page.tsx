@@ -299,18 +299,18 @@ export default function CheckoutPage() {
       // Generate unique payment reference
       const newPaymentRef = generatePaymentRef()
       
+      // Combine shipping info into shipping_address for compatibility
+      const fullShippingAddress = `${formData.name} | ${formData.phone} | ${formData.city} | ${formData.address}`
+      
       const orderData = {
-        user_id: user?.id,
+        user_id: user?.id || null,
         status: 'pending' as const,
-        payment_status: 'Pending' as const,
+        payment_status: 'Pending',
         payment_ref: newPaymentRef,
         payment_method: 'bank_transfer',
         total_amount: grandTotal,
-        shipping_name: formData.name,
-        shipping_phone: formData.phone,
-        shipping_city: formData.city,
-        shipping_address: formData.address,
-        notes: formData.notes
+        shipping_address: fullShippingAddress,
+        notes: formData.notes || ''
       }
 
       const orderItems = items.map(item => ({
