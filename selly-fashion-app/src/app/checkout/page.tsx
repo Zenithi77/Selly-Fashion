@@ -303,9 +303,9 @@ export default function CheckoutPage() {
       const fullShippingAddress = `${formData.name} | ${formData.phone} | ${formData.city} | ${formData.address}`
       
       const orderData = {
-        user_id: user?.id || null,
+        user_id: user?.id,
         status: 'pending' as const,
-        payment_status: 'Pending',
+        payment_status: 'Pending' as 'Pending',
         payment_ref: newPaymentRef,
         payment_method: 'bank_transfer',
         total_amount: grandTotal,
