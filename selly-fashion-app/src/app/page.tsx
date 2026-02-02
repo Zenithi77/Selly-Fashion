@@ -152,7 +152,7 @@ export default function Home() {
               categories.slice(0, 4).map((category) => (
                 <Link 
                   key={category.id} 
-                  href={`/category/${category.slug}`} 
+                  href={category.slug ? `/category/${category.slug}` : `/shop?category=${category.id}`} 
                   className="group relative aspect-[3/4] rounded-2xl overflow-hidden cursor-pointer"
                 >
                   <img

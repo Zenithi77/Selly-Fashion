@@ -2,21 +2,32 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { api, Product, ClothingType, Subcategory } from '@/lib/supabase'
 import { useCartStore, useWishlistStore } from '@/lib/store'
 
 export default function ShopPage() {
+  const searchParams = useSearchParams()
+  const categoryParam = searchParams.get('category')
+  
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<ClothingType[]>([])
   const [subcategories, setSubcategories] = useState<Subcategory[]>([])
   const [loading, setLoading] = useState(true)
   
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(categoryParam)
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null)
   const [sortBy, setSortBy] = useState('newest')
   
   const addToCart = useCartStore(state => state.addItem)
   const { items: wishlistItems, addItem: addToWishlist, removeItem: removeFromWishlist } = useWishlistStore()
+
+  // Update selected category when URL changes
+  useEffect(() => {
+    if (categoryParam) {
+      setSelectedCategory(categoryParam)
+    }
+  }, [categoryParam])
 
   useEffect(() => {
     const fetchData = async () => {
