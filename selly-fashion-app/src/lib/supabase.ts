@@ -93,6 +93,20 @@ export interface ClothingType {
   updated_at: string
 }
 
+export interface Subcategory {
+  id: string
+  name: string
+  slug: string
+  description: string
+  image_url: string
+  clothing_type_id: string
+  is_active: boolean
+  display_order: number
+  created_at: string
+  updated_at: string
+  clothing_type?: ClothingType
+}
+
 export interface Product {
   id: string
   name: string
@@ -104,6 +118,7 @@ export interface Product {
   images?: string[]
   brand_id: string
   clothing_type_id: string
+  subcategory_id?: string
   sizes: string[]
   colors: string[]
   is_featured: boolean
@@ -114,6 +129,7 @@ export interface Product {
   updated_at: string
   brand?: Brand
   clothing_type?: ClothingType
+  subcategory?: Subcategory
 }
 
 export interface UserProfile {
@@ -184,13 +200,15 @@ export const api = {
     featured?: boolean;
     newArrivals?: boolean;
     onSale?: boolean;
+    subcategory?: string;
   }) {
     let query = supabase
       .from('products')
       .select(`
         *,
         brand:brands(*),
-        clothing_type:clothing_types(*)
+        clothing_type:clothing_types(*),
+        subcategory:subcategories(*)
       `)
       .order('created_at', { ascending: false })
 
@@ -200,6 +218,7 @@ export const api = {
     if (options?.onSale) query = query.eq('is_on_sale', true)
     if (options?.category) query = query.eq('clothing_type_id', options.category)
     if (options?.brand) query = query.eq('brand_id', options.brand)
+    if (options?.subcategory) query = query.eq('subcategory_id', options.subcategory)
 
     const { data, error } = await query
     return { data: data as Product[], error }
@@ -211,7 +230,8 @@ export const api = {
       .select(`
         *,
         brand:brands(*),
-        clothing_type:clothing_types(*)
+        clothing_type:clothing_types(*),
+        subcategory:subcategories(*)
       `)
       .eq('slug', slug)
       .single()
@@ -224,7 +244,8 @@ export const api = {
       .select(`
         *,
         brand:brands(*),
-        clothing_type:clothing_types(*)
+        clothing_type:clothing_types(*),
+        subcategory:subcategories(*)
       `)
       .eq('id', id)
       .single()
@@ -303,6 +324,75 @@ export const api = {
       .select()
       .single()
     return { data, error }
+  },
+
+  // Subcategories
+  async getSubcategories(clothingTypeId?: string) {
+    let query = supabase
+      .from('subcategories')
+      .select(`
+        *,
+        clothing_type:clothing_types(*)
+      `)
+      .eq('is_active', true)
+      .order('display_order', { ascending: true })
+
+    if (clothingTypeId) {
+      query = query.eq('clothing_type_id', clothingTypeId)
+    }
+
+    const { data, error } = await query
+    return { data: data as Subcategory[], error }
+  },
+
+  async getAllSubcategories() {
+    const { data, error } = await supabase
+      .from('subcategories')
+      .select(`
+        *,
+        clothing_type:clothing_types(*)
+      `)
+      .order('display_order', { ascending: true })
+    return { data: data as Subcategory[], error }
+  },
+
+  async getSubcategoryBySlug(slug: string) {
+    const { data, error } = await supabase
+      .from('subcategories')
+      .select(`
+        *,
+        clothing_type:clothing_types(*)
+      `)
+      .eq('slug', slug)
+      .single()
+    return { data: data as Subcategory, error }
+  },
+
+  async createSubcategory(subcategory: Partial<Subcategory>) {
+    const { data, error } = await supabase
+      .from('subcategories')
+      .insert(subcategory)
+      .select()
+      .single()
+    return { data: data as Subcategory, error }
+  },
+
+  async updateSubcategory(id: string, subcategory: Partial<Subcategory>) {
+    const { data, error } = await supabase
+      .from('subcategories')
+      .update({ ...subcategory, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single()
+    return { data: data as Subcategory, error }
+  },
+
+  async deleteSubcategory(id: string) {
+    const { error } = await supabase
+      .from('subcategories')
+      .delete()
+      .eq('id', id)
+    return { error }
   },
 
   // Orders

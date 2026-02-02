@@ -1,14 +1,31 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { api, Product, Brand, ClothingType, supabase } from '@/lib/supabase'
+import { api, Product, Brand, ClothingType, Subcategory, supabase } from '@/lib/supabase'
+
+// Predefined sizes and colors for quick selection
+const COMMON_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '2XL', '3XL']
+const COMMON_COLORS = [
+  { name: 'Хар', value: 'Black', hex: '#000000' },
+  { name: 'Цагаан', value: 'White', hex: '#FFFFFF' },
+  { name: 'Ягаан', value: 'Pink', hex: '#EC4899' },
+  { name: 'Улаан', value: 'Red', hex: '#EF4444' },
+  { name: 'Цэнхэр', value: 'Blue', hex: '#3B82F6' },
+  { name: 'Ногоон', value: 'Green', hex: '#22C55E' },
+  { name: 'Шар', value: 'Yellow', hex: '#EAB308' },
+  { name: 'Саарал', value: 'Gray', hex: '#6B7280' },
+  { name: 'Хүрэн', value: 'Brown', hex: '#92400E' },
+  { name: 'Бор', value: 'Beige', hex: '#D4B896' },
+]
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [brands, setBrands] = useState<Brand[]>([])
   const [categories, setCategories] = useState<ClothingType[]>([])
+  const [subcategories, setSubcategories] = useState<Subcategory[]>([])
   const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   
@@ -21,34 +38,43 @@ export default function AdminProductsPage() {
   const [savingCategory, setSavingCategory] = useState(false)
   const [uploading, setUploading] = useState(false)
   
+  // Custom size/color input
+  const [customSize, setCustomSize] = useState('')
+  const [customColor, setCustomColor] = useState('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  // Form state with string values for better UX (no leading zeros issue)
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
     description: '',
-    price: 0,
-    original_price: 0,
+    price: '',
+    original_price: '',
     image_url: '',
     brand_id: '',
     clothing_type_id: '',
+    subcategory_id: '',
     sizes: [] as string[],
     colors: [] as string[],
     is_featured: false,
     is_new_arrival: false,
     is_on_sale: false,
-    stock_quantity: 0
+    stock_quantity: ''
   })
 
   const fetchData = async () => {
     setLoading(true)
-    const [productsRes, brandsRes, categoriesRes] = await Promise.all([
+    const [productsRes, brandsRes, categoriesRes, subcategoriesRes] = await Promise.all([
       api.getProducts(),
       api.getBrands(),
-      api.getCategories()
+      api.getCategories(),
+      api.getAllSubcategories()
     ])
     
     if (productsRes.data) setProducts(productsRes.data)
     if (brandsRes.data) setBrands(brandsRes.data)
     if (categoriesRes.data) setCategories(categoriesRes.data)
+    if (subcategoriesRes.data) setSubcategories(subcategoriesRes.data)
     setLoading(false)
   }
 
@@ -59,35 +85,75 @@ export default function AdminProductsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (editingProduct) {
-      await api.updateProduct(editingProduct.id, formData)
-    } else {
-      await api.createProduct(formData)
+    // Validate required fields
+    if (!formData.name.trim()) {
+      alert('Бүтээгдэхүүний нэр оруулна уу')
+      return
     }
+    if (!formData.price || parseFloat(formData.price) <= 0) {
+      alert('Үнэ оруулна уу')
+      return
+    }
+
+    setSaving(true)
     
-    setShowModal(false)
-    setEditingProduct(null)
-    resetForm()
-    fetchData()
+    try {
+      const submitData = {
+        name: formData.name.trim(),
+        slug: formData.slug.trim() || generateSlug(formData.name),
+        description: formData.description.trim(),
+        price: parseFloat(formData.price) || 0,
+        original_price: formData.original_price ? parseFloat(formData.original_price) : undefined,
+        image_url: formData.image_url.trim(),
+        brand_id: formData.brand_id || undefined,
+        clothing_type_id: formData.clothing_type_id || undefined,
+        subcategory_id: formData.subcategory_id || undefined,
+        sizes: formData.sizes,
+        colors: formData.colors,
+        is_featured: formData.is_featured,
+        is_new_arrival: formData.is_new_arrival,
+        is_on_sale: formData.is_on_sale,
+        stock_quantity: formData.stock_quantity ? parseInt(formData.stock_quantity) : 0
+      }
+
+      if (editingProduct) {
+        const result = await api.updateProduct(editingProduct.id, submitData)
+        if (result.error) throw result.error
+      } else {
+        const result = await api.createProduct(submitData)
+        if (result.error) throw result.error
+      }
+      
+      setShowModal(false)
+      setEditingProduct(null)
+      resetForm()
+      fetchData()
+    } catch (error) {
+      console.error('Save error:', error)
+      alert('Хадгалахад алдаа гарлаа')
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handleEdit = (product: Product) => {
     setEditingProduct(product)
     setFormData({
-      name: product.name,
-      slug: product.slug,
+      name: product.name || '',
+      slug: product.slug || '',
       description: product.description || '',
-      price: product.price,
-      original_price: product.original_price || 0,
+      price: product.price?.toString() || '',
+      original_price: product.original_price?.toString() || '',
       image_url: product.image_url || '',
       brand_id: product.brand_id || '',
       clothing_type_id: product.clothing_type_id || '',
+      subcategory_id: product.subcategory_id || '',
       sizes: product.sizes || [],
       colors: product.colors || [],
       is_featured: product.is_featured || false,
       is_new_arrival: product.is_new_arrival || false,
       is_on_sale: product.is_on_sale || false,
-      stock_quantity: product.stock_quantity || 0
+      stock_quantity: product.stock_quantity?.toString() || ''
     })
     setShowModal(true)
   }
@@ -104,22 +170,67 @@ export default function AdminProductsPage() {
       name: '',
       slug: '',
       description: '',
-      price: 0,
-      original_price: 0,
+      price: '',
+      original_price: '',
       image_url: '',
       brand_id: '',
       clothing_type_id: '',
+      subcategory_id: '',
       sizes: [],
       colors: [],
       is_featured: false,
       is_new_arrival: false,
       is_on_sale: false,
-      stock_quantity: 0
+      stock_quantity: ''
     })
+    setCustomSize('')
+    setCustomColor('')
   }
 
   const generateSlug = (name: string) => {
-    return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+    return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-а-яөү]/gi, '')
+  }
+
+  // Toggle size selection
+  const toggleSize = (size: string) => {
+    setFormData(prev => ({
+      ...prev,
+      sizes: prev.sizes.includes(size) 
+        ? prev.sizes.filter(s => s !== size)
+        : [...prev.sizes, size]
+    }))
+  }
+
+  // Add custom size
+  const addCustomSize = () => {
+    if (customSize.trim() && !formData.sizes.includes(customSize.trim().toUpperCase())) {
+      setFormData(prev => ({
+        ...prev,
+        sizes: [...prev.sizes, customSize.trim().toUpperCase()]
+      }))
+      setCustomSize('')
+    }
+  }
+
+  // Toggle color selection
+  const toggleColor = (color: string) => {
+    setFormData(prev => ({
+      ...prev,
+      colors: prev.colors.includes(color)
+        ? prev.colors.filter(c => c !== color)
+        : [...prev.colors, color]
+    }))
+  }
+
+  // Add custom color
+  const addCustomColor = () => {
+    if (customColor.trim() && !formData.colors.includes(customColor.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        colors: [...prev.colors, customColor.trim()]
+      }))
+      setCustomColor('')
+    }
   }
 
   // Зураг upload хийх
@@ -127,15 +238,21 @@ export default function AdminProductsPage() {
     const file = e.target.files?.[0]
     if (!file) return
 
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      alert('Зургийн хэмжээ 10MB-аас бага байх ёстой')
+      return
+    }
+
     setUploading(true)
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('folder', 'products')
+      const uploadFormData = new FormData()
+      uploadFormData.append('file', file)
+      uploadFormData.append('folder', 'products')
 
       const response = await fetch('/api/upload', {
         method: 'POST',
-        body: formData,
+        body: uploadFormData,
       })
 
       if (!response.ok) {
@@ -150,6 +267,9 @@ export default function AdminProductsPage() {
       alert('Зураг оруулахад алдаа гарлаа')
     } finally {
       setUploading(false)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
     }
   }
 
@@ -393,30 +513,45 @@ export default function AdminProductsPage() {
 
                 <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Үнэ</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Үнэ (₮) <span className="text-red-500">*</span></label>
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
                       value={formData.price}
-                      onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/[^0-9]/g, '')
+                        setFormData({ ...formData, price: value })
+                      }}
+                      placeholder="0"
                       className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Хуучин үнэ</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Хуучин үнэ (₮) <span className="text-xs text-slate-400">(хямдрал)</span></label>
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
                       value={formData.original_price}
-                      onChange={(e) => setFormData({ ...formData, original_price: Number(e.target.value) })}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/[^0-9]/g, '')
+                        setFormData({ ...formData, original_price: value })
+                      }}
+                      placeholder="Хоосон үлдээх"
                       className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Нөөц</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Нөөц (ш)</label>
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
                       value={formData.stock_quantity}
-                      onChange={(e) => setFormData({ ...formData, stock_quantity: Number(e.target.value) })}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/[^0-9]/g, '')
+                        setFormData({ ...formData, stock_quantity: value })
+                      }}
+                      placeholder="0"
                       className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
                     />
                   </div>
@@ -494,11 +629,11 @@ export default function AdminProductsPage() {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Категори</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Ангилал</label>
                     <div className="flex gap-2">
                       <select
                         value={formData.clothing_type_id}
-                        onChange={(e) => setFormData({ ...formData, clothing_type_id: e.target.value })}
+                        onChange={(e) => setFormData({ ...formData, clothing_type_id: e.target.value, subcategory_id: '' })}
                         className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
                       >
                         <option value="">Сонгох...</option>
@@ -510,7 +645,7 @@ export default function AdminProductsPage() {
                         type="button"
                         onClick={() => setShowCategoryModal(true)}
                         className="w-10 h-10 bg-pink-500 hover:bg-pink-600 text-white rounded-xl flex items-center justify-center font-bold text-xl transition-colors"
-                        title="Шинэ категори нэмэх"
+                        title="Шинэ ангилал нэмэх"
                       >
                         +
                       </button>
@@ -518,30 +653,135 @@ export default function AdminProductsPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                {/* Subcategory - shows only when category is selected */}
+                {formData.clothing_type_id && (
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Хэмжээ (таслалаар)</label>
-                    <input
-                      type="text"
-                      value={formData.sizes.join(', ')}
-                      onChange={(e) => setFormData({ ...formData, sizes: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
-                      placeholder="XS, S, M, L, XL"
-                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
-                    />
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Дэд ангилал</label>
+                    <div className="flex gap-2">
+                      <select
+                        value={formData.subcategory_id}
+                        onChange={(e) => setFormData({ ...formData, subcategory_id: e.target.value })}
+                        className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
+                      >
+                        <option value="">Сонгох (заавал биш)...</option>
+                        {subcategories
+                          .filter(sub => sub.clothing_type_id === formData.clothing_type_id)
+                          .map((sub) => (
+                            <option key={sub.id} value={sub.id}>{sub.name}</option>
+                          ))}
+                      </select>
+                      <Link
+                        href="/admin/subcategories"
+                        className="w-10 h-10 bg-slate-200 hover:bg-slate-300 text-slate-600 rounded-xl flex items-center justify-center font-bold text-xl transition-colors"
+                        title="Дэд ангилал удирдах"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" />
+                        </svg>
+                      </Link>
+                    </div>
+                    {subcategories.filter(sub => sub.clothing_type_id === formData.clothing_type_id).length === 0 && (
+                      <p className="text-xs text-slate-400 mt-1">
+                        Энэ ангилалд дэд ангилал байхгүй. <Link href="/admin/subcategories" className="text-pink-500 hover:underline">Нэмэх</Link>
+                      </p>
+                    )}
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Өнгө (таслалаар)</label>
+                )}
+
+                {/* Sizes - Tag based */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Хэмжээ</label>
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {COMMON_SIZES.map((size) => (
+                      <button
+                        key={size}
+                        type="button"
+                        onClick={() => toggleSize(size)}
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                          formData.sizes.includes(size)
+                            ? 'bg-pink-500 text-white shadow-sm'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        }`}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                  {/* Custom sizes */}
+                  {formData.sizes.filter(s => !COMMON_SIZES.includes(s)).length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {formData.sizes.filter(s => !COMMON_SIZES.includes(s)).map((size) => (
+                        <span
+                          key={size}
+                          className="px-2 py-1 bg-pink-100 text-pink-600 rounded-full text-xs flex items-center gap-1"
+                        >
+                          {size}
+                          <button type="button" onClick={() => toggleSize(size)} className="hover:text-pink-800">×</button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <div className="flex gap-2">
                     <input
                       type="text"
-                      value={formData.colors.join(', ')}
-                      onChange={(e) => setFormData({ ...formData, colors: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })}
-                      placeholder="Pink, Black, White"
-                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
+                      value={customSize}
+                      onChange={(e) => setCustomSize(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomSize())}
+                      placeholder="Өөр хэмжээ..."
+                      className="flex-1 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-pink-500 outline-none"
                     />
+                    <button type="button" onClick={addCustomSize} className="px-3 py-1.5 bg-slate-200 text-slate-600 rounded-lg hover:bg-slate-300 text-sm">Нэмэх</button>
                   </div>
                 </div>
 
-                <div className="flex gap-6">
+                {/* Colors - Tag based */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Өнгө</label>
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {COMMON_COLORS.map((color) => (
+                      <button
+                        key={color.value}
+                        type="button"
+                        onClick={() => toggleColor(color.value)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                          formData.colors.includes(color.value)
+                            ? 'bg-pink-500 text-white shadow-sm'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        }`}
+                      >
+                        <span className="w-3 h-3 rounded-full border border-slate-300" style={{ backgroundColor: color.hex }}></span>
+                        {color.name}
+                      </button>
+                    ))}
+                  </div>
+                  {/* Custom colors */}
+                  {formData.colors.filter(c => !COMMON_COLORS.map(cc => cc.value).includes(c)).length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {formData.colors.filter(c => !COMMON_COLORS.map(cc => cc.value).includes(c)).map((color) => (
+                        <span
+                          key={color}
+                          className="px-2 py-1 bg-pink-100 text-pink-600 rounded-full text-xs flex items-center gap-1"
+                        >
+                          {color}
+                          <button type="button" onClick={() => toggleColor(color)} className="hover:text-pink-800">×</button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={customColor}
+                      onChange={(e) => setCustomColor(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomColor())}
+                      placeholder="Өөр өнгө..."
+                      className="flex-1 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-pink-500 outline-none"
+                    />
+                    <button type="button" onClick={addCustomColor} className="px-3 py-1.5 bg-slate-200 text-slate-600 rounded-lg hover:bg-slate-300 text-sm">Нэмэх</button>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-4 p-4 bg-slate-50 rounded-xl">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
@@ -549,7 +789,10 @@ export default function AdminProductsPage() {
                       onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
                       className="w-5 h-5 rounded border-slate-300 text-pink-500 focus:ring-pink-500"
                     />
-                    <span className="text-sm">Онцлох</span>
+                    <div>
+                      <span className="text-sm font-medium">Онцлох</span>
+                      <p className="text-xs text-slate-500">Нүүр хуудсанд</p>
+                    </div>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -558,7 +801,10 @@ export default function AdminProductsPage() {
                       onChange={(e) => setFormData({ ...formData, is_new_arrival: e.target.checked })}
                       className="w-5 h-5 rounded border-slate-300 text-pink-500 focus:ring-pink-500"
                     />
-                    <span className="text-sm">Шинэ</span>
+                    <div>
+                      <span className="text-sm font-medium">Шинэ</span>
+                      <p className="text-xs text-slate-500">NEW tag</p>
+                    </div>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -567,22 +813,30 @@ export default function AdminProductsPage() {
                       onChange={(e) => setFormData({ ...formData, is_on_sale: e.target.checked })}
                       className="w-5 h-5 rounded border-slate-300 text-pink-500 focus:ring-pink-500"
                     />
-                    <span className="text-sm">Хямдрал</span>
+                    <div>
+                      <span className="text-sm font-medium">Хямдрал</span>
+                      <p className="text-xs text-slate-500">Sale хуудсанд</p>
+                    </div>
                   </label>
                 </div>
 
-                <div className="flex gap-3 pt-4">
+                <div className="flex gap-3 pt-4 border-t border-slate-100">
                   <button
                     type="button"
-                    onClick={() => setShowModal(false)}
-                    className="flex-1 py-3 bg-slate-100 text-slate-700 font-medium rounded-xl hover:bg-slate-200 transition-colors"
+                    onClick={() => !saving && setShowModal(false)}
+                    disabled={saving}
+                    className="flex-1 py-3 bg-slate-100 text-slate-700 font-medium rounded-xl hover:bg-slate-200 transition-colors disabled:opacity-50"
                   >
                     Болих
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 py-3 bg-pink-500 text-white font-medium rounded-xl hover:bg-pink-600 transition-colors"
+                    disabled={saving}
+                    className="flex-1 py-3 bg-pink-500 text-white font-medium rounded-xl hover:bg-pink-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                   >
+                    {saving && (
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    )}
                     {editingProduct ? 'Хадгалах' : 'Нэмэх'}
                   </button>
                 </div>

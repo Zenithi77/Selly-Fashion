@@ -2,17 +2,17 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { api, Product, ClothingType, Subcategory } from '@/lib/supabase'
+import { useParams } from 'next/navigation'
+import { api, Product, Subcategory } from '@/lib/supabase'
 import { useCartStore, useWishlistStore } from '@/lib/store'
 
-export default function ShopPage() {
-  const [products, setProducts] = useState<Product[]>([])
-  const [categories, setCategories] = useState<ClothingType[]>([])
-  const [subcategories, setSubcategories] = useState<Subcategory[]>([])
-  const [loading, setLoading] = useState(true)
+export default function SubcategoryPage() {
+  const params = useParams()
+  const slug = params.slug as string
   
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
-  const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null)
+  const [subcategory, setSubcategory] = useState<Subcategory | null>(null)
+  const [products, setProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
   const [sortBy, setSortBy] = useState('newest')
   
   const addToCart = useCartStore(state => state.addItem)
@@ -22,38 +22,36 @@ export default function ShopPage() {
     const fetchData = async () => {
       setLoading(true)
       
-      const [productsRes, categoriesRes, subcatsRes] = await Promise.all([
-        api.getProducts(),
-        api.getClothingTypes(),
-        api.getAllSubcategories()
-      ])
-      
-      if (productsRes.data) setProducts(productsRes.data)
-      if (categoriesRes.data) setCategories(categoriesRes.data)
-      if (subcatsRes.data) setSubcategories(subcatsRes.data)
+      // Get subcategory
+      const subcategoryRes = await api.getSubcategoryBySlug(slug)
+      if (subcategoryRes.data) {
+        setSubcategory(subcategoryRes.data)
+        
+        // Get products in this subcategory
+        const productsRes = await api.getProducts({ subcategory: subcategoryRes.data.id })
+        if (productsRes.data) {
+          setProducts(productsRes.data)
+        }
+      }
       
       setLoading(false)
     }
     
     fetchData()
-  }, [])
+  }, [slug])
 
-  // Get subcategories for selected category
-  const filteredSubcategories = selectedCategory
-    ? subcategories.filter(sub => sub.clothing_type_id === selectedCategory)
-    : []
+  const isInWishlist = (productId: string) => wishlistItems.some(item => item.id === productId)
 
-  // Filter products
-  let filteredProducts = [...products]
-  if (selectedCategory) {
-    filteredProducts = filteredProducts.filter(p => p.clothing_type_id === selectedCategory)
-  }
-  if (selectedSubcategory) {
-    filteredProducts = filteredProducts.filter(p => p.subcategory_id === selectedSubcategory)
+  const toggleWishlist = (product: Product) => {
+    if (isInWishlist(product.id)) {
+      removeFromWishlist(product.id)
+    } else {
+      addToWishlist(product)
+    }
   }
 
   // Sort products
-  const sortedProducts = [...filteredProducts].sort((a, b) => {
+  const sortedProducts = [...products].sort((a, b) => {
     switch (sortBy) {
       case 'price-low':
         return a.price - b.price
@@ -66,21 +64,6 @@ export default function ShopPage() {
     }
   })
 
-  const isInWishlist = (productId: string) => wishlistItems.some(item => item.id === productId)
-
-  const toggleWishlist = (product: Product) => {
-    if (isInWishlist(product.id)) {
-      removeFromWishlist(product.id)
-    } else {
-      addToWishlist(product)
-    }
-  }
-
-  const handleCategoryChange = (categoryId: string | null) => {
-    setSelectedCategory(categoryId)
-    setSelectedSubcategory(null) // Reset subcategory when category changes
-  }
-
   if (loading) {
     return (
       <main className="min-h-screen pt-[104px] flex items-center justify-center">
@@ -89,99 +72,70 @@ export default function ShopPage() {
     )
   }
 
+  if (!subcategory) {
+    return (
+      <main className="min-h-screen pt-[104px] flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-slate-800 mb-4">Дэд ангилал олдсонгүй</h1>
+          <Link href="/shop" className="text-pink-500 hover:underline">
+            Дэлгүүр рүү буцах
+          </Link>
+        </div>
+      </main>
+    )
+  }
+
   return (
     <main className="min-h-screen pt-[104px] bg-slate-50">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-pink-50 to-pink-100/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      {/* Breadcrumb & Header */}
+      <div className="bg-white border-b border-slate-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          {/* Breadcrumb */}
           <nav className="flex items-center gap-2 text-sm mb-4">
             <Link href="/" className="text-slate-500 hover:text-pink-500">Нүүр</Link>
             <span className="text-slate-300">/</span>
-            <span className="text-pink-500 font-medium">Дэлгүүр</span>
+            <Link href="/shop" className="text-slate-500 hover:text-pink-500">Дэлгүүр</Link>
+            {subcategory.clothing_type && (
+              <>
+                <span className="text-slate-300">/</span>
+                <Link 
+                  href={`/category/${subcategory.clothing_type.slug}`} 
+                  className="text-slate-500 hover:text-pink-500"
+                >
+                  {subcategory.clothing_type.name}
+                </Link>
+              </>
+            )}
+            <span className="text-slate-300">/</span>
+            <span className="text-pink-500 font-medium">{subcategory.name}</span>
           </nav>
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">Бүх бүтээгдэхүүн</h1>
-          <p className="text-slate-600">Манай бүтээгдэхүүнүүдтэй танилцана уу</p>
-          <p className="text-sm text-slate-500 mt-3">{sortedProducts.length} бүтээгдэхүүн</p>
+          
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-slate-900">{subcategory.name}</h1>
+              {subcategory.description && (
+                <p className="text-slate-600 mt-1">{subcategory.description}</p>
+              )}
+              <p className="text-sm text-slate-500 mt-2">{products.length} бүтээгдэхүүн</p>
+            </div>
+            
+            {/* Sort */}
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
+            >
+              <option value="newest">Шинэ эхэнд</option>
+              <option value="price-low">Үнэ: Багаас их</option>
+              <option value="price-high">Үнэ: Ихээс бага</option>
+              <option value="name">Нэрээр</option>
+            </select>
+          </div>
         </div>
       </div>
 
-      {/* Filters & Products */}
+      {/* Products Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Category Filter */}
-        <div className="bg-white rounded-2xl p-4 mb-6 shadow-sm">
-          <div className="flex flex-wrap items-center gap-3 mb-4">
-            <span className="text-sm font-medium text-slate-700">Ангилал:</span>
-            <button
-              onClick={() => handleCategoryChange(null)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                selectedCategory === null 
-                  ? 'bg-pink-500 text-white' 
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              Бүгд
-            </button>
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => handleCategoryChange(cat.id)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                  selectedCategory === cat.id 
-                    ? 'bg-pink-500 text-white' 
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                {cat.name}
-              </button>
-            ))}
-          </div>
-          
-          {/* Subcategory Filter - shows when category is selected */}
-          {filteredSubcategories.length > 0 && (
-            <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-slate-100">
-              <span className="text-sm font-medium text-slate-700">Дэд ангилал:</span>
-              <button
-                onClick={() => setSelectedSubcategory(null)}
-                className={`px-3 py-1.5 rounded-full text-sm transition-all ${
-                  selectedSubcategory === null 
-                    ? 'bg-pink-100 text-pink-600 font-medium' 
-                    : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
-                }`}
-              >
-                Бүгд
-              </button>
-              {filteredSubcategories.map((sub) => (
-                <button
-                  key={sub.id}
-                  onClick={() => setSelectedSubcategory(sub.id)}
-                  className={`px-3 py-1.5 rounded-full text-sm transition-all ${
-                    selectedSubcategory === sub.id 
-                      ? 'bg-pink-100 text-pink-600 font-medium' 
-                      : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
-                  }`}
-                >
-                  {sub.name}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Sort */}
-        <div className="flex justify-end mb-6">
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="px-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
-          >
-            <option value="newest">Шинэ эхэнд</option>
-            <option value="price-low">Үнэ: Багаас их</option>
-            <option value="price-high">Үнэ: Ихээс бага</option>
-            <option value="name">Нэрээр</option>
-          </select>
-        </div>
-
-        {/* Products Grid */}
         {sortedProducts.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
             {sortedProducts.map((product) => (
@@ -230,20 +184,6 @@ export default function ShopPage() {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
                       </svg>
                     </button>
-                    
-                    {/* Category & Subcategory tags */}
-                    <div className="absolute bottom-2 left-2 flex flex-wrap gap-1">
-                      {product.clothing_type && (
-                        <span className="px-2 py-1 bg-white/90 backdrop-blur-sm text-slate-600 text-xs font-medium rounded-full">
-                          {product.clothing_type.name}
-                        </span>
-                      )}
-                      {product.subcategory && (
-                        <span className="px-2 py-1 bg-pink-50/90 backdrop-blur-sm text-pink-600 text-xs font-medium rounded-full">
-                          {product.subcategory.name}
-                        </span>
-                      )}
-                    </div>
                   </div>
                 </Link>
                 
@@ -279,13 +219,16 @@ export default function ShopPage() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
             </svg>
             <h3 className="text-xl font-semibold text-slate-700 mb-2">Бүтээгдэхүүн байхгүй</h3>
-            <p className="text-slate-500 mb-6">Сонгосон шүүлтүүрт тохирох бүтээгдэхүүн олдсонгүй</p>
-            <button
-              onClick={() => { setSelectedCategory(null); setSelectedSubcategory(null) }}
+            <p className="text-slate-500 mb-6">Энэ ангилалд одоогоор бүтээгдэхүүн байхгүй байна</p>
+            <Link 
+              href="/shop"
               className="inline-flex items-center gap-2 px-6 py-3 bg-pink-500 text-white font-medium rounded-xl hover:bg-pink-600 transition-colors"
             >
-              Шүүлтүүр арилгах
-            </button>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+              </svg>
+              Дэлгүүр рүү буцах
+            </Link>
           </div>
         )}
       </div>
