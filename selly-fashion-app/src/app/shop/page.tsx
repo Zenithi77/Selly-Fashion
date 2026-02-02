@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { api, Product, ClothingType, Subcategory } from '@/lib/supabase'
 import { useCartStore, useWishlistStore } from '@/lib/store'
 
-export default function ShopPage() {
+function ShopContent() {
   const searchParams = useSearchParams()
   const categoryParam = searchParams.get('category')
   
@@ -301,5 +301,17 @@ export default function ShopPage() {
         )}
       </div>
     </main>
+  )
+}
+
+export default function ShopPage() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen pt-[104px] flex items-center justify-center">
+        <div className="w-16 h-16 border-4 border-pink-500 border-t-transparent rounded-full animate-spin"></div>
+      </main>
+    }>
+      <ShopContent />
+    </Suspense>
   )
 }
