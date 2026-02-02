@@ -207,8 +207,7 @@ export const api = {
       .select(`
         *,
         brand:brands(*),
-        clothing_type:clothing_types(*),
-        subcategory:subcategories(*)
+        clothing_type:clothing_types(*)
       `)
       .order('created_at', { ascending: false })
 
@@ -230,8 +229,7 @@ export const api = {
       .select(`
         *,
         brand:brands(*),
-        clothing_type:clothing_types(*),
-        subcategory:subcategories(*)
+        clothing_type:clothing_types(*)
       `)
       .eq('slug', slug)
       .single()
@@ -244,8 +242,7 @@ export const api = {
       .select(`
         *,
         brand:brands(*),
-        clothing_type:clothing_types(*),
-        subcategory:subcategories(*)
+        clothing_type:clothing_types(*)
       `)
       .eq('id', id)
       .single()
@@ -326,73 +323,34 @@ export const api = {
     return { data, error }
   },
 
-  // Subcategories
+  // Subcategories - table doesn't exist yet, return empty arrays
   async getSubcategories(clothingTypeId?: string) {
-    let query = supabase
-      .from('subcategories')
-      .select(`
-        *,
-        clothing_type:clothing_types(*)
-      `)
-      .eq('is_active', true)
-      .order('display_order', { ascending: true })
-
-    if (clothingTypeId) {
-      query = query.eq('clothing_type_id', clothingTypeId)
-    }
-
-    const { data, error } = await query
-    return { data: data as Subcategory[], error }
+    // Return empty array since subcategories table doesn't exist
+    return { data: [] as Subcategory[], error: null }
   },
 
   async getAllSubcategories() {
-    const { data, error } = await supabase
-      .from('subcategories')
-      .select(`
-        *,
-        clothing_type:clothing_types(*)
-      `)
-      .order('display_order', { ascending: true })
-    return { data: data as Subcategory[], error }
+    // Return empty array since subcategories table doesn't exist
+    return { data: [] as Subcategory[], error: null }
   },
 
   async getSubcategoryBySlug(slug: string) {
-    const { data, error } = await supabase
-      .from('subcategories')
-      .select(`
-        *,
-        clothing_type:clothing_types(*)
-      `)
-      .eq('slug', slug)
-      .single()
-    return { data: data as Subcategory, error }
+    return { data: null as Subcategory | null, error: null }
   },
 
   async createSubcategory(subcategory: Partial<Subcategory>) {
-    const { data, error } = await supabase
-      .from('subcategories')
-      .insert(subcategory)
-      .select()
-      .single()
-    return { data: data as Subcategory, error }
+    // Subcategories table doesn't exist yet
+    return { data: null as Subcategory | null, error: { message: 'Subcategories table not available' } }
   },
 
   async updateSubcategory(id: string, subcategory: Partial<Subcategory>) {
-    const { data, error } = await supabase
-      .from('subcategories')
-      .update({ ...subcategory, updated_at: new Date().toISOString() })
-      .eq('id', id)
-      .select()
-      .single()
-    return { data: data as Subcategory, error }
+    // Subcategories table doesn't exist yet
+    return { data: null as Subcategory | null, error: { message: 'Subcategories table not available' } }
   },
 
   async deleteSubcategory(id: string) {
-    const { error } = await supabase
-      .from('subcategories')
-      .delete()
-      .eq('id', id)
-    return { error }
+    // Subcategories table doesn't exist yet
+    return { error: { message: 'Subcategories table not available' } }
   },
 
   // Orders
