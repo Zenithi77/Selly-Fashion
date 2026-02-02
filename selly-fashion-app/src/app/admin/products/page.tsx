@@ -98,9 +98,13 @@ export default function AdminProductsPage() {
     setSaving(true)
     
     try {
+      // Generate unique slug with timestamp for new products
+      const isNewProduct = !editingProduct
+      const slugValue = formData.slug.trim() || generateSlug(formData.name, isNewProduct)
+      
       const submitData = {
         name: formData.name.trim(),
-        slug: formData.slug.trim() || generateSlug(formData.name),
+        slug: slugValue,
         description: formData.description.trim(),
         price: parseFloat(formData.price) || 0,
         original_price: formData.original_price ? parseFloat(formData.original_price) : undefined,
@@ -187,8 +191,12 @@ export default function AdminProductsPage() {
     setCustomColor('')
   }
 
-  const generateSlug = (name: string) => {
-    return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-а-яөү]/gi, '')
+  const generateSlug = (name: string, addTimestamp: boolean = false) => {
+    const baseSlug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-а-яөү]/gi, '')
+    if (addTimestamp) {
+      return `${baseSlug}-${Date.now()}`
+    }
+    return baseSlug
   }
 
   // Toggle size selection

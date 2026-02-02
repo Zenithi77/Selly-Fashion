@@ -26,7 +26,10 @@ export default function CategoryPage() {
       
       // Get category by slug
       const typesRes = await api.getClothingTypes()
+      console.log('All categories:', typesRes.data)
+      console.log('Looking for slug:', slug)
       const foundCategory = typesRes.data?.find(t => t.slug === slug)
+      console.log('Found category:', foundCategory)
       
       if (foundCategory) {
         setCategory(foundCategory)
@@ -39,6 +42,7 @@ export default function CategoryPage() {
         
         // Get products in this category
         const productsRes = await api.getProducts({ category: foundCategory.id })
+        console.log('Products for category:', productsRes.data)
         if (productsRes.data) {
           setProducts(productsRes.data)
         }
