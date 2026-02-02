@@ -86,7 +86,7 @@ export default function Home() {
               brands.slice(0, 5).map((brand) => (
                 <Link 
                   key={brand.id} 
-                  href={`/brand/${brand.slug}`} 
+                  href={brand.slug ? `/brand/${brand.slug}` : `/shop?brand=${brand.id}`} 
                   className="group relative aspect-[3/4] rounded-2xl overflow-hidden cursor-pointer"
                 >
                   <img
