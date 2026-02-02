@@ -28,7 +28,7 @@ export default function BrandsTypesPage() {
                 <span className="material-symbols-outlined text-primary">verified</span>
                 Featured Brands
               </h2>
-              <Link href="/brands" className="text-primary font-semibold hover:underline text-sm">
+              <Link href="/shop" className="text-primary font-semibold hover:underline text-sm">
                 View All 24 Brands
               </Link>
             </div>
