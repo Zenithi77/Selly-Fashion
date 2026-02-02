@@ -259,12 +259,25 @@ export const api = {
   },
 
   async getFeaturedBrands(limit: number = 5) {
-    const { data, error } = await supabase
+    // First try to get featured brands
+    let { data, error } = await supabase
       .from('brands')
       .select('*')
       .eq('is_featured', true)
       .order('featured_order', { ascending: true })
       .limit(limit)
+    
+    // If no featured brands, get any brands
+    if (!data || data.length === 0) {
+      const result = await supabase
+        .from('brands')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(limit)
+      data = result.data
+      error = result.error
+    }
+    
     return { data: data as Brand[], error }
   },
 
@@ -295,12 +308,25 @@ export const api = {
   },
 
   async getFeaturedCategories(limit: number = 4) {
-    const { data, error } = await supabase
+    // First try to get featured categories
+    let { data, error } = await supabase
       .from('clothing_types')
       .select('*')
       .eq('is_featured', true)
       .order('featured_order', { ascending: true })
       .limit(limit)
+    
+    // If no featured categories, get any categories
+    if (!data || data.length === 0) {
+      const result = await supabase
+        .from('clothing_types')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(limit)
+      data = result.data
+      error = result.error
+    }
+    
     return { data: data as ClothingType[], error }
   },
 
