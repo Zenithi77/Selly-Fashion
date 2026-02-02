@@ -296,6 +296,17 @@ export default function CheckoutPage() {
     setLoading(true)
 
     try {
+      // Validate product IDs are valid UUIDs
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+      const invalidItems = items.filter(item => !uuidRegex.test(item.product.id))
+      
+      if (invalidItems.length > 0) {
+        alert('Сагсанд буруу бүтээгдэхүүн байна. Сагсаа цэвэрлэж, дахин нэмнэ үү.')
+        clearCart()
+        router.push('/shop')
+        return
+      }
+
       // Generate unique payment reference
       const newPaymentRef = generatePaymentRef()
       
