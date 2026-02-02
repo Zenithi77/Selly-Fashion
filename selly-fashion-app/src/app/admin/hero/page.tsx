@@ -30,7 +30,6 @@ export default function AdminHeroPage() {
   const [categoryForm, setCategoryForm] = useState({
     name: '',
     slug: '',
-    icon: '',
     image_url: '',
     is_featured: true,
     featured_order: 1
@@ -86,7 +85,6 @@ export default function AdminHeroPage() {
     setCategoryForm({
       name: category.name,
       slug: category.slug,
-      icon: category.icon || '',
       image_url: category.image_url || '',
       is_featured: category.is_featured || false,
       featured_order: category.featured_order || 0
@@ -161,7 +159,6 @@ export default function AdminHeroPage() {
       const updateData = {
         name: categoryForm.name,
         slug: categoryForm.slug,
-        icon: categoryForm.icon,
         image_url: categoryForm.image_url,
         is_featured: Boolean(categoryForm.is_featured),
         featured_order: Number(categoryForm.featured_order) || 0
@@ -405,7 +402,7 @@ export default function AdminHeroPage() {
                       {category.image_url ? (
                         <img src={category.image_url} alt={category.name} className="w-full h-full object-cover" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-2xl">{category.icon}</div>
+                        <div className="w-full h-full flex items-center justify-center text-2xl text-slate-400">📷</div>
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
