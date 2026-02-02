@@ -90,7 +90,7 @@ export default function FloatingCart() {
                     {item.size && <span>Хэмжээ: {item.size}</span>}
                     {item.color && <span className="ml-2">Өнгө: {item.color}</span>}
                   </p>
-                  <p className="font-bold text-pink-500">${item.product.price}</p>
+                  <p className="font-bold text-pink-500">{item.product.price.toLocaleString()}₮</p>
                   
                   <div className="flex items-center justify-between mt-2">
                     <div className="flex items-center gap-2">
@@ -132,7 +132,7 @@ export default function FloatingCart() {
           <div className="absolute bottom-0 left-0 right-0 p-6 bg-white border-t border-pink-100">
             <div className="flex justify-between items-center mb-4">
               <span className="text-slate-600">Нийт дүн</span>
-              <span className="text-2xl font-bold text-slate-900">${totalPrice.toFixed(2)}</span>
+              <span className="text-2xl font-bold text-slate-900">{totalPrice.toLocaleString()}₮</span>
             </div>
             <Link 
               href="/checkout"

@@ -201,9 +201,9 @@ export default function ProductDetailPage() {
                 {product.name}
               </h1>
               <div className="flex items-center gap-4">
-                <span className="text-3xl font-bold text-pink-500">${product.price}</span>
+                <span className="text-3xl font-bold text-pink-500">{product.price.toLocaleString()}₮</span>
                 {product.original_price && product.original_price > product.price && (
-                  <span className="text-xl text-slate-400 line-through">${product.original_price}</span>
+                  <span className="text-xl text-slate-400 line-through">{product.original_price.toLocaleString()}₮</span>
                 )}
               </div>
             </div>

@@ -91,7 +91,7 @@ export default function AdminSalePage() {
               </div>
               <div>
                 <p className="text-2xl font-bold text-slate-900">
-                  ${saleProducts.reduce((sum, p) => sum + (p.original_price || p.price) - p.price, 0).toFixed(0)}
+                  {saleProducts.reduce((sum, p) => sum + (p.original_price || p.price) - p.price, 0).toLocaleString()}₮
                 </p>
                 <p className="text-sm text-slate-500">Нийт хөнгөлөлт</p>
               </div>
@@ -154,10 +154,10 @@ export default function AdminSalePage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-slate-600">
-                        ${product.original_price || product.price}
+                        {(product.original_price || product.price).toLocaleString()}₮
                       </td>
                       <td className="px-6 py-4">
-                        <span className="font-semibold text-pink-500">${product.price}</span>
+                        <span className="font-semibold text-pink-500">{product.price.toLocaleString()}₮</span>
                       </td>
                       <td className="px-6 py-4">
                         {discount > 0 ? (

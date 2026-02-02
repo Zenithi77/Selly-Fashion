@@ -103,9 +103,9 @@ export default function SalePage() {
                     <p className="text-xs text-pink-500 font-semibold mb-1">{product.brand?.name}</p>
                     <h3 className="font-bold mb-2 group-hover:text-pink-500 transition-colors">{product.name}</h3>
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-rose-500">${product.price}</span>
+                      <span className="font-bold text-rose-500">{product.price.toLocaleString()}₮</span>
                       {product.original_price && product.original_price > product.price && (
-                        <span className="text-sm text-slate-400 line-through">${product.original_price}</span>
+                        <span className="text-sm text-slate-400 line-through">{product.original_price.toLocaleString()}₮</span>
                       )}
                     </div>
                   </div>

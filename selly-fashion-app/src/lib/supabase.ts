@@ -85,7 +85,6 @@ export interface ClothingType {
   name: string
   slug: string
   description: string
-  icon: string
   image_url: string
   subcategories: string[]
   is_featured: boolean

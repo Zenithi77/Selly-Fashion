@@ -19,6 +19,7 @@ export default function AdminProductsPage() {
   const [newCategoryName, setNewCategoryName] = useState('')
   const [savingBrand, setSavingBrand] = useState(false)
   const [savingCategory, setSavingCategory] = useState(false)
+  const [uploading, setUploading] = useState(false)
   
   const [formData, setFormData] = useState({
     name: '',
@@ -119,6 +120,37 @@ export default function AdminProductsPage() {
 
   const generateSlug = (name: string) => {
     return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+  }
+
+  // Зураг upload хийх
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('folder', 'products')
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Upload failed')
+      }
+
+      const result = await response.json()
+      setFormData(prev => ({ ...prev, image_url: result.url }))
+    } catch (error) {
+      console.error('Upload error:', error)
+      alert('Зураг оруулахад алдаа гарлаа')
+    } finally {
+      setUploading(false)
+    }
   }
 
   // Add new brand
@@ -254,9 +286,9 @@ export default function AdminProductsPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="font-semibold text-pink-500">${product.price}</span>
+                      <span className="font-semibold text-pink-500">{product.price.toLocaleString()}₮</span>
                       {product.original_price && product.original_price > product.price && (
-                        <span className="text-sm text-slate-400 line-through ml-2">${product.original_price}</span>
+                        <span className="text-sm text-slate-400 line-through ml-2">{product.original_price.toLocaleString()}₮</span>
                       )}
                     </td>
                     <td className="px-6 py-4 text-slate-600">
@@ -391,13 +423,50 @@ export default function AdminProductsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Зургийн URL</label>
-                  <input
-                    type="url"
-                    value={formData.image_url}
-                    onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
-                  />
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Зураг</label>
+                  <div className="space-y-3">
+                    {/* Preview */}
+                    {formData.image_url && (
+                      <div className="relative w-32 h-40 rounded-xl overflow-hidden bg-slate-100">
+                        <img src={formData.image_url} alt="Preview" className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => setFormData({ ...formData, image_url: '' })}
+                          className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-sm hover:bg-red-600"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
+                    {/* Upload button */}
+                    <div className="flex gap-2">
+                      <label className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-pink-50 border-2 border-dashed border-pink-300 rounded-xl cursor-pointer hover:bg-pink-100 transition-colors ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-pink-500">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                        </svg>
+                        <span className="text-sm font-medium text-pink-600">
+                          {uploading ? 'Оруулж байна...' : 'Зураг сонгох'}
+                        </span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          disabled={uploading}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                    {/* URL input */}
+                    <div className="flex gap-2">
+                      <input
+                        type="url"
+                        value={formData.image_url}
+                        onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                        placeholder="Эсвэл URL оруулах..."
+                        className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none text-sm"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">

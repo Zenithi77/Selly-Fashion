@@ -129,7 +129,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
               <div>
                 <p className="text-xs text-primary font-semibold mb-1">{product.brand}</p>
                 <h3 className="font-bold mb-2 group-hover:text-primary transition-colors">{product.name}</h3>
-                <p className="text-slate-600 dark:text-slate-400">${product.price}</p>
+                <p className="text-slate-600 dark:text-slate-400">{product.price.toLocaleString()}₮</p>
               </div>
             </Link>
           ))}
