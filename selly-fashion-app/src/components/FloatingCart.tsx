@@ -79,7 +79,7 @@ export default function FloatingCart() {
               <div key={item.id} className="flex gap-4 p-4 bg-slate-50 rounded-2xl">
                 <div className="w-20 h-24 rounded-xl overflow-hidden flex-shrink-0">
                   <img 
-                    src={item.product.image_url || 'https://via.placeholder.com/200'} 
+                    src={item.product.image_url || '/placeholder-product.svg'} 
                     alt={item.product.name}
                     className="w-full h-full object-cover"
                   />

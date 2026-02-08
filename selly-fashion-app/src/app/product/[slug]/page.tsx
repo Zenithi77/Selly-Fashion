@@ -111,7 +111,7 @@ export default function ProductDetailPage() {
     )
   }
 
-  const images = product.images?.length ? product.images : [product.image_url]
+  const images = product.images?.length ? product.images : [product.image_url || '/placeholder-product.svg']
   const discount = product.original_price 
     ? Math.round((1 - product.price / product.original_price) * 100) 
     : 0

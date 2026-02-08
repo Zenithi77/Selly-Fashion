@@ -43,6 +43,18 @@ export default function AdminProductsPage() {
   const [customColor, setCustomColor] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
   
+  // Excel upload state
+  const [showExcelModal, setShowExcelModal] = useState(false)
+  const [excelUploading, setExcelUploading] = useState(false)
+  const [excelResult, setExcelResult] = useState<{
+    success?: boolean
+    message?: string
+    successCount?: number
+    totalRows?: number
+    errors?: string[]
+  } | null>(null)
+  const excelInputRef = useRef<HTMLInputElement>(null)
+  
   // Form state with string values for better UX (no leading zeros issue)
   const [formData, setFormData] = useState({
     name: '',
@@ -345,6 +357,74 @@ export default function AdminProductsPage() {
     }
   }
 
+  // Handle Excel file upload
+  const handleExcelUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setExcelUploading(true)
+    setExcelResult(null)
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await fetch('/api/upload-excel', {
+        method: 'POST',
+        body: formData,
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        setExcelResult({ success: false, message: result.error || 'Алдаа гарлаа', errors: result.details ? [result.details] : undefined })
+      } else {
+        setExcelResult(result)
+        if (result.success) {
+          fetchData() // Refresh products list
+        }
+      }
+    } catch (error) {
+      console.error('Excel upload error:', error)
+      setExcelResult({ success: false, message: 'Файл оруулахад алдаа гарлаа' })
+    } finally {
+      setExcelUploading(false)
+      if (excelInputRef.current) {
+        excelInputRef.current.value = ''
+      }
+    }
+  }
+
+  // Download Excel template
+  const downloadExcelTemplate = () => {
+    // Create template headers
+    const headers = [
+      'name', 'description', 'price', 'original_price', 'brand', 'category', 
+      'subcategory', 'sizes', 'colors', 'stock', 'is_featured', 'is_new_arrival', 'is_on_sale'
+    ]
+    
+    // Example row
+    const exampleRow = [
+      'Загварлаг цамц', 'Тайлбар энд бичнэ', '89000', '120000', 'Nike', 'Цамц',
+      'Эрэгтэй цамц', 'S,M,L,XL', 'Black,White,Blue', '50', 'false', 'true', 'true'
+    ]
+
+    // Create CSV content
+    const csvContent = [
+      headers.join(','),
+      exampleRow.join(',')
+    ].join('\n')
+
+    // Download as CSV
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'products-template.csv'
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
   if (loading) {
     return (
       <main className="min-h-screen pt-[104px] flex items-center justify-center">
@@ -372,15 +452,26 @@ export default function AdminProductsPage() {
               <p className="text-sm text-slate-500">{products.length} бүтээгдэхүүн</p>
             </div>
           </div>
-          <button
-            onClick={() => { resetForm(); setEditingProduct(null); setShowModal(true) }}
-            className="px-4 py-2 bg-pink-500 text-white rounded-lg font-medium hover:bg-pink-600 transition-colors flex items-center gap-2"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-            Нэмэх
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowExcelModal(true)}
+              className="px-4 py-2 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-600 transition-colors flex items-center gap-2"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+              </svg>
+              Excel оруулах
+            </button>
+            <button
+              onClick={() => { resetForm(); setEditingProduct(null); setShowModal(true) }}
+              className="px-4 py-2 bg-pink-500 text-white rounded-lg font-medium hover:bg-pink-600 transition-colors flex items-center gap-2"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              Нэмэх
+            </button>
+          </div>
         </div>
 
         {/* Products Table */}
@@ -403,9 +494,11 @@ export default function AdminProductsPage() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-14 rounded-lg overflow-hidden bg-slate-100 flex-shrink-0">
-                          {product.image_url && (
-                            <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
-                          )}
+                          <img 
+                            src={product.image_url || '/placeholder-product.svg'} 
+                            alt={product.name} 
+                            className="w-full h-full object-cover" 
+                          />
                         </div>
                         <div>
                           <p className="font-medium text-slate-900">{product.name}</p>
@@ -932,6 +1025,124 @@ export default function AdminProductsPage() {
                     {savingCategory ? 'Нэмж байна...' : 'Нэмэх'}
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Excel Upload Modal */}
+        {showExcelModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-slate-800">Excel-ээр бараа оруулах</h3>
+                <button 
+                  onClick={() => { setShowExcelModal(false); setExcelResult(null) }}
+                  className="p-2 hover:bg-slate-100 rounded-lg"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {/* Instructions */}
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                  <h4 className="font-semibold text-blue-800 mb-2">Заавар:</h4>
+                  <ul className="text-sm text-blue-700 space-y-1">
+                    <li>• Excel (.xlsx, .xls) эсвэл CSV файл оруулна уу</li>
+                    <li>• Доорх загвар файлыг татаж харна уу</li>
+                    <li>• Зургийг дараа нь бараа тус бүрт засварлаж оруулна</li>
+                    <li>• Брэнд, ангилал нь урьдчилан бүртгэгдсэн байх шаардлагатай</li>
+                  </ul>
+                </div>
+
+                {/* Template download */}
+                <button
+                  onClick={downloadExcelTemplate}
+                  className="w-full py-3 border-2 border-dashed border-emerald-300 text-emerald-600 rounded-xl hover:bg-emerald-50 transition-colors flex items-center justify-center gap-2"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                  </svg>
+                  Загвар файл татах (CSV)
+                </button>
+
+                {/* File upload */}
+                <div className="relative">
+                  <input
+                    ref={excelInputRef}
+                    type="file"
+                    accept=".xlsx,.xls,.csv"
+                    onChange={handleExcelUpload}
+                    className="hidden"
+                    id="excel-upload"
+                  />
+                  <label
+                    htmlFor="excel-upload"
+                    className={`w-full py-8 border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors ${
+                      excelUploading 
+                        ? 'border-slate-300 bg-slate-50' 
+                        : 'border-pink-300 hover:bg-pink-50'
+                    }`}
+                  >
+                    {excelUploading ? (
+                      <>
+                        <div className="w-8 h-8 border-4 border-pink-500 border-t-transparent rounded-full animate-spin"></div>
+                        <span className="text-slate-600">Файл боловсруулж байна...</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-10 h-10 text-pink-500">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m6.75 12-3-3m0 0-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                        </svg>
+                        <span className="text-slate-600 font-medium">Excel файл сонгох</span>
+                        <span className="text-sm text-slate-400">.xlsx, .xls, .csv</span>
+                      </>
+                    )}
+                  </label>
+                </div>
+
+                {/* Result */}
+                {excelResult && (
+                  <div className={`rounded-xl p-4 ${excelResult.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+                    <div className="flex items-start gap-3">
+                      {excelResult.success ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6 text-green-500 flex-shrink-0">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                        </svg>
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6 text-red-500 flex-shrink-0">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                        </svg>
+                      )}
+                      <div className="flex-1">
+                        <p className={`font-semibold ${excelResult.success ? 'text-green-700' : 'text-red-700'}`}>
+                          {excelResult.message}
+                        </p>
+                        {excelResult.success && excelResult.totalRows && (
+                          <p className="text-sm text-green-600 mt-1">
+                            Нийт {excelResult.totalRows} мөрөөс {excelResult.successCount} бараа амжилттай нэмэгдлээ
+                          </p>
+                        )}
+                        {excelResult.errors && excelResult.errors.length > 0 && (
+                          <div className="mt-2">
+                            <p className="text-sm font-medium text-amber-700">Анхааруулга:</p>
+                            <ul className="text-sm text-amber-600 mt-1 max-h-32 overflow-y-auto">
+                              {excelResult.errors.slice(0, 10).map((err, i) => (
+                                <li key={i}>• {err}</li>
+                              ))}
+                              {excelResult.errors.length > 10 && (
+                                <li>... + {excelResult.errors.length - 10} бусад</li>
+                              )}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

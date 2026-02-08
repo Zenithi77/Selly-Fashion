@@ -76,7 +76,7 @@ export default function SalePage() {
                 <Link href={`/product/${product.slug}`} key={product.id} className="group">
                   <div className="relative aspect-[3/4] overflow-hidden rounded-2xl mb-4">
                     <img
-                      src={product.image_url || 'https://via.placeholder.com/400'}
+                      src={product.image_url || '/placeholder-product.svg'}
                       alt={product.name}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
