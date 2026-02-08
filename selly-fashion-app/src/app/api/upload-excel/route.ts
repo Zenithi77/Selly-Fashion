@@ -128,24 +128,39 @@ export async function POST(request: NextRequest) {
       const row = rawData[i]
       const rowNum = i + 2 // Excel rows start at 1, header is row 1
       
-      // Map column names (support both Mongolian and English)
+      // Helper function to find value by multiple possible column names
+      const findValue = (...keys: string[]): unknown => {
+        for (const key of keys) {
+          // Check exact match
+          if (row[key] !== undefined) return row[key]
+          // Check if any column contains this key (for combined headers like "Нэр (name)")
+          for (const colName of Object.keys(row)) {
+            if (colName.toLowerCase().includes(key.toLowerCase())) {
+              return row[colName]
+            }
+          }
+        }
+        return ''
+      }
+      
+      // Map column names (support both Mongolian and English, and combined headers)
       const productData: ExcelProduct = {
-        name: (row['name'] || row['нэр'] || row['Нэр'] || row['Name'] || '') as string,
-        description: (row['description'] || row['тайлбар'] || row['Тайлбар'] || row['Description'] || '') as string,
-        price: parseNumber(row['price'] || row['үнэ'] || row['Үнэ'] || row['Price']),
-        original_price: row['original_price'] || row['хуучин_үнэ'] || row['Хуучин үнэ'] 
-          ? parseNumber(row['original_price'] || row['хуучин_үнэ'] || row['Хуучин үнэ']) 
+        name: (findValue('name', 'нэр', 'Нэр', 'Name') || '') as string,
+        description: (findValue('description', 'тайлбар', 'Тайлбар', 'Description') || '') as string,
+        price: parseNumber(findValue('price', 'үнэ', 'Үнэ', 'Price')),
+        original_price: findValue('original_price', 'хуучин_үнэ', 'Хуучин үнэ', 'Хуучин')
+          ? parseNumber(findValue('original_price', 'хуучин_үнэ', 'Хуучин үнэ', 'Хуучин'))
           : undefined,
-        brand_name: (row['brand'] || row['брэнд'] || row['Брэнд'] || row['Brand'] || '') as string,
-        category_name: (row['category'] || row['ангилал'] || row['Ангилал'] || row['Category'] || '') as string,
-        subcategory_name: (row['subcategory'] || row['дэд_ангилал'] || row['Дэд ангилал'] || row['Subcategory'] || '') as string,
-        sizes: (row['sizes'] || row['хэмжээ'] || row['Хэмжээ'] || row['Sizes'] || '') as string,
-        colors: (row['colors'] || row['өнгө'] || row['Өнгө'] || row['Colors'] || '') as string,
-        is_featured: parseBoolean(row['is_featured'] || row['онцлох'] || row['Онцлох']),
-        is_new_arrival: parseBoolean(row['is_new_arrival'] || row['шинэ'] || row['Шинэ']),
-        is_on_sale: parseBoolean(row['is_on_sale'] || row['хямдрал'] || row['Хямдрал']),
-        stock_quantity: parseNumber(row['stock'] || row['stock_quantity'] || row['нөөц'] || row['Нөөц'], 0),
-        image_url: (row['image_url'] || row['зураг'] || row['Зураг'] || '') as string,
+        brand_name: (findValue('brand', 'брэнд', 'Брэнд', 'Brand') || '') as string,
+        category_name: (findValue('category', 'ангилал', 'Ангилал', 'Category') || '') as string,
+        subcategory_name: (findValue('subcategory', 'дэд_ангилал', 'Дэд ангилал', 'Subcategory', 'Дэд') || '') as string,
+        sizes: (findValue('sizes', 'хэмжээ', 'Хэмжээ', 'Sizes') || '') as string,
+        colors: (findValue('colors', 'өнгө', 'Өнгө', 'Colors') || '') as string,
+        is_featured: parseBoolean(findValue('is_featured', 'онцлох', 'Онцлох', 'featured')),
+        is_new_arrival: parseBoolean(findValue('is_new_arrival', 'шинэ', 'Шинэ', 'new')),
+        is_on_sale: parseBoolean(findValue('is_on_sale', 'хямдрал', 'Хямдрал', 'sale')),
+        stock_quantity: parseNumber(findValue('stock', 'stock_quantity', 'нөөц', 'Нөөц'), 0),
+        image_url: (findValue('image_url', 'зураг', 'Зураг', 'image') || '') as string,
       }
 
       // Validate required fields

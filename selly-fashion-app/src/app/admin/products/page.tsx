@@ -397,25 +397,72 @@ export default function AdminProductsPage() {
 
   // Download Excel template
   const downloadExcelTemplate = () => {
-    // Create template headers
+    // Create template headers - Mongolian labels for better understanding
     const headers = [
-      'name', 'description', 'price', 'original_price', 'brand', 'category', 
-      'subcategory', 'sizes', 'colors', 'stock', 'is_featured', 'is_new_arrival', 'is_on_sale'
+      'Нэр (name)',
+      'Тайлбар (description)', 
+      'Үнэ (price)',
+      'Хуучин үнэ (original_price)',
+      'Брэнд (brand)',
+      'Ангилал (category)',
+      'Дэд ангилал (subcategory)',
+      'Хэмжээ (sizes)',
+      'Өнгө (colors)',
+      'Нөөц (stock)',
+      'Онцлох (is_featured)',
+      'Шинэ (is_new_arrival)',
+      'Хямдрал (is_on_sale)'
     ]
     
-    // Example row
-    const exampleRow = [
-      'Загварлаг цамц', 'Тайлбар энд бичнэ', '89000', '120000', 'Nike', 'Цамц',
-      'Эрэгтэй цамц', 'S,M,L,XL', 'Black,White,Blue', '50', 'false', 'true', 'true'
+    // Example rows
+    const exampleRow1 = [
+      'Загварлаг цамц',
+      'Өндөр чанартай материалаар хийгдсэн',
+      '89000',
+      '120000',
+      'Nike',
+      'Цамц',
+      'Эрэгтэй цамц',
+      'S,M,L,XL',
+      'Black,White',
+      '50',
+      'false',
+      'true',
+      'true'
+    ]
+    
+    const exampleRow2 = [
+      'Спорт өмд',
+      'Тав тухтай спорт өмд',
+      '65000',
+      '',
+      'Adidas',
+      'Өмд',
+      '',
+      'M,L,XL',
+      'Gray,Black',
+      '30',
+      'false',
+      'false',
+      'false'
     ]
 
-    // Create CSV content
+    // Properly escape CSV values (wrap in quotes if contains comma)
+    const escapeCSV = (value: string) => {
+      if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+        return `"${value.replace(/"/g, '""')}"`
+      }
+      return value
+    }
+
+    // Create CSV content with proper escaping
     const csvContent = [
-      headers.join(','),
-      exampleRow.join(',')
+      headers.map(escapeCSV).join(','),
+      exampleRow1.map(escapeCSV).join(','),
+      exampleRow2.map(escapeCSV).join(',')
     ].join('\n')
 
-    // Download as CSV
+    // Download as CSV with UTF-8 BOM for Excel compatibility
     const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
