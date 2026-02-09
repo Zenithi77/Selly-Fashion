@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { useCartStore, useAuthStore, useWishlistStore } from '@/lib/store'
+import { api, Brand } from '@/lib/supabase'
 
 function WishlistButton() {
   const { items } = useWishlistStore()
@@ -31,10 +32,19 @@ function WishlistButton() {
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null)
+  const [featuredBrands, setFeaturedBrands] = useState<Brand[]>([])
   const { items, toggleCart } = useCartStore()
   const { isAuthenticated } = useAuthStore()
 
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0)
+
+  useEffect(() => {
+    const fetchBrands = async () => {
+      const { data } = await api.getFeaturedBrands(5)
+      if (data) setFeaturedBrands(data)
+    }
+    fetchBrands()
+  }, [])
 
   const toggleSubmenu = (menu: string) => {
     setOpenSubmenu(openSubmenu === menu ? null : menu)
@@ -110,10 +120,10 @@ export default function Header() {
                   BRANDS
                 </button>
                 <div className="absolute top-full left-0 w-48 bg-white shadow-xl rounded-xl py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 border border-gray-100">
-                  <Link href="/brand/lumina" className="block px-4 py-2 text-sm text-gray-700 hover:bg-pink-50 hover:text-pink-500">Lumina</Link>
-                  <Link href="/brand/velvet" className="block px-4 py-2 text-sm text-gray-700 hover:bg-pink-50 hover:text-pink-500">Velvet & Co</Link>
-                  <Link href="/brand/aura" className="block px-4 py-2 text-sm text-gray-700 hover:bg-pink-50 hover:text-pink-500">Aura Studio</Link>
-                  <Link href="/brands-types" className="block px-4 py-2 text-sm font-medium text-pink-500 border-t border-gray-100 mt-1 pt-2">View All →</Link>
+                  {featuredBrands.map((brand) => (
+                    <Link key={brand.id} href={`/brand/${brand.slug}`} className="block px-4 py-2 text-sm text-gray-700 hover:bg-pink-50 hover:text-pink-500">{brand.name}</Link>
+                  ))}
+                  <Link href="/brands-types" className="block px-4 py-2 text-sm font-medium text-pink-500 border-t border-gray-100 mt-1 pt-2">Бүх брэнд үзэх →</Link>
                 </div>
               </div>
 
@@ -210,11 +220,11 @@ export default function Header() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                   </svg>
                 </button>
-                <div className={`overflow-hidden transition-all duration-200 ${openSubmenu === 'brands' ? 'max-h-48 pb-2' : 'max-h-0'}`}>
-                  <Link href="/brand/lumina" onClick={closeMenu} className="block py-2 pl-4 text-sm text-gray-600 hover:text-pink-500">Lumina</Link>
-                  <Link href="/brand/velvet" onClick={closeMenu} className="block py-2 pl-4 text-sm text-gray-600 hover:text-pink-500">Velvet & Co</Link>
-                  <Link href="/brand/aura" onClick={closeMenu} className="block py-2 pl-4 text-sm text-gray-600 hover:text-pink-500">Aura Studio</Link>
-                  <Link href="/brands-types" onClick={closeMenu} className="block py-2 pl-4 text-sm text-pink-500 font-medium">View All Brands →</Link>
+                <div className={`overflow-hidden transition-all duration-200 ${openSubmenu === 'brands' ? 'max-h-96 pb-2' : 'max-h-0'}`}>
+                  {featuredBrands.map((brand) => (
+                    <Link key={brand.id} href={`/brand/${brand.slug}`} onClick={closeMenu} className="block py-2 pl-4 text-sm text-gray-600 hover:text-pink-500">{brand.name}</Link>
+                  ))}
+                  <Link href="/brands-types" onClick={closeMenu} className="block py-2 pl-4 text-sm text-pink-500 font-medium">Бүх брэнд үзэх →</Link>
                 </div>
               </div>
 
