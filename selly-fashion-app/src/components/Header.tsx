@@ -50,8 +50,7 @@ export default function Header() {
       <header className="fixed top-0 w-full z-50 bg-white/95 backdrop-blur-md border-b border-gray-100">
         {/* Top Banner */}
         <div className="bg-pink-500 text-white text-center py-1.5 text-[10px] sm:text-xs font-medium tracking-wide">
-          <span className="hidden sm:inline">100,000₮-ААС ДЭЭШ ЗАХИАЛГАД ҮНЭГҮЙ ХҮРГЭЛТ | 7 ХОНОГТ ШИНЭ БАРАА</span>
-          <span className="sm:hidden">100,000₮+ ҮНЭГҮЙ ХҮРГЭЛТ ✨</span>
+          <span>7 ХОНОГТ ШИНЭ БАРАА ✨</span>
         </div>
 
         {/* Main Navigation */}

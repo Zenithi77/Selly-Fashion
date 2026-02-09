@@ -12,7 +12,7 @@ export const BANK_ACCOUNTS = {
 
 // Shipping cost in MNT (₮)
 export const SHIPPING_COST = 5000;
-export const FREE_SHIPPING_THRESHOLD = 100000; // 100,000₮-аас дээш үнэгүй хүргэлт
+export const FREE_SHIPPING_THRESHOLD = 100000;
 
 // Payment statuses
 export const PAYMENT_STATUSES = ['Pending', 'Paid', 'PendingReview', 'Failed', 'Refunded'] as const;

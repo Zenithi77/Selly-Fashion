@@ -545,11 +545,7 @@ export default function CheckoutPage() {
                     {shipping === 0 ? 'Үнэгүй' : formatPrice(shipping)}
                   </span>
                 </div>
-                {shipping > 0 && (
-                  <p className="text-xs text-slate-400">
-                    {formatPrice(FREE_SHIPPING_THRESHOLD)}-аас дээш захиалгад үнэгүй хүргэлт
-                  </p>
-                )}
+
                 <div className="flex justify-between font-bold text-lg border-t border-slate-100 pt-3">
                   <span>Нийт</span>
                   <span className="text-pink-500">{formatPrice(grandTotal)}</span>

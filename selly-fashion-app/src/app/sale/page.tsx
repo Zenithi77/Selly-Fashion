@@ -30,26 +30,6 @@ export default function SalePage() {
 
   return (
     <main className="min-h-screen pt-[104px]">
-      {/* Hero Banner */}
-      <div className="relative bg-gradient-to-r from-rose-600 via-pink-600 to-red-600 py-16 overflow-hidden">
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute top-10 left-10 w-40 h-40 bg-white rounded-full blur-3xl"></div>
-          <div className="absolute bottom-10 right-10 w-60 h-60 bg-yellow-300 rounded-full blur-3xl"></div>
-        </div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <span className="inline-block px-6 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white text-sm font-semibold mb-4 animate-pulse">
-            🔥 ХЯМДРАЛ 🔥
-          </span>
-          <h1 className="text-4xl lg:text-6xl font-black text-white mb-4">
-            50% ХҮРТЭЛ ХЯМДРАЛ
-          </h1>
-          <p className="text-white/80 text-lg max-w-2xl mx-auto">
-            Шилдэг брэндүүдийн бүтээгдэхүүнийг хямд үнээр аваарай. 
-            Хязгаарлагдмал хугацаанд!
-          </p>
-        </div>
-      </div>
-
       {/* Products Grid */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {products.length === 0 ? (
@@ -114,34 +94,6 @@ export default function SalePage() {
             })}
           </div>
         )}
-      </section>
-
-      {/* Sale Banner */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-        <div className="relative bg-gradient-to-r from-slate-900 to-slate-800 rounded-3xl p-8 lg:p-12 overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-pink-500/20 rounded-full blur-3xl"></div>
-          <div className="relative z-10 max-w-xl">
-            <span className="inline-block px-4 py-1 bg-pink-500 text-white text-sm font-semibold rounded-full mb-4">
-              Онцгой санал
-            </span>
-            <h2 className="text-3xl lg:text-4xl font-bold text-white mb-4">
-              Бүх захиалгад үнэгүй хүргэлт
-            </h2>
-            <p className="text-slate-400 mb-6">
-              $100-с дээш захиалгад үнэгүй хүргэлт хийж байна. 
-              Та одоо захиалгаа өгөөд хямдралын давуу талыг ашиглаарай!
-            </p>
-            <Link 
-              href="/shop"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-pink-500 text-white font-semibold rounded-full hover:bg-pink-600 transition-colors"
-            >
-              Дэлгүүр үзэх
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-              </svg>
-            </Link>
-          </div>
-        </div>
       </section>
     </main>
   )
