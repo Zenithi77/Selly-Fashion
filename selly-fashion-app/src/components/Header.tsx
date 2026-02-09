@@ -124,7 +124,7 @@ export default function Header() {
 
             {/* Center Logo */}
             <Link href="/" className="absolute left-1/2 -translate-x-1/2 lg:static lg:translate-x-0">
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-script text-gray-900">
+              <h1 className="text-2xl sm:text-3xl lg:text-3xl font-script text-gray-900">
                 Selly <span className="text-pink-500">Fashion</span>
               </h1>
             </Link>
