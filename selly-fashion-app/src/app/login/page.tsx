@@ -106,8 +106,8 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-block">
-            <h1 className="text-3xl font-bold tracking-wider text-slate-900">
-              SELLY <span className="text-pink-500">FASHION</span>
+            <h1 className="text-4xl font-script text-slate-900">
+              Selly <span className="text-pink-500">Fashion</span>
             </h1>
           </Link>
         </div>

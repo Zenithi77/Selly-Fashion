@@ -21,13 +21,23 @@ html {
 }
 
 body {
-  font-family: "Inter", sans-serif;
+  font-family: "Quicksand", sans-serif;
   background-color: #fff1f2;
   color: #0f172a;
+  letter-spacing: 0.01em;
 }
 
 .font-display {
-  font-family: "Playfair Display", serif;
+  font-family: "Cormorant Garamond", serif;
+}
+
+.font-script {
+  font-family: "Dancing Script", cursive;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Cormorant Garamond", serif;
+  font-weight: 600;
 }
 
 /* Glass Effect like original HTML */

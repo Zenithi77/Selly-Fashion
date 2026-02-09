@@ -7,7 +7,7 @@ export default function Footer() {
       <div className="border-b border-pink-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="max-w-xl mx-auto text-center">
-            <h3 className="text-2xl font-bold tracking-tight mb-4 text-pink-500">JOIN THE SELLY CLUB</h3>
+            <h3 className="text-3xl font-script mb-4 text-pink-500">Join the Selly Club</h3>
             <p className="text-slate-600 mb-8 text-sm">
               Be the first to know about new arrivals, exclusive offers, and member-only events.
             </p>
@@ -33,8 +33,8 @@ export default function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 lg:gap-12">
           {/* Brand */}
           <div className="col-span-2 md:col-span-4 lg:col-span-1 mb-8 lg:mb-0">
-            <Link href="/" className="text-2xl font-bold tracking-[0.15em] mb-6 block text-pink-500 font-display">
-              SELLY
+            <Link href="/" className="text-3xl font-script mb-6 block text-pink-500">
+              Selly
             </Link>
             <p className="text-slate-600 text-sm leading-relaxed mb-6">
               Premium fashion for the modern individual. Quality meets style.
