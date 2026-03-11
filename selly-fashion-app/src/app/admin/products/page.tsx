@@ -54,6 +54,9 @@ export default function AdminProductsPage() {
     errors?: string[]
   } | null>(null)
   const excelInputRef = useRef<HTMLInputElement>(null)
+
+  // Excel download state
+  const [excelDownloading, setExcelDownloading] = useState(false)
   
   // Form state with string values for better UX (no leading zeros issue)
   const [formData, setFormData] = useState({
@@ -395,6 +398,34 @@ export default function AdminProductsPage() {
     }
   }
 
+  // Download all products as Excel file
+  const handleExcelDownload = async () => {
+    setExcelDownloading(true)
+    try {
+      const response = await fetch('/api/download-excel')
+      if (!response.ok) {
+        const errData = await response.json()
+        alert(errData.error || 'Excel татахад алдаа гарлаа')
+        return
+      }
+      const blob = await response.blob()
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      const today = new Date().toISOString().split('T')[0]
+      link.download = `products-${today}.xlsx`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error('Excel download error:', error)
+      alert('Excel файл татахад алдаа гарлаа')
+    } finally {
+      setExcelDownloading(false)
+    }
+  }
+
   // Download Excel template
   const downloadExcelTemplate = () => {
     // Create template headers - Mongolian labels for better understanding
@@ -500,6 +531,20 @@ export default function AdminProductsPage() {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              onClick={handleExcelDownload}
+              disabled={excelDownloading || products.length === 0}
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {excelDownloading ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                </svg>
+              )}
+              Excel татах
+            </button>
             <button
               onClick={() => setShowExcelModal(true)}
               className="px-4 py-2 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-600 transition-colors flex items-center gap-2"
