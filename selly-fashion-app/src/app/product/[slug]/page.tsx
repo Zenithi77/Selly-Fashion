@@ -6,6 +6,19 @@ import Link from 'next/link'
 import { useCartStore, useWishlistStore } from '@/lib/store'
 import { api, Product } from '@/lib/supabase'
 
+// Color name to hex mapping for visual display
+const COLOR_MAP: Record<string, string> = {
+  'Black': '#000000', 'White': '#FFFFFF', 'Dark Gray': '#374151', 'Gray': '#6B7280',
+  'Light Gray': '#D1D5DB', 'Cream': '#FFFDD0', 'Red': '#EF4444', 'Dark Red': '#991B1B',
+  'Pink': '#EC4899', 'Light Pink': '#F9A8D4', 'Hot Pink': '#DB2777', 'Rose': '#F43F5E',
+  'Yellow': '#EAB308', 'Orange': '#F97316', 'Coral': '#FB7185', 'Peach': '#FDBA74',
+  'Blue': '#3B82F6', 'Navy': '#1E3A5F', 'Light Blue': '#93C5FD', 'Sky Blue': '#38BDF8',
+  'Green': '#22C55E', 'Dark Green': '#166534', 'Olive': '#6B8E23', 'Mint': '#6EE7B7',
+  'Purple': '#A855F7', 'Lavender': '#C4B5FD', 'Brown': '#92400E', 'Beige': '#D4B896',
+  'Tan': '#D2B48C', 'Coffee': '#6F4E37', 'Chocolate': '#7B3F00',
+  'Silver': '#C0C0C0', 'Gold': '#D4A017', 'Rose Gold': '#B76E79',
+}
+
 // Sample products for demo
 const sampleProducts: Product[] = [
   {
@@ -260,19 +273,30 @@ export default function ProductDetailPage() {
                   Өнгө: <span className="text-pink-500">{selectedColor}</span>
                 </label>
                 <div className="flex flex-wrap gap-3">
-                  {product.colors.map((color) => (
-                    <button
-                      key={color}
-                      onClick={() => setSelectedColor(color)}
-                      className={`px-4 py-2 rounded-xl font-medium transition-all ${
-                        selectedColor === color
-                          ? 'bg-pink-500 text-white'
-                          : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-pink-100'
-                      }`}
-                    >
-                      {color}
-                    </button>
-                  ))}
+                  {product.colors.map((color) => {
+                    const hex = COLOR_MAP[color]
+                    return (
+                      <button
+                        key={color}
+                        onClick={() => setSelectedColor(color)}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${
+                          selectedColor === color
+                            ? 'bg-pink-500 text-white shadow-lg shadow-pink-500/30'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-pink-100'
+                        }`}
+                      >
+                        {hex && (
+                          <span
+                            className={`w-5 h-5 rounded-full border-2 flex-shrink-0 ${
+                              selectedColor === color ? 'border-white' : 'border-slate-300'
+                            }`}
+                            style={{ backgroundColor: hex }}
+                          />
+                        )}
+                        {color}
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
             )}

@@ -7,17 +7,55 @@ import { api, Product, Brand, ClothingType, Subcategory, supabase } from '@/lib/
 // Predefined sizes and colors for quick selection
 const COMMON_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '2XL', '3XL']
 const COMMON_COLORS = [
+  // Үндсэн өнгөнүүд
   { name: 'Хар', value: 'Black', hex: '#000000' },
   { name: 'Цагаан', value: 'White', hex: '#FFFFFF' },
-  { name: 'Ягаан', value: 'Pink', hex: '#EC4899' },
-  { name: 'Улаан', value: 'Red', hex: '#EF4444' },
-  { name: 'Цэнхэр', value: 'Blue', hex: '#3B82F6' },
-  { name: 'Ногоон', value: 'Green', hex: '#22C55E' },
-  { name: 'Шар', value: 'Yellow', hex: '#EAB308' },
+  { name: 'Бараан саарал', value: 'Dark Gray', hex: '#374151' },
   { name: 'Саарал', value: 'Gray', hex: '#6B7280' },
+  { name: 'Цайвар саарал', value: 'Light Gray', hex: '#D1D5DB' },
+  { name: 'Крем', value: 'Cream', hex: '#FFFDD0' },
+  // Улаан, Ягаан
+  { name: 'Улаан', value: 'Red', hex: '#EF4444' },
+  { name: 'Бүдэг улаан', value: 'Dark Red', hex: '#991B1B' },
+  { name: 'Ягаан', value: 'Pink', hex: '#EC4899' },
+  { name: 'Цайвар ягаан', value: 'Light Pink', hex: '#F9A8D4' },
+  { name: 'Тод ягаан', value: 'Hot Pink', hex: '#DB2777' },
+  { name: 'Роза', value: 'Rose', hex: '#F43F5E' },
+  // Шар, Улбар шар
+  { name: 'Шар', value: 'Yellow', hex: '#EAB308' },
+  { name: 'Улбар шар', value: 'Orange', hex: '#F97316' },
+  { name: 'Тоосон ягаан', value: 'Coral', hex: '#FB7185' },
+  { name: 'Персик', value: 'Peach', hex: '#FDBA74' },
+  // Цэнхэр
+  { name: 'Цэнхэр', value: 'Blue', hex: '#3B82F6' },
+  { name: 'Хөх', value: 'Navy', hex: '#1E3A5F' },
+  { name: 'Цайвар цэнхэр', value: 'Light Blue', hex: '#93C5FD' },
+  { name: 'Тэнгэрийн', value: 'Sky Blue', hex: '#38BDF8' },
+  // Ногоон
+  { name: 'Ногоон', value: 'Green', hex: '#22C55E' },
+  { name: 'Бараан ногоон', value: 'Dark Green', hex: '#166534' },
+  { name: 'Оливийн', value: 'Olive', hex: '#6B8E23' },
+  { name: 'Минт', value: 'Mint', hex: '#6EE7B7' },
+  // Ягаан, нил ягаан
+  { name: 'Нил ягаан', value: 'Purple', hex: '#A855F7' },
+  { name: 'Лаванда', value: 'Lavender', hex: '#C4B5FD' },
+  // Хүрэн, бор
   { name: 'Хүрэн', value: 'Brown', hex: '#92400E' },
   { name: 'Бор', value: 'Beige', hex: '#D4B896' },
+  { name: 'Тан', value: 'Tan', hex: '#D2B48C' },
+  { name: 'Кофе', value: 'Coffee', hex: '#6F4E37' },
+  { name: 'Шоколад', value: 'Chocolate', hex: '#7B3F00' },
+  // Тусгай
+  { name: 'Мөнгөлөг', value: 'Silver', hex: '#C0C0C0' },
+  { name: 'Алтан', value: 'Gold', hex: '#D4A017' },
+  { name: 'Роза алтан', value: 'Rose Gold', hex: '#B76E79' },
 ]
+
+// Helper: find hex for a color value
+function getColorHex(colorValue: string): string | null {
+  const found = COMMON_COLORS.find(c => c.value === colorValue)
+  return found ? found.hex : null
+}
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([])
@@ -40,7 +78,9 @@ export default function AdminProductsPage() {
   
   // Custom size/color input
   const [customSize, setCustomSize] = useState('')
-  const [customColor, setCustomColor] = useState('')
+  const [colorPickerHex, setColorPickerHex] = useState('#FF0000')
+  const [customColorName, setCustomColorName] = useState('')
+  const [showColorPicker, setShowColorPicker] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   
   // Excel upload state
@@ -203,7 +243,6 @@ export default function AdminProductsPage() {
       stock_quantity: ''
     })
     setCustomSize('')
-    setCustomColor('')
   }
 
   const generateSlug = (name: string, addTimestamp: boolean = false) => {
@@ -245,15 +284,21 @@ export default function AdminProductsPage() {
     }))
   }
 
-  // Add custom color
-  const addCustomColor = () => {
-    if (customColor.trim() && !formData.colors.includes(customColor.trim())) {
+  // Add color from color picker
+  const addColorFromPicker = () => {
+    const name = customColorName.trim()
+    if (!name) {
+      alert('Өнгөний нэр оруулна уу')
+      return
+    }
+    if (!formData.colors.includes(name)) {
       setFormData(prev => ({
         ...prev,
-        colors: [...prev.colors, customColor.trim()]
+        colors: [...prev.colors, name]
       }))
-      setCustomColor('')
     }
+    setCustomColorName('')
+    setShowColorPicker(false)
   }
 
   // Зураг upload хийх
@@ -426,81 +471,82 @@ export default function AdminProductsPage() {
     }
   }
 
-  // Download Excel template
-  const downloadExcelTemplate = () => {
-    // Create template headers - Mongolian labels for better understanding
-    const headers = [
-      'Нэр (name)',
-      'Тайлбар (description)', 
-      'Үнэ (price)',
-      'Хуучин үнэ (original_price)',
-      'Брэнд (brand)',
-      'Ангилал (category)',
-      'Дэд ангилал (subcategory)',
-      'Хэмжээ (sizes)',
-      'Өнгө (colors)',
-      'Нөөц (stock)',
-      'Онцлох (is_featured)',
-      'Шинэ (is_new_arrival)',
-      'Хямдрал (is_on_sale)'
-    ]
-    
-    // Example rows
-    const exampleRow1 = [
-      'Загварлаг цамц',
-      'Өндөр чанартай материалаар хийгдсэн',
-      '89000',
-      '120000',
-      'Nike',
-      'Цамц',
-      'Эрэгтэй цамц',
-      'S,M,L,XL',
-      'Black,White',
-      '50',
-      'false',
-      'true',
-      'true'
-    ]
-    
-    const exampleRow2 = [
-      'Спорт өмд',
-      'Тав тухтай спорт өмд',
-      '65000',
-      '',
-      'Adidas',
-      'Өмд',
-      '',
-      'M,L,XL',
-      'Gray,Black',
-      '30',
-      'false',
-      'false',
-      'false'
-    ]
+  // Download Excel template (same format as export)
+  const downloadExcelTemplate = async () => {
+    try {
+      // Dynamic import XLSX for client-side
+      const XLSX = await import('xlsx')
+      
+      // Template data with same columns as export
+      const templateData = [
+        {
+          'Нэр (name)': 'Загварлаг цамц',
+          'Тайлбар (description)': 'Өндөр чанартай материалаар хийгдсэн',
+          'Үнэ (price)': 89000,
+          'Хуучин үнэ (original_price)': 120000,
+          'Брэнд (brand)': 'Nike',
+          'Ангилал (category)': 'Цамц',
+          'Дэд ангилал (subcategory)': 'Эрэгтэй цамц',
+          'Хэмжээ (sizes)': 'S, M, L, XL',
+          'Өнгө (colors)': 'Black, White',
+          'Нөөц (stock)': 50,
+          'Онцлох (is_featured)': 'false',
+          'Шинэ (is_new_arrival)': 'true',
+          'Хямдрал (is_on_sale)': 'true',
+          'Зураг (image_url)': '',
+          'Slug': '',
+          'Үүсгэсэн огноо': '',
+        },
+        {
+          'Нэр (name)': 'Спорт өмд',
+          'Тайлбар (description)': 'Тав тухтай спорт өмд',
+          'Үнэ (price)': 65000,
+          'Хуучин үнэ (original_price)': '',
+          'Брэнд (brand)': 'Adidas',
+          'Ангилал (category)': 'Өмд',
+          'Дэд ангилал (subcategory)': '',
+          'Хэмжээ (sizes)': 'M, L, XL',
+          'Өнгө (colors)': 'Gray, Black',
+          'Нөөц (stock)': 30,
+          'Онцлох (is_featured)': 'false',
+          'Шинэ (is_new_arrival)': 'false',
+          'Хямдрал (is_on_sale)': 'false',
+          'Зураг (image_url)': '',
+          'Slug': '',
+          'Үүсгэсэн огноо': '',
+        },
+      ]
 
-    // Properly escape CSV values (wrap in quotes if contains comma)
-    const escapeCSV = (value: string) => {
-      if (value.includes(',') || value.includes('"') || value.includes('\n')) {
-        return `"${value.replace(/"/g, '""')}"`
-      }
-      return value
+      const workbook = XLSX.utils.book_new()
+      const worksheet = XLSX.utils.json_to_sheet(templateData)
+
+      // Auto-size columns
+      const colWidths = Object.keys(templateData[0]).map((key) => {
+        const maxLen = Math.max(
+          key.length,
+          ...templateData.map((row) => String(row[key as keyof typeof row] ?? '').length)
+        )
+        return { wch: Math.min(maxLen + 2, 50) }
+      })
+      worksheet['!cols'] = colWidths
+
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Бүтээгдэхүүн')
+
+      // Write and download
+      const buffer = XLSX.write(workbook, { type: 'array', bookType: 'xlsx' })
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = 'products-template.xlsx'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error('Template download error:', error)
+      alert('Загвар файл татахад алдаа гарлаа')
     }
-
-    // Create CSV content with proper escaping
-    const csvContent = [
-      headers.map(escapeCSV).join(','),
-      exampleRow1.map(escapeCSV).join(','),
-      exampleRow2.map(escapeCSV).join(',')
-    ].join('\n')
-
-    // Download as CSV with UTF-8 BOM for Excel compatibility
-    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = 'products-template.csv'
-    link.click()
-    URL.revokeObjectURL(url)
   }
 
   if (loading) {
@@ -927,51 +973,119 @@ export default function AdminProductsPage() {
                   </div>
                 </div>
 
-                {/* Colors - Tag based */}
+                {/* Colors - Visual swatch picker */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Өнгө</label>
-                  <div className="flex flex-wrap gap-2 mb-2">
-                    {COMMON_COLORS.map((color) => (
-                      <button
-                        key={color.value}
-                        type="button"
-                        onClick={() => toggleColor(color.value)}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                          formData.colors.includes(color.value)
-                            ? 'bg-pink-500 text-white shadow-sm'
-                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                        }`}
-                      >
-                        <span className="w-3 h-3 rounded-full border border-slate-300" style={{ backgroundColor: color.hex }}></span>
-                        {color.name}
-                      </button>
-                    ))}
-                  </div>
-                  {/* Custom colors */}
-                  {formData.colors.filter(c => !COMMON_COLORS.map(cc => cc.value).includes(c)).length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      {formData.colors.filter(c => !COMMON_COLORS.map(cc => cc.value).includes(c)).map((color) => (
-                        <span
-                          key={color}
-                          className="px-2 py-1 bg-pink-100 text-pink-600 rounded-full text-xs flex items-center gap-1"
-                        >
-                          {color}
-                          <button type="button" onClick={() => toggleColor(color)} className="hover:text-pink-800">×</button>
-                        </span>
-                      ))}
+                  <label className="block text-sm font-medium text-slate-700 mb-3">Өнгө сонгох</label>
+                  
+                  {/* Selected colors display */}
+                  {formData.colors.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-3 p-3 bg-pink-50 rounded-xl">
+                      <span className="text-xs text-pink-600 font-medium w-full mb-1">Сонгосон ({formData.colors.length}):</span>
+                      {formData.colors.map((color) => {
+                        const hex = getColorHex(color)
+                        return (
+                          <span
+                            key={color}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white rounded-full text-xs font-medium text-slate-700 shadow-sm border border-pink-200"
+                          >
+                            <span
+                              className="w-3.5 h-3.5 rounded-full border border-slate-300 flex-shrink-0"
+                              style={{ backgroundColor: hex || '#ccc' }}
+                            />
+                            {color}
+                            <button
+                              type="button"
+                              onClick={() => toggleColor(color)}
+                              className="ml-0.5 text-slate-400 hover:text-red-500 font-bold"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        )
+                      })}
                     </div>
                   )}
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={customColor}
-                      onChange={(e) => setCustomColor(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomColor())}
-                      placeholder="Өөр өнгө..."
-                      className="flex-1 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-pink-500 outline-none"
-                    />
-                    <button type="button" onClick={addCustomColor} className="px-3 py-1.5 bg-slate-200 text-slate-600 rounded-lg hover:bg-slate-300 text-sm">Нэмэх</button>
+
+                  {/* Color swatch grid */}
+                  <div className="grid grid-cols-9 gap-1.5 mb-3">
+                    {COMMON_COLORS.map((color) => {
+                      const isSelected = formData.colors.includes(color.value)
+                      return (
+                        <button
+                          key={color.value}
+                          type="button"
+                          onClick={() => toggleColor(color.value)}
+                          title={`${color.name} (${color.value})`}
+                          className={`relative group w-full aspect-square rounded-lg border-2 transition-all hover:scale-110 hover:z-10 ${
+                            isSelected
+                              ? 'border-pink-500 ring-2 ring-pink-500/30 scale-105 z-10'
+                              : 'border-slate-200 hover:border-slate-400'
+                          }`}
+                          style={{ backgroundColor: color.hex }}
+                        >
+                          {/* Checkmark */}
+                          {isSelected && (
+                            <span className="absolute inset-0 flex items-center justify-center">
+                              <svg className={`w-4 h-4 ${['#FFFFFF', '#FFFDD0', '#D1D5DB', '#F9A8D4', '#C4B5FD', '#93C5FD', '#6EE7B7', '#FDBA74', '#D4B896', '#D2B48C', '#C0C0C0'].includes(color.hex) ? 'text-slate-800' : 'text-white'}`} fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                              </svg>
+                            </span>
+                          )}
+                          {/* Tooltip */}
+                          <span className="absolute -bottom-7 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-0.5 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
+                            {color.name}
+                          </span>
+                        </button>
+                      )
+                    })}
                   </div>
+
+                  {/* Custom color picker */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowColorPicker(!showColorPicker)}
+                      className="flex items-center gap-2 px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-sm text-slate-600 transition-colors"
+                    >
+                      <span className="w-5 h-5 rounded-full border-2 border-dashed border-slate-400 flex items-center justify-center text-slate-400 text-xs">+</span>
+                      Өөр өнгө нэмэх
+                    </button>
+                  </div>
+
+                  {showColorPicker && (
+                    <div className="mt-3 p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="color"
+                          value={colorPickerHex}
+                          onChange={(e) => setColorPickerHex(e.target.value)}
+                          className="w-12 h-12 rounded-lg cursor-pointer border-2 border-slate-300"
+                        />
+                        <div
+                          className="w-12 h-12 rounded-lg border border-slate-300"
+                          style={{ backgroundColor: colorPickerHex }}
+                        />
+                        <span className="text-sm text-slate-500 font-mono">{colorPickerHex.toUpperCase()}</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={customColorName}
+                          onChange={(e) => setCustomColorName(e.target.value)}
+                          onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addColorFromPicker())}
+                          placeholder="Өнгөний нэр (жнь: Coral Pink)"
+                          className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-pink-500 outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={addColorFromPicker}
+                          className="px-4 py-2 bg-pink-500 text-white rounded-lg text-sm font-medium hover:bg-pink-600 transition-colors"
+                        >
+                          Нэмэх
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex flex-wrap gap-4 p-4 bg-slate-50 rounded-xl">
@@ -1158,7 +1272,7 @@ export default function AdminProductsPage() {
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
                   </svg>
-                  Загвар файл татах (CSV)
+                  Загвар файл татах (Excel)
                 </button>
 
                 {/* File upload */}
