@@ -213,7 +213,7 @@ export default function AdminBarcodePage() {
                     </div>
                     <div className="mt-3 pt-3 border-t border-blue-200">
                       <Link
-                        href="/admin/products"
+                        href={`/admin/products?barcode=${encodeURIComponent(scannedBarcode || '')}`}
                         className="inline-flex items-center gap-2 px-4 py-2 bg-pink-500 text-white rounded-lg text-sm font-medium hover:bg-pink-600 transition-colors"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
@@ -237,7 +237,7 @@ export default function AdminBarcodePage() {
                     <p className="text-sm text-amber-700 mb-1">Дотоод мэдээллийн сан болон дэлхийн баркод мэдээллийн сангаас олдсонгүй.</p>
                     <p className="text-xs text-amber-600 mb-3">{apiLookup.message}</p>
                     <Link
-                      href="/admin/products"
+                      href={`/admin/products?barcode=${encodeURIComponent(scannedBarcode || '')}`}
                       className="inline-flex items-center gap-2 px-4 py-2 bg-pink-500 text-white rounded-lg text-sm font-medium hover:bg-pink-600 transition-colors"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">

@@ -59,6 +59,43 @@ export async function POST(request: NextRequest) {
   }
 }
 
+// URL-аас зураг upload хийх
+export async function PUT(request: NextRequest) {
+  try {
+    const { url, folder = 'products' } = await request.json()
+
+    if (!url || typeof url !== 'string') {
+      return NextResponse.json({ error: 'No URL provided' }, { status: 400 })
+    }
+
+    // Only allow http/https URLs
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      return NextResponse.json({ error: 'Invalid URL' }, { status: 400 })
+    }
+
+    // Upload directly from URL to Cloudinary
+    const result = await cloudinary.uploader.upload(url, {
+      folder: folder,
+      resource_type: 'image',
+      transformation: [
+        { quality: 'auto:good' },
+        { fetch_format: 'auto' }
+      ]
+    })
+
+    return NextResponse.json({
+      success: true,
+      url: result.secure_url,
+      public_id: result.public_id,
+      width: result.width,
+      height: result.height
+    })
+  } catch (error) {
+    console.error('URL upload error:', error)
+    return NextResponse.json({ error: 'URL upload failed' }, { status: 500 })
+  }
+}
+
 // Зураг устгах
 export async function DELETE(request: NextRequest) {
   try {

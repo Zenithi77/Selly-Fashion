@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { api, Product, Brand, ClothingType, Subcategory, supabase } from '@/lib/supabase'
 
@@ -103,6 +104,11 @@ export default function AdminProductsPage() {
   
   // Barcode scanner state
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false)
+  const [barcodeLookupStatus, setBarcodeLookupStatus] = useState<{
+    loading: boolean
+    message?: string
+    type?: 'success' | 'error' | 'info'
+  } | null>(null)
   
   // Form state with string values for better UX (no leading zeros issue)
   const [formData, setFormData] = useState({
@@ -124,6 +130,8 @@ export default function AdminProductsPage() {
     stock_quantity: ''
   })
 
+  const searchParams = useSearchParams()
+
   const fetchData = async () => {
     setLoading(true)
     const [productsRes, brandsRes, categoriesRes, subcategoriesRes] = await Promise.all([
@@ -143,6 +151,16 @@ export default function AdminProductsPage() {
   useEffect(() => {
     fetchData()
   }, [])
+
+  // Auto-trigger barcode lookup when navigating from barcode page
+  const barcodeHandledRef = useRef(false)
+  useEffect(() => {
+    const barcodeParam = searchParams.get('barcode')
+    if (barcodeParam && !loading && !barcodeHandledRef.current) {
+      barcodeHandledRef.current = true
+      handleBarcodeScan(barcodeParam)
+    }
+  }, [searchParams, loading, handleBarcodeScan])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -559,7 +577,7 @@ export default function AdminProductsPage() {
     }
   }
 
-  // Handle barcode scan - open form with barcode prefilled
+  // Handle barcode scan - open form with barcode prefilled and auto-fill from API
   const handleBarcodeScan = useCallback(async (barcode: string) => {
     setShowBarcodeScanner(false)
     
@@ -575,6 +593,7 @@ export default function AdminProductsPage() {
     setEditingProduct(null)
     setFormData(prev => ({ ...prev, barcode }))
     setShowModal(true)
+    setBarcodeLookupStatus({ loading: true, message: 'Дэлхийн баркод мэдээллийн сангаас хайж байна...', type: 'info' })
 
     try {
       const res = await fetch(`/api/barcode-lookup?barcode=${encodeURIComponent(barcode)}`)
@@ -582,19 +601,117 @@ export default function AdminProductsPage() {
       
       if (data.found && data.product) {
         const p = data.product
+        
+        // Auto-match brand with existing brands
+        let matchedBrandId = ''
+        if (p.brand) {
+          const brandLower = p.brand.toLowerCase().trim()
+          const matchedBrand = brands.find(b => 
+            b.name.toLowerCase().trim() === brandLower ||
+            b.name.toLowerCase().includes(brandLower) ||
+            brandLower.includes(b.name.toLowerCase())
+          )
+          if (matchedBrand) {
+            matchedBrandId = matchedBrand.id
+          }
+        }
+
+        // Parse sizes from API size field
+        const apiSizes: string[] = []
+        if (p.size) {
+          const sizeStr = p.size.toUpperCase()
+          const knownSizes = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', '2XL', '3XL', '4XL', '5XL']
+          for (const sz of knownSizes) {
+            if (sizeStr.includes(sz)) {
+              apiSizes.push(sz)
+            }
+          }
+          // Check for numeric sizes (shoes, etc.)
+          const numericSizes = sizeStr.match(/\b(\d{2})\b/g)
+          if (numericSizes) {
+            apiSizes.push(...numericSizes)
+          }
+        }
+
+        // Parse colors from API color field
+        const apiColors: string[] = []
+        if (p.color) {
+          const colorLower = p.color.toLowerCase()
+          const colorMap: Record<string, string> = {
+            'black': 'Black', 'white': 'White', 'red': 'Red', 'blue': 'Blue',
+            'green': 'Green', 'yellow': 'Yellow', 'pink': 'Pink', 'purple': 'Purple',
+            'orange': 'Orange', 'brown': 'Brown', 'gray': 'Gray', 'grey': 'Gray',
+            'navy': 'Navy', 'beige': 'Beige', 'cream': 'Cream', 'gold': 'Gold',
+            'silver': 'Silver', 'olive': 'Olive',
+          }
+          for (const [key, value] of Object.entries(colorMap)) {
+            if (colorLower.includes(key)) {
+              apiColors.push(value)
+            }
+          }
+        }
+
+        // Update form with all available data
         setFormData(prev => ({
           ...prev,
           name: p.title || prev.name,
           slug: p.title ? generateSlug(p.title, true) : prev.slug,
           description: p.description || prev.description,
-          image_url: p.images?.[0] || prev.image_url,
+          brand_id: matchedBrandId || prev.brand_id,
+          sizes: apiSizes.length > 0 ? apiSizes : prev.sizes,
+          colors: apiColors.length > 0 ? apiColors : prev.colors,
         }))
-        alert(`✅ "${p.title}" - ${data.source}-аас олдлоо! Мэдээллийг формд оруулсан.`)
+
+        // Upload image from API to Cloudinary
+        if (p.images && p.images.length > 0) {
+          setBarcodeLookupStatus({ loading: true, message: `"${p.title}" олдлоо! Зургийг хуулж байна...`, type: 'success' })
+          try {
+            const uploadRes = await fetch('/api/upload', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ url: p.images[0], folder: 'products' })
+            })
+            const uploadData = await uploadRes.json()
+            if (uploadData.success && uploadData.url) {
+              setFormData(prev => ({ ...prev, image_url: uploadData.url }))
+            } else {
+              // Fallback: use the original image URL directly
+              setFormData(prev => ({ ...prev, image_url: p.images[0] }))
+            }
+          } catch {
+            // Fallback: use the original image URL directly
+            setFormData(prev => ({ ...prev, image_url: p.images[0] }))
+          }
+        }
+
+        const filledFields = []
+        if (p.title) filledFields.push('нэр')
+        if (p.images?.[0]) filledFields.push('зураг')
+        if (matchedBrandId) filledFields.push('брэнд')
+        if (p.description) filledFields.push('тайлбар')
+        if (apiSizes.length > 0) filledFields.push('размер')
+        if (apiColors.length > 0) filledFields.push('өнгө')
+
+        setBarcodeLookupStatus({ 
+          loading: false, 
+          message: `✅ "${p.title}" - ${data.source}-аас олдлоо! Бөглөсөн: ${filledFields.join(', ')}`, 
+          type: 'success' 
+        })
+      } else {
+        setBarcodeLookupStatus({ 
+          loading: false, 
+          message: 'Энэ баркод дэлхийн мэдээллийн сангаас олдсонгүй. Гараар бөглөнө үү.', 
+          type: 'error' 
+        })
       }
     } catch {
-      // API lookup failed silently - form is already open with barcode
+      setBarcodeLookupStatus({ 
+        loading: false, 
+        message: 'API хайлт амжилтгүй. Гараар бөглөнө үү.', 
+        type: 'error' 
+      })
     }
-  }, [products])
+  }, [products, brands])
 
   if (loading) {
     return (
@@ -658,7 +775,7 @@ export default function AdminProductsPage() {
               Excel оруулах
             </button>
             <button
-              onClick={() => { resetForm(); setEditingProduct(null); setShowModal(true) }}
+              onClick={() => { resetForm(); setEditingProduct(null); setBarcodeLookupStatus(null); setShowModal(true) }}
               className="px-4 py-2 bg-pink-500 text-white rounded-lg font-medium hover:bg-pink-600 transition-colors flex items-center gap-2"
             >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
@@ -772,6 +889,35 @@ export default function AdminProductsPage() {
               </div>
               
               <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                {/* Barcode API lookup status */}
+                {barcodeLookupStatus && (
+                  <div className={`flex items-center gap-3 p-3 rounded-xl text-sm ${
+                    barcodeLookupStatus.type === 'success' ? 'bg-green-50 border border-green-200 text-green-800' :
+                    barcodeLookupStatus.type === 'error' ? 'bg-amber-50 border border-amber-200 text-amber-800' :
+                    'bg-blue-50 border border-blue-200 text-blue-800'
+                  }`}>
+                    {barcodeLookupStatus.loading ? (
+                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin flex-shrink-0"></div>
+                    ) : barcodeLookupStatus.type === 'success' ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 flex-shrink-0">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                      </svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 flex-shrink-0">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                      </svg>
+                    )}
+                    <span className="flex-1">{barcodeLookupStatus.message}</span>
+                    {!barcodeLookupStatus.loading && (
+                      <button type="button" onClick={() => setBarcodeLookupStatus(null)} className="p-0.5 hover:opacity-70">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                )}
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Нэр</label>

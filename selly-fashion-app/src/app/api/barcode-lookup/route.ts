@@ -6,6 +6,11 @@ export interface BarcodeProduct {
   brand: string
   images: string[]
   category: string
+  size: string
+  color: string
+  weight: string
+  dimension: string
+  model: string
 }
 
 export async function GET(request: Request) {
@@ -66,6 +71,11 @@ async function lookupUPCitemdb(barcode: string): Promise<BarcodeProduct | null> 
         brand: item.brand || '',
         images: item.images || [],
         category: item.category || '',
+        size: item.size || '',
+        color: item.color || '',
+        weight: item.weight || '',
+        dimension: item.dimension || '',
+        model: item.model || '',
       }
     }
     return null
@@ -99,6 +109,11 @@ async function lookupOpenFoodFacts(barcode: string): Promise<BarcodeProduct | nu
         brand: p.brands || '',
         images,
         category: p.categories || '',
+        size: p.quantity || '',
+        color: '',
+        weight: p.quantity || '',
+        dimension: '',
+        model: '',
       }
     }
     return null
