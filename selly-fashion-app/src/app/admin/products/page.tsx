@@ -152,16 +152,6 @@ export default function AdminProductsPage() {
     fetchData()
   }, [])
 
-  // Auto-trigger barcode lookup when navigating from barcode page
-  const barcodeHandledRef = useRef(false)
-  useEffect(() => {
-    const barcodeParam = searchParams.get('barcode')
-    if (barcodeParam && !loading && !barcodeHandledRef.current) {
-      barcodeHandledRef.current = true
-      handleBarcodeScan(barcodeParam)
-    }
-  }, [searchParams, loading, handleBarcodeScan])
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -712,6 +702,16 @@ export default function AdminProductsPage() {
       })
     }
   }, [products, brands])
+
+  // Auto-trigger barcode lookup when navigating from barcode page
+  const barcodeHandledRef = useRef(false)
+  useEffect(() => {
+    const barcodeParam = searchParams.get('barcode')
+    if (barcodeParam && !loading && !barcodeHandledRef.current) {
+      barcodeHandledRef.current = true
+      handleBarcodeScan(barcodeParam)
+    }
+  }, [searchParams, loading, handleBarcodeScan])
 
   if (loading) {
     return (
