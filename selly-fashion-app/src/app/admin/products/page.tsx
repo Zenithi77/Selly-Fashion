@@ -1,8 +1,11 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import { api, Product, Brand, ClothingType, Subcategory, supabase } from '@/lib/supabase'
+
+const BarcodeScanner = dynamic(() => import('@/components/BarcodeScanner'), { ssr: false })
 
 // Predefined sizes and colors for quick selection
 const COMMON_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '2XL', '3XL']
@@ -98,6 +101,9 @@ export default function AdminProductsPage() {
   // Excel download state
   const [excelDownloading, setExcelDownloading] = useState(false)
   
+  // Barcode scanner state
+  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false)
+  
   // Form state with string values for better UX (no leading zeros issue)
   const [formData, setFormData] = useState({
     name: '',
@@ -106,6 +112,7 @@ export default function AdminProductsPage() {
     price: '',
     original_price: '',
     image_url: '',
+    barcode: '',
     brand_id: '',
     clothing_type_id: '',
     subcategory_id: '',
@@ -164,6 +171,7 @@ export default function AdminProductsPage() {
         price: parseFloat(formData.price) || 0,
         original_price: formData.original_price ? parseFloat(formData.original_price) : undefined,
         image_url: formData.image_url.trim(),
+        barcode: formData.barcode.trim() || undefined,
         brand_id: formData.brand_id || undefined,
         clothing_type_id: formData.clothing_type_id || undefined,
         subcategory_id: formData.subcategory_id || undefined,
@@ -204,6 +212,7 @@ export default function AdminProductsPage() {
       price: product.price?.toString() || '',
       original_price: product.original_price?.toString() || '',
       image_url: product.image_url || '',
+      barcode: product.barcode || '',
       brand_id: product.brand_id || '',
       clothing_type_id: product.clothing_type_id || '',
       subcategory_id: product.subcategory_id || '',
@@ -232,6 +241,7 @@ export default function AdminProductsPage() {
       price: '',
       original_price: '',
       image_url: '',
+      barcode: '',
       brand_id: '',
       clothing_type_id: '',
       subcategory_id: '',
@@ -549,6 +559,24 @@ export default function AdminProductsPage() {
     }
   }
 
+  // Handle barcode scan - open form with barcode prefilled
+  const handleBarcodeScan = useCallback((barcode: string) => {
+    setShowBarcodeScanner(false)
+    
+    // Check if product with this barcode already exists
+    const existingProduct = products.find(p => p.barcode === barcode)
+    if (existingProduct) {
+      handleEdit(existingProduct)
+      return
+    }
+    
+    // Open new product form with barcode prefilled
+    resetForm()
+    setEditingProduct(null)
+    setFormData(prev => ({ ...prev, barcode }))
+    setShowModal(true)
+  }, [products])
+
   if (loading) {
     return (
       <main className="min-h-screen pt-[104px] flex items-center justify-center">
@@ -577,6 +605,16 @@ export default function AdminProductsPage() {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowBarcodeScanner(true)}
+              className="px-4 py-2 bg-purple-500 text-white rounded-lg font-medium hover:bg-purple-600 transition-colors flex items-center gap-2"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5Z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5Z" />
+              </svg>
+              Баркод
+            </button>
             <button
               onClick={handleExcelDownload}
               disabled={excelDownloading || products.length === 0}
@@ -737,6 +775,31 @@ export default function AdminProductsPage() {
                       className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
                       required
                     />
+                  </div>
+                </div>
+
+                {/* Barcode field */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Баркод</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={formData.barcode}
+                      onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
+                      placeholder="Баркод дугаар..."
+                      className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowBarcodeScanner(true)}
+                      className="px-4 py-2.5 bg-purple-50 border border-purple-200 text-purple-600 rounded-xl hover:bg-purple-100 transition-colors flex items-center gap-2"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
+                      </svg>
+                      Скан
+                    </button>
                   </div>
                 </div>
 
@@ -1352,6 +1415,22 @@ export default function AdminProductsPage() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* Barcode Scanner Modal */}
+        {showBarcodeScanner && (
+          <BarcodeScanner
+            onScan={(barcode) => {
+              // If modal is already open, just set the barcode
+              if (showModal) {
+                setFormData(prev => ({ ...prev, barcode }))
+                setShowBarcodeScanner(false)
+              } else {
+                handleBarcodeScan(barcode)
+              }
+            }}
+            onClose={() => setShowBarcodeScanner(false)}
+          />
         )}
       </div>
     </main>

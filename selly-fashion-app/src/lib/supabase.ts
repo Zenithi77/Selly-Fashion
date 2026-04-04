@@ -116,6 +116,7 @@ export interface Product {
   original_price?: number
   image_url: string
   images?: string[]
+  barcode?: string
   brand_id: string
   clothing_type_id: string
   subcategory_id?: string
