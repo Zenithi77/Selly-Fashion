@@ -560,21 +560,40 @@ export default function AdminProductsPage() {
   }
 
   // Handle barcode scan - open form with barcode prefilled
-  const handleBarcodeScan = useCallback((barcode: string) => {
+  const handleBarcodeScan = useCallback(async (barcode: string) => {
     setShowBarcodeScanner(false)
     
-    // Check if product with this barcode already exists
+    // Check if product with this barcode already exists locally
     const existingProduct = products.find(p => p.barcode === barcode)
     if (existingProduct) {
       handleEdit(existingProduct)
       return
     }
     
-    // Open new product form with barcode prefilled
+    // Not found locally - try global barcode API
     resetForm()
     setEditingProduct(null)
     setFormData(prev => ({ ...prev, barcode }))
     setShowModal(true)
+
+    try {
+      const res = await fetch(`/api/barcode-lookup?barcode=${encodeURIComponent(barcode)}`)
+      const data = await res.json()
+      
+      if (data.found && data.product) {
+        const p = data.product
+        setFormData(prev => ({
+          ...prev,
+          name: p.title || prev.name,
+          slug: p.title ? generateSlug(p.title, true) : prev.slug,
+          description: p.description || prev.description,
+          image_url: p.images?.[0] || prev.image_url,
+        }))
+        alert(`✅ "${p.title}" - ${data.source}-аас олдлоо! Мэдээллийг формд оруулсан.`)
+      }
+    } catch {
+      // API lookup failed silently - form is already open with barcode
+    }
   }, [products])
 
   if (loading) {

@@ -15,7 +15,14 @@ export default function AdminBarcodePage() {
   const [showScanner, setShowScanner] = useState(false)
   const [scannedProduct, setScannedProduct] = useState<Product | null>(null)
   const [scannedBarcode, setScannedBarcode] = useState<string | null>(null)
-  const [scanHistory, setScanHistory] = useState<{ barcode: string; product?: Product; time: Date }[]>([])
+  const [apiLookup, setApiLookup] = useState<{
+    loading: boolean
+    found: boolean
+    product?: { title: string; description: string; brand: string; images: string[]; category: string }
+    source?: string
+    message?: string
+  } | null>(null)
+  const [scanHistory, setScanHistory] = useState<{ barcode: string; product?: Product; apiProduct?: { title: string }; time: Date }[]>([])
   const { isAdmin } = useAuthStore()
   const router = useRouter()
 
@@ -33,17 +40,47 @@ export default function AdminBarcodePage() {
     fetchProducts()
   }, [isAdmin, router, loading])
 
-  const handleScan = useCallback((barcode: string) => {
+  const handleScan = useCallback(async (barcode: string) => {
     setShowScanner(false)
     setScannedBarcode(barcode)
+    setApiLookup(null)
 
     const found = products.find(p => p.barcode === barcode)
     setScannedProduct(found || null)
 
-    setScanHistory(prev => [
-      { barcode, product: found, time: new Date() },
-      ...prev.slice(0, 19) // Keep last 20 scans
-    ])
+    if (!found) {
+      // Not in local DB - try global barcode API
+      setApiLookup({ loading: true, found: false })
+      try {
+        const res = await fetch(`/api/barcode-lookup?barcode=${encodeURIComponent(barcode)}`)
+        const data = await res.json()
+        
+        if (data.found && data.product) {
+          setApiLookup({ loading: false, found: true, product: data.product, source: data.source })
+          setScanHistory(prev => [
+            { barcode, apiProduct: data.product, time: new Date() },
+            ...prev.slice(0, 19)
+          ])
+        } else {
+          setApiLookup({ loading: false, found: false, message: data.message })
+          setScanHistory(prev => [
+            { barcode, time: new Date() },
+            ...prev.slice(0, 19)
+          ])
+        }
+      } catch {
+        setApiLookup({ loading: false, found: false, message: 'API хайлт амжилтгүй' })
+        setScanHistory(prev => [
+          { barcode, time: new Date() },
+          ...prev.slice(0, 19)
+        ])
+      }
+    } else {
+      setScanHistory(prev => [
+        { barcode, product: found, time: new Date() },
+        ...prev.slice(0, 19)
+      ])
+    }
   }, [products])
 
   if (loading) {
@@ -134,24 +171,83 @@ export default function AdminBarcodePage() {
                 </div>
               </div>
             ) : (
-              <div className="border border-amber-200 bg-amber-50 rounded-xl p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-amber-600">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-                  </svg>
-                  <span className="font-semibold text-amber-800">Бүтээгдэхүүн олдсонгүй</span>
-                </div>
-                <p className="text-sm text-amber-700 mb-3">Энэ баркодтой бүтээгдэхүүн бүртгэлд байхгүй байна.</p>
-                <Link
-                  href={`/admin/products`}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-pink-500 text-white rounded-lg text-sm font-medium hover:bg-pink-600 transition-colors"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                  </svg>
-                  Шинэ бүтээгдэхүүн нэмэх
-                </Link>
-              </div>
+              <>
+                {/* API Lookup Loading */}
+                {apiLookup?.loading && (
+                  <div className="border border-blue-200 bg-blue-50 rounded-xl p-4 mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                      <span className="text-sm text-blue-700">Дэлхийн баркод мэдээллийн сангаас хайж байна...</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* API Found */}
+                {apiLookup && !apiLookup.loading && apiLookup.found && apiLookup.product && (
+                  <div className="border border-blue-200 bg-blue-50 rounded-xl p-4 mb-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-blue-600">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418" />
+                      </svg>
+                      <span className="font-semibold text-blue-800">Дэлхийн мэдээллийн сангаас олдлоо!</span>
+                      <span className="text-xs bg-blue-200 text-blue-700 px-2 py-0.5 rounded-full">{apiLookup.source}</span>
+                    </div>
+                    <div className="flex items-start gap-4">
+                      {apiLookup.product.images?.[0] && (
+                        <div className="w-20 h-24 rounded-lg overflow-hidden bg-white flex-shrink-0 border border-blue-100">
+                          <img src={apiLookup.product.images[0]} alt={apiLookup.product.title} className="w-full h-full object-cover" />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-slate-900">{apiLookup.product.title}</h4>
+                        {apiLookup.product.brand && (
+                          <p className="text-sm text-slate-600">Брэнд: {apiLookup.product.brand}</p>
+                        )}
+                        {apiLookup.product.description && (
+                          <p className="text-sm text-slate-500 mt-1 line-clamp-2">{apiLookup.product.description}</p>
+                        )}
+                        {apiLookup.product.category && (
+                          <p className="text-xs text-slate-400 mt-1">Ангилал: {apiLookup.product.category}</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="mt-3 pt-3 border-t border-blue-200">
+                      <Link
+                        href="/admin/products"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-pink-500 text-white rounded-lg text-sm font-medium hover:bg-pink-600 transition-colors"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                        Энэ мэдээллээр бүтээгдэхүүн нэмэх
+                      </Link>
+                    </div>
+                  </div>
+                )}
+
+                {/* Not found anywhere */}
+                {apiLookup && !apiLookup.loading && !apiLookup.found && (
+                  <div className="border border-amber-200 bg-amber-50 rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-amber-600">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                      </svg>
+                      <span className="font-semibold text-amber-800">Хаанаас ч олдсонгүй</span>
+                    </div>
+                    <p className="text-sm text-amber-700 mb-1">Дотоод мэдээллийн сан болон дэлхийн баркод мэдээллийн сангаас олдсонгүй.</p>
+                    <p className="text-xs text-amber-600 mb-3">{apiLookup.message}</p>
+                    <Link
+                      href="/admin/products"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-pink-500 text-white rounded-lg text-sm font-medium hover:bg-pink-600 transition-colors"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                      </svg>
+                      Гараар бүтээгдэхүүн нэмэх
+                    </Link>
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
@@ -164,10 +260,14 @@ export default function AdminBarcodePage() {
               {scanHistory.map((item, index) => (
                 <div key={index} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
                   <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${item.product ? 'bg-green-100' : 'bg-amber-100'}`}>
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${item.product ? 'bg-green-100' : item.apiProduct ? 'bg-blue-100' : 'bg-amber-100'}`}>
                       {item.product ? (
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 text-green-600">
                           <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                        </svg>
+                      ) : item.apiProduct ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 text-blue-600">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418" />
                         </svg>
                       ) : (
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 text-amber-600">
@@ -178,7 +278,7 @@ export default function AdminBarcodePage() {
                     <div>
                       <p className="font-mono text-sm font-medium text-slate-900">{item.barcode}</p>
                       <p className="text-xs text-slate-500">
-                        {item.product ? item.product.name : 'Олдсонгүй'} • {item.time.toLocaleTimeString()}
+                        {item.product ? item.product.name : item.apiProduct ? `${item.apiProduct.title} (API)` : 'Олдсонгүй'} • {item.time.toLocaleTimeString()}
                       </p>
                     </div>
                   </div>
