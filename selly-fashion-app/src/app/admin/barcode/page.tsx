@@ -18,7 +18,13 @@ export default function AdminBarcodePage() {
   const [apiLookup, setApiLookup] = useState<{
     loading: boolean
     found: boolean
-    product?: { title: string; description: string; brand: string; images: string[]; category: string }
+    product?: {
+      title: string; description: string; brand: string; images: string[]; category: string
+      size?: string; color?: string; weight?: string; model?: string; price?: string; currency?: string
+      material?: string; gender?: string; ean?: string; upc?: string; asin?: string; manufacturer?: string; mpn?: string
+      stores?: { name: string; price: string; url: string; currency: string }[]
+      ingredients?: string; nutrition?: string
+    }
     source?: string
     message?: string
   } | null>(null)
@@ -192,25 +198,132 @@ export default function AdminBarcodePage() {
                       <span className="font-semibold text-blue-800">Дэлхийн мэдээллийн сангаас олдлоо!</span>
                       <span className="text-xs bg-blue-200 text-blue-700 px-2 py-0.5 rounded-full">{apiLookup.source}</span>
                     </div>
-                    <div className="flex items-start gap-4">
-                      {apiLookup.product.images?.[0] && (
-                        <div className="w-20 h-24 rounded-lg overflow-hidden bg-white flex-shrink-0 border border-blue-100">
-                          <img src={apiLookup.product.images[0]} alt={apiLookup.product.title} className="w-full h-full object-cover" />
+
+                    {/* Зурагнууд */}
+                    {apiLookup.product.images && apiLookup.product.images.length > 0 && (
+                      <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+                        {apiLookup.product.images.slice(0, 6).map((img, idx) => (
+                          <div key={idx} className="w-24 h-28 rounded-lg overflow-hidden bg-white flex-shrink-0 border border-blue-100">
+                            <img src={img} alt={`${apiLookup.product?.title} - ${idx + 1}`} className="w-full h-full object-cover" />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Үндсэн мэдээлэл */}
+                    <div className="space-y-2 mb-4">
+                      <h4 className="font-bold text-lg text-slate-900">{apiLookup.product.title}</h4>
+                      {apiLookup.product.description && (
+                        <p className="text-sm text-slate-600">{apiLookup.product.description}</p>
+                      )}
+                    </div>
+
+                    {/* Дэлгэрэнгүй мэдээлэл grid */}
+                    <div className="grid grid-cols-2 gap-2 mb-4">
+                      {apiLookup.product.brand && (
+                        <div className="bg-white rounded-lg p-2.5 border border-blue-100">
+                          <p className="text-xs text-slate-400">Брэнд</p>
+                          <p className="text-sm font-semibold text-slate-900">{apiLookup.product.brand}</p>
                         </div>
                       )}
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-slate-900">{apiLookup.product.title}</h4>
-                        {apiLookup.product.brand && (
-                          <p className="text-sm text-slate-600">Брэнд: {apiLookup.product.brand}</p>
-                        )}
-                        {apiLookup.product.description && (
-                          <p className="text-sm text-slate-500 mt-1 line-clamp-2">{apiLookup.product.description}</p>
-                        )}
-                        {apiLookup.product.category && (
-                          <p className="text-xs text-slate-400 mt-1">Ангилал: {apiLookup.product.category}</p>
-                        )}
-                      </div>
+                      {apiLookup.product.category && (
+                        <div className="bg-white rounded-lg p-2.5 border border-blue-100">
+                          <p className="text-xs text-slate-400">Ангилал</p>
+                          <p className="text-sm font-semibold text-slate-900">{apiLookup.product.category}</p>
+                        </div>
+                      )}
+                      {apiLookup.product.price && (
+                        <div className="bg-white rounded-lg p-2.5 border border-blue-100">
+                          <p className="text-xs text-slate-400">Үнэ</p>
+                          <p className="text-sm font-bold text-green-700">{apiLookup.product.currency || '$'}{apiLookup.product.price}</p>
+                        </div>
+                      )}
+                      {apiLookup.product.color && (
+                        <div className="bg-white rounded-lg p-2.5 border border-blue-100">
+                          <p className="text-xs text-slate-400">Өнгө</p>
+                          <p className="text-sm font-semibold text-slate-900">{apiLookup.product.color}</p>
+                        </div>
+                      )}
+                      {apiLookup.product.size && (
+                        <div className="bg-white rounded-lg p-2.5 border border-blue-100">
+                          <p className="text-xs text-slate-400">Хэмжээ</p>
+                          <p className="text-sm font-semibold text-slate-900">{apiLookup.product.size}</p>
+                        </div>
+                      )}
+                      {apiLookup.product.material && (
+                        <div className="bg-white rounded-lg p-2.5 border border-blue-100">
+                          <p className="text-xs text-slate-400">Материал</p>
+                          <p className="text-sm font-semibold text-slate-900">{apiLookup.product.material}</p>
+                        </div>
+                      )}
+                      {apiLookup.product.gender && (
+                        <div className="bg-white rounded-lg p-2.5 border border-blue-100">
+                          <p className="text-xs text-slate-400">Хүйс</p>
+                          <p className="text-sm font-semibold text-slate-900">{apiLookup.product.gender}</p>
+                        </div>
+                      )}
+                      {apiLookup.product.weight && (
+                        <div className="bg-white rounded-lg p-2.5 border border-blue-100">
+                          <p className="text-xs text-slate-400">Жин</p>
+                          <p className="text-sm font-semibold text-slate-900">{apiLookup.product.weight}</p>
+                        </div>
+                      )}
+                      {apiLookup.product.model && (
+                        <div className="bg-white rounded-lg p-2.5 border border-blue-100">
+                          <p className="text-xs text-slate-400">Загвар</p>
+                          <p className="text-sm font-semibold text-slate-900">{apiLookup.product.model}</p>
+                        </div>
+                      )}
+                      {apiLookup.product.manufacturer && apiLookup.product.manufacturer !== apiLookup.product.brand && (
+                        <div className="bg-white rounded-lg p-2.5 border border-blue-100">
+                          <p className="text-xs text-slate-400">Үйлдвэрлэгч</p>
+                          <p className="text-sm font-semibold text-slate-900">{apiLookup.product.manufacturer}</p>
+                        </div>
+                      )}
+                      {(apiLookup.product.ean || apiLookup.product.upc) && (
+                        <div className="bg-white rounded-lg p-2.5 border border-blue-100">
+                          <p className="text-xs text-slate-400">EAN/UPC</p>
+                          <p className="text-sm font-mono font-semibold text-slate-900">{apiLookup.product.ean || apiLookup.product.upc}</p>
+                        </div>
+                      )}
+                      {apiLookup.product.asin && (
+                        <div className="bg-white rounded-lg p-2.5 border border-blue-100">
+                          <p className="text-xs text-slate-400">ASIN</p>
+                          <p className="text-sm font-mono font-semibold text-slate-900">{apiLookup.product.asin}</p>
+                        </div>
+                      )}
                     </div>
+
+                    {/* Дэлгүүрүүдийн үнэ */}
+                    {apiLookup.product.stores && apiLookup.product.stores.length > 0 && (
+                      <div className="mb-4">
+                        <p className="text-xs font-semibold text-slate-500 mb-2 uppercase">Дэлгүүрүүд дэх үнэ</p>
+                        <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                          {apiLookup.product.stores.map((store, idx) => (
+                            <div key={idx} className="flex items-center justify-between bg-white rounded-lg p-2 border border-blue-100 text-sm">
+                              <span className="text-slate-700 font-medium">{store.name || 'Дэлгүүр'}</span>
+                              <div className="flex items-center gap-2">
+                                {store.price && <span className="font-bold text-green-700">{store.currency || '$'}{store.price}</span>}
+                                {store.url && (
+                                  <a href={store.url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline text-xs">
+                                    Линк →
+                                  </a>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Ingredients (хүнсний/гоо сайхны бүтээгдэхүүн) */}
+                    {apiLookup.product.ingredients && (
+                      <div className="bg-white rounded-lg p-2.5 border border-blue-100 mb-4">
+                        <p className="text-xs text-slate-400 mb-1">Орц, найрлага</p>
+                        <p className="text-sm text-slate-700 line-clamp-3">{apiLookup.product.ingredients}</p>
+                      </div>
+                    )}
+
                     <div className="mt-3 pt-3 border-t border-blue-200">
                       <Link
                         href={`/admin/products?barcode=${encodeURIComponent(scannedBarcode || '')}`}

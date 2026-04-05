@@ -60,7 +60,10 @@ CREATE TABLE user_profiles (
     avatar_url TEXT,
     phone VARCHAR(20),
     address TEXT,
+    city VARCHAR(255),
     is_vip BOOLEAN DEFAULT FALSE,
+    is_admin BOOLEAN DEFAULT FALSE,
+    role VARCHAR(20) DEFAULT 'customer',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -138,6 +141,7 @@ ALTER TABLE cart_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE wishlist ENABLE ROW LEVEL SECURITY;
+ALTER TABLE newsletter_subscribers ENABLE ROW LEVEL SECURITY;
 
 -- Users can only see their own profile
 CREATE POLICY "Users can view own profile" ON user_profiles
@@ -172,3 +176,16 @@ CREATE POLICY "Brands are viewable by everyone" ON brands
 
 CREATE POLICY "Clothing types are viewable by everyone" ON clothing_types
     FOR SELECT USING (true);
+
+-- Newsletter subscriber policies
+CREATE POLICY "Anyone can subscribe to newsletter" ON newsletter_subscribers
+    FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Admins can view newsletter subscribers" ON newsletter_subscribers
+    FOR SELECT USING (
+        EXISTS (
+            SELECT 1 FROM user_profiles
+            WHERE user_profiles.id = auth.uid()
+            AND (user_profiles.is_admin = true OR user_profiles.role = 'admin')
+        )
+    );
