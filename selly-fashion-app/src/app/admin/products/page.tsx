@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
@@ -62,6 +62,18 @@ function getColorHex(colorValue: string): string | null {
 }
 
 export default function AdminProductsPage() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen pt-[104px] flex items-center justify-center">
+        <div className="w-16 h-16 border-4 border-pink-500 border-t-transparent rounded-full animate-spin"></div>
+      </main>
+    }>
+      <AdminProductsContent />
+    </Suspense>
+  )
+}
+
+function AdminProductsContent() {
   const [products, setProducts] = useState<Product[]>([])
   const [brands, setBrands] = useState<Brand[]>([])
   const [categories, setCategories] = useState<ClothingType[]>([])
