@@ -40,6 +40,8 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Буруу баркод дугаар' }, { status: 400 })
   }
 
+  const errors: string[] = []
+
   try {
     // 1. Barcode Lookup API (barcodelookup.com) - хамгийн их мэдээлэлтэй, хувцасны мэдээлэл сайн
     const barcodeLookupKey = process.env.BARCODE_LOOKUP_API_KEY
@@ -62,26 +64,38 @@ export async function GET(request: Request) {
     // 3. UPCitemdb.com API (API key байвал paid, үгүй бол trial)
     const upcApiKey = process.env.UPCITEMDB_API_KEY
     const upcResult = await lookupUPCitemdb(sanitized, upcApiKey)
-    if (upcResult) {
-      return NextResponse.json({ found: true, product: upcResult, source: 'UPCitemdb' })
+    if (upcResult.product) {
+      return NextResponse.json({ found: true, product: upcResult.product, source: 'UPCitemdb' })
     }
+    if (upcResult.error) errors.push(`UPCitemdb: ${upcResult.error}`)
 
-    // 4. Open Food Facts (free, unlimited)
+    // 4. Barcode Monster (free, no limit)
+    const monsterResult = await lookupBarcodeMonster(sanitized)
+    if (monsterResult.product) {
+      return NextResponse.json({ found: true, product: monsterResult.product, source: 'BarcodeMonster' })
+    }
+    if (monsterResult.error) errors.push(`BarcodeMonster: ${monsterResult.error}`)
+
+    // 5. Open Food Facts (free, unlimited)
     const offResult = await lookupOpenFoodFacts(sanitized)
     if (offResult) {
       return NextResponse.json({ found: true, product: offResult, source: 'OpenFoodFacts' })
     }
 
-    // 5. Open Beauty Facts (гоо сайхны бүтээгдэхүүн)
+    // 6. Open Beauty Facts (гоо сайхны бүтээгдэхүүн)
     const obfResult = await lookupOpenBeautyFacts(sanitized)
     if (obfResult) {
       return NextResponse.json({ found: true, product: obfResult, source: 'OpenBeautyFacts' })
     }
 
-    return NextResponse.json({ found: false, message: 'Энэ баркод дэлхийн мэдээллийн санд олдсонгүй. API key тохируулснаар илүү олон бараа олдох боломжтой.' })
+    const message = errors.length > 0
+      ? `Олдсонгүй. ${errors.join('; ')}. API key тохируулснаар илүү олон бараа олдох боломжтой.`
+      : 'Энэ баркод дэлхийн мэдээллийн санд олдсонгүй. API key тохируулснаар илүү олон бараа олдох боломжтой.'
+
+    return NextResponse.json({ found: false, message })
   } catch (error) {
     console.error('Barcode lookup error:', error)
-    return NextResponse.json({ found: false, message: 'API хайлт амжилтгүй боллоо' })
+    return NextResponse.json({ found: false, message: `API хайлт амжилтгүй. ${errors.length > 0 ? errors.join('; ') : ''}` })
   }
 }
 
@@ -210,8 +224,11 @@ async function lookupGoUPC(barcode: string, apiKey: string): Promise<BarcodeProd
 // Trial: https://api.upcitemdb.com/prod/trial/lookup (өдөрт 100)
 // Paid: API key-тэй бол илүү олон хүсэлт
 // ==========================================
-async function lookupUPCitemdb(barcode: string, apiKey?: string): Promise<BarcodeProduct | null> {
+async function lookupUPCitemdb(barcode: string, apiKey?: string): Promise<{ product?: BarcodeProduct; error?: string }> {
   try {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 8000)
+
     const url = apiKey
       ? `https://api.upcitemdb.com/prod/v1/lookup?upc=${encodeURIComponent(barcode)}`
       : `https://api.upcitemdb.com/prod/trial/lookup?upc=${encodeURIComponent(barcode)}`
@@ -225,10 +242,21 @@ async function lookupUPCitemdb(barcode: string, apiKey?: string): Promise<Barcod
       headers['key_type'] = '3scale'
     }
 
-    const response = await fetch(url, { headers })
-    if (!response.ok) return null
+    const response = await fetch(url, { headers, signal: controller.signal })
+    clearTimeout(timeout)
+
+    if (response.status === 429) {
+      return { error: apiKey ? 'Rate limit хэтэрсэн' : 'Өдрийн лимит (100) дууссан. Маргааш дахин оролдоно уу' }
+    }
+    if (!response.ok) {
+      return { error: `HTTP ${response.status}` }
+    }
 
     const data = await response.json()
+
+    if (data.code === 'EXCEED_LIMIT') {
+      return { error: apiKey ? 'Rate limit хэтэрсэн' : 'Өдрийн лимит (100) дууссан. Маргааш дахин оролдоно уу' }
+    }
 
     if (data.code === 'OK' && data.items && data.items.length > 0) {
       const item = data.items[0]
@@ -243,30 +271,82 @@ async function lookupUPCitemdb(barcode: string, apiKey?: string): Promise<Barcod
       }))
 
       return {
-        ...emptyProduct(),
-        title: item.title || '',
-        description: item.description || '',
-        brand: item.brand || '',
-        images,
-        category: item.category || '',
-        size: item.size || '',
-        color: item.color || '',
-        weight: item.weight || '',
-        dimension: item.dimension || '',
-        model: item.model || '',
-        ean: item.ean || '',
-        upc: item.upc || barcode,
-        asin: item.asin || '',
-        stores,
-        price: stores[0]?.price || '',
-        currency: stores[0]?.currency || '',
-        manufacturer: item.brand || '',
-        mpn: item.mpn || '',
+        product: {
+          ...emptyProduct(),
+          title: item.title || '',
+          description: item.description || '',
+          brand: item.brand || '',
+          images,
+          category: item.category || '',
+          size: item.size || '',
+          color: item.color || '',
+          weight: item.weight || '',
+          dimension: item.dimension || '',
+          model: item.model || '',
+          ean: item.ean || '',
+          upc: item.upc || barcode,
+          asin: item.asin || '',
+          stores,
+          price: stores[0]?.price || '',
+          currency: stores[0]?.currency || '',
+          manufacturer: item.brand || '',
+          mpn: item.mpn || '',
+        }
       }
     }
-    return null
-  } catch {
-    return null
+    return {}
+  } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') {
+      return { error: 'Хугацаа хэтэрсэн (timeout)' }
+    }
+    return { error: 'Холболт амжилтгүй' }
+  }
+}
+
+// ==========================================
+// 4. Barcode Monster (free, no limit)
+// ==========================================
+async function lookupBarcodeMonster(barcode: string): Promise<{ product?: BarcodeProduct; error?: string }> {
+  try {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 8000)
+
+    const response = await fetch(
+      `https://barcode.monster/api/${encodeURIComponent(barcode)}`,
+      {
+        headers: { 'Accept': 'application/json' },
+        signal: controller.signal,
+      }
+    )
+
+    clearTimeout(timeout)
+
+    if (!response.ok) {
+      return { error: `HTTP ${response.status}` }
+    }
+
+    const data = await response.json()
+
+    if (data.description || data.company) {
+      return {
+        product: {
+          ...emptyProduct(),
+          title: data.description || '',
+          description: data.description || '',
+          brand: data.company || '',
+          images: data.image_url ? [data.image_url] : [],
+          category: data.category || '',
+          size: data.size || '',
+          ean: barcode,
+        }
+      }
+    }
+    return {}
+  } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') {
+      return { error: 'Хугацаа хэтэрсэн (timeout)' }
+    }
+    return { error: 'Холболт амжилтгүй' }
   }
 }
 
