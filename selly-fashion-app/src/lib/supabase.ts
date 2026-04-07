@@ -350,34 +350,63 @@ export const api = {
     return { data, error }
   },
 
-  // Subcategories - table doesn't exist yet, return empty arrays
+  // Subcategories
   async getSubcategories(clothingTypeId?: string) {
-    // Return empty array since subcategories table doesn't exist
-    return { data: [] as Subcategory[], error: null }
+    let query = supabase
+      .from('subcategories')
+      .select('*, clothing_type:clothing_types(*)')
+      .order('display_order', { ascending: true })
+
+    if (clothingTypeId) {
+      query = query.eq('clothing_type_id', clothingTypeId)
+    }
+
+    const { data, error } = await query
+    return { data: (data || []) as Subcategory[], error }
   },
 
   async getAllSubcategories() {
-    // Return empty array since subcategories table doesn't exist
-    return { data: [] as Subcategory[], error: null }
+    const { data, error } = await supabase
+      .from('subcategories')
+      .select('*, clothing_type:clothing_types(*)')
+      .order('display_order', { ascending: true })
+    return { data: (data || []) as Subcategory[], error }
   },
 
   async getSubcategoryBySlug(slug: string) {
-    return { data: null as Subcategory | null, error: null }
+    const { data, error } = await supabase
+      .from('subcategories')
+      .select('*, clothing_type:clothing_types(*)')
+      .eq('slug', slug)
+      .single()
+    return { data: data as Subcategory | null, error }
   },
 
   async createSubcategory(subcategory: Partial<Subcategory>) {
-    // Subcategories table doesn't exist yet
-    return { data: null as Subcategory | null, error: { message: 'Subcategories table not available' } }
+    const { data, error } = await supabase
+      .from('subcategories')
+      .insert(subcategory)
+      .select()
+      .single()
+    return { data: data as Subcategory | null, error }
   },
 
   async updateSubcategory(id: string, subcategory: Partial<Subcategory>) {
-    // Subcategories table doesn't exist yet
-    return { data: null as Subcategory | null, error: { message: 'Subcategories table not available' } }
+    const { data, error } = await supabase
+      .from('subcategories')
+      .update({ ...subcategory, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single()
+    return { data: data as Subcategory | null, error }
   },
 
   async deleteSubcategory(id: string) {
-    // Subcategories table doesn't exist yet
-    return { error: { message: 'Subcategories table not available' } }
+    const { error } = await supabase
+      .from('subcategories')
+      .delete()
+      .eq('id', id)
+    return { error }
   },
 
   // Orders
