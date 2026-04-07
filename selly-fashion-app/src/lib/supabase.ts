@@ -522,6 +522,10 @@ export const api = {
   },
 
   async deleteProduct(id: string) {
+    // Холбоотой өгөгдлийг эхлээд устгах
+    await supabase.from('cart_items').delete().eq('product_id', id)
+    await supabase.from('wishlist').delete().eq('product_id', id)
+
     const { error } = await supabase
       .from('products')
       .delete()

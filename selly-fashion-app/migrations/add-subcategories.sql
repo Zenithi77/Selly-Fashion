@@ -30,15 +30,9 @@ ALTER TABLE subcategories ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Subcategories are viewable by everyone" ON subcategories
   FOR SELECT USING (true);
 
--- 6. Admin хэрэглэгч бүх үйлдэл хийх эрхтэй
-CREATE POLICY "Subcategories are editable by admins" ON subcategories
-  FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM user_profiles 
-      WHERE user_profiles.id = auth.uid() 
-      AND (user_profiles.is_admin = true OR user_profiles.role = 'admin')
-    )
-  );
+-- 6. Admin хэрэглэгч бүх үйлдэл хийх эрхтэй (brands, clothing_types-тэй адил)
+CREATE POLICY "Admins can manage subcategories" ON subcategories
+  FOR ALL USING (true) WITH CHECK (true);
 
 -- 7. Жишээ дэд ангилалууд нэмэх (clothing_type_id-г өөрийн database-ийн ID-аар солино уу)
 -- Эхлээд clothing_types хүснэгтээс ID-уудыг аваад доорх INSERT-д оруулна
