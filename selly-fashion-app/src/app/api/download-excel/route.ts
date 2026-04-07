@@ -38,6 +38,8 @@ export async function GET() {
       'Брэнд (brand)': product.brand?.name || '',
       'Ангилал (category)': product.clothing_type?.name || '',
       'Дэд ангилал (subcategory)': product.subcategory?.name || '',
+      'Улс (country)': product.country || '',
+      'Баркод (barcode)': product.barcode || '',
       'Хэмжээ (sizes)': Array.isArray(product.sizes) ? product.sizes.join(', ') : (product.sizes || ''),
       'Өнгө (colors)': Array.isArray(product.colors) ? product.colors.join(', ') : (product.colors || ''),
       'Нөөц (stock)': product.stock_quantity || 0,

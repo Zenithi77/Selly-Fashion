@@ -131,6 +131,7 @@ function AdminProductsContent() {
     original_price: '',
     image_url: '',
     barcode: '',
+    country: '',
     brand_id: '',
     clothing_type_id: '',
     subcategory_id: '',
@@ -192,6 +193,7 @@ function AdminProductsContent() {
         original_price: formData.original_price ? parseFloat(formData.original_price) : undefined,
         image_url: formData.image_url.trim(),
         barcode: formData.barcode.trim() || undefined,
+        country: formData.country.trim() || undefined,
         brand_id: formData.brand_id || undefined,
         clothing_type_id: formData.clothing_type_id || undefined,
         subcategory_id: formData.subcategory_id || undefined,
@@ -233,6 +235,7 @@ function AdminProductsContent() {
       original_price: product.original_price?.toString() || '',
       image_url: product.image_url || '',
       barcode: product.barcode || '',
+      country: product.country || '',
       brand_id: product.brand_id || '',
       clothing_type_id: product.clothing_type_id || '',
       subcategory_id: product.subcategory_id || '',
@@ -262,6 +265,7 @@ function AdminProductsContent() {
       original_price: '',
       image_url: '',
       barcode: '',
+      country: '',
       brand_id: '',
       clothing_type_id: '',
       subcategory_id: '',
@@ -978,6 +982,18 @@ function AdminProductsContent() {
                       Скан
                     </button>
                   </div>
+                </div>
+
+                {/* Country field */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Улс</label>
+                  <input
+                    type="text"
+                    value={formData.country}
+                    onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                    placeholder="Жишээ: Монгол, Хятад, Солонгос..."
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
+                  />
                 </div>
 
                 <div>

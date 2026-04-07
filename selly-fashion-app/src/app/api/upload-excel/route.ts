@@ -59,6 +59,8 @@ interface ExcelProduct {
   brand_name?: string
   category_name?: string
   subcategory_name?: string
+  country?: string
+  barcode?: string
   sizes?: string
   colors?: string
   is_featured?: boolean
@@ -154,6 +156,8 @@ export async function POST(request: NextRequest) {
         brand_name: (findValue('brand', 'брэнд', 'Брэнд', 'Brand') || '') as string,
         category_name: (findValue('category', 'ангилал', 'Ангилал', 'Category') || '') as string,
         subcategory_name: (findValue('subcategory', 'дэд_ангилал', 'Дэд ангилал', 'Subcategory', 'Дэд') || '') as string,
+        country: (findValue('country', 'улс', 'Улс', 'Country', 'Origin', 'Гарал') || '') as string,
+        barcode: (findValue('barcode', 'баркод', 'Баркод', 'Barcode', 'EAN', 'UPC') || '') as string,
         sizes: (findValue('sizes', 'хэмжээ', 'Хэмжээ', 'Sizes') || '') as string,
         colors: (findValue('colors', 'өнгө', 'Өнгө', 'Colors') || '') as string,
         is_featured: parseBoolean(findValue('is_featured', 'онцлох', 'Онцлох', 'featured')),
@@ -209,6 +213,8 @@ export async function POST(request: NextRequest) {
         price: productData.price,
         original_price: productData.original_price,
         image_url: productData.image_url?.trim() || PLACEHOLDER_IMAGE,
+        barcode: productData.barcode?.trim() || undefined,
+        country: productData.country?.trim() || undefined,
         brand_id: brand_id || null,
         clothing_type_id: clothing_type_id || null,
         subcategory_id: subcategory_id || null,
@@ -223,15 +229,133 @@ export async function POST(request: NextRequest) {
       productsToInsert.push(product)
     }
 
-    // Insert products to database
-    if (productsToInsert.length > 0) {
+    // ========================================
+    // Smart Variant Detection
+    // Ижил нэр, брэнд, үнэ, тайлбартай бараанууд → нэг бүтээгдэхүүн болгож нэгтгэнэ
+    // Зөвхөн өнгө, хэмжээ, нөөц ялгаатай бол variant гэж тооцно
+    // ========================================
+    const mergedProducts: typeof productsToInsert = []
+    const variantMap = new Map<string, number>() // key -> index in mergedProducts
+
+    for (const product of productsToInsert) {
+      // Create a unique key based on: name + brand + price + description + category + subcategory + country
+      const variantKey = [
+        product.name.toLowerCase().trim(),
+        product.brand_id || '',
+        product.price,
+        (product.description || '').toLowerCase().trim(),
+        product.clothing_type_id || '',
+        product.subcategory_id || '',
+        product.country || '',
+      ].join('|||')
+
+      const existingIdx = variantMap.get(variantKey)
+
+      if (existingIdx !== undefined) {
+        // Merge sizes and colors into existing product
+        const existing = mergedProducts[existingIdx]
+
+        // Merge sizes (no duplicates)
+        const allSizes = new Set([...existing.sizes, ...product.sizes])
+        existing.sizes = Array.from(allSizes)
+
+        // Merge colors (no duplicates)
+        const allColors = new Set([...existing.colors, ...product.colors])
+        existing.colors = Array.from(allColors)
+
+        // Sum stock quantities
+        existing.stock_quantity = (existing.stock_quantity || 0) + (product.stock_quantity || 0)
+
+        // Take barcode if the existing one doesn't have one
+        if (!existing.barcode && product.barcode) {
+          existing.barcode = product.barcode
+        }
+
+        // Take image if existing doesn't have a real one
+        if ((!existing.image_url || existing.image_url === PLACEHOLDER_IMAGE) && product.image_url && product.image_url !== PLACEHOLDER_IMAGE) {
+          existing.image_url = product.image_url
+        }
+      } else {
+        // New unique product
+        variantMap.set(variantKey, mergedProducts.length)
+        mergedProducts.push({ ...product })
+      }
+    }
+
+    const mergedCount = productsToInsert.length - mergedProducts.length
+
+    // ========================================
+    // Check against existing DB products for updates
+    // If a product with same name+brand already exists → update sizes/colors  
+    // ========================================
+    const toInsert: typeof mergedProducts = []
+    const toUpdate: { id: string; sizes: string[]; colors: string[]; stock_quantity: number; barcode?: string; country?: string }[] = []
+
+    // Fetch existing products for comparison
+    const { data: existingProducts } = await supabase
+      .from('products')
+      .select('id, name, brand_id, price, sizes, colors, stock_quantity, barcode, country')
+
+    const existingMap = new Map<string, typeof existingProducts extends (infer T)[] | null ? T : never>()
+    if (existingProducts) {
+      for (const ep of existingProducts) {
+        const key = [
+          ep.name.toLowerCase().trim(),
+          ep.brand_id || '',
+          ep.price,
+        ].join('|||')
+        existingMap.set(key, ep)
+      }
+    }
+
+    for (const product of mergedProducts) {
+      const lookupKey = [
+        product.name.toLowerCase().trim(),
+        product.brand_id || '',
+        product.price,
+      ].join('|||')
+
+      const existing = existingMap.get(lookupKey)
+
+      if (existing) {
+        // Product exists in DB → merge sizes/colors and update
+        const existingSizes = Array.isArray(existing.sizes) ? existing.sizes : []
+        const existingColors = Array.isArray(existing.colors) ? existing.colors : []
+        
+        const allSizes = Array.from(new Set([...existingSizes, ...product.sizes]))
+        const allColors = Array.from(new Set([...existingColors, ...product.colors]))
+        
+        const hasNewSizes = allSizes.length > existingSizes.length
+        const hasNewColors = allColors.length > existingColors.length
+        const hasNewBarcode = !existing.barcode && product.barcode
+        const hasNewCountry = !existing.country && product.country
+
+        if (hasNewSizes || hasNewColors || hasNewBarcode || hasNewCountry) {
+          toUpdate.push({
+            id: existing.id,
+            sizes: allSizes,
+            colors: allColors,
+            stock_quantity: (existing.stock_quantity || 0) + (product.stock_quantity || 0),
+            barcode: product.barcode || existing.barcode || undefined,
+            country: product.country || existing.country || undefined,
+          })
+        }
+      } else {
+        // Ensure unique slug
+        product.slug = `${product.slug}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
+        toInsert.push(product)
+      }
+    }
+
+    // Execute inserts
+    if (toInsert.length > 0) {
       const { data, error } = await supabase
         .from('products')
-        .insert(productsToInsert)
+        .insert(toInsert)
         .select()
 
       if (error) {
-        console.error('Database error:', error)
+        console.error('Database insert error:', error)
         return NextResponse.json({ 
           error: 'Бүтээгдэхүүн нэмэхэд алдаа гарлаа',
           details: error.message 
@@ -241,10 +365,35 @@ export async function POST(request: NextRequest) {
       successCount = data?.length || 0
     }
 
+    // Execute updates
+    let updatedCount = 0
+    for (const upd of toUpdate) {
+      const { error } = await supabase
+        .from('products')
+        .update({
+          sizes: upd.sizes,
+          colors: upd.colors,
+          stock_quantity: upd.stock_quantity,
+          barcode: upd.barcode,
+          country: upd.country,
+        })
+        .eq('id', upd.id)
+
+      if (!error) updatedCount++
+    }
+
+    // Build detailed result message
+    const parts: string[] = []
+    if (successCount > 0) parts.push(`${successCount} шинэ бүтээгдэхүүн нэмэгдлээ`)
+    if (updatedCount > 0) parts.push(`${updatedCount} бүтээгдэхүүн шинэчлэгдлээ (өнгө/размер нэмэгдсэн)`)
+    if (mergedCount > 0) parts.push(`${mergedCount} мөр variant болгож нэгтгэгдсэн`)
+
     return NextResponse.json({
       success: true,
-      message: `${successCount} бүтээгдэхүүн амжилттай нэмэгдлээ`,
+      message: parts.length > 0 ? parts.join('. ') : 'Бүх бүтээгдэхүүн аль хэдийн бүртгэгдсэн байна',
       successCount,
+      updatedCount,
+      mergedCount,
       totalRows: rawData.length,
       errors: errors.length > 0 ? errors : undefined
     })

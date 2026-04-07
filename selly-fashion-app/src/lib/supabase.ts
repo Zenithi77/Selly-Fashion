@@ -117,6 +117,7 @@ export interface Product {
   image_url: string
   images?: string[]
   barcode?: string
+  country?: string
   brand_id: string
   clothing_type_id: string
   subcategory_id?: string
