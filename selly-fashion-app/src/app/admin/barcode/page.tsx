@@ -151,12 +151,13 @@ export default function AdminBarcodePage() {
 
             {scannedProduct ? (
               <div className="border border-green-200 bg-green-50 rounded-xl p-4">
-                <div className="flex items-center gap-2 mb-3">
+                <div className="flex items-center gap-2 mb-1">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-green-600">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                   </svg>
-                  <span className="font-semibold text-green-800">Бүтээгдэхүүн олдлоо!</span>
+                  <span className="font-semibold text-green-800">Энэ бараа аль хэдийн нэмэгдсэн байна!</span>
                 </div>
+                <p className="text-xs text-green-600 mb-3 ml-7">Дотоод мэдээллийн санд бүртгэлтэй бараа.</p>
                 <div className="flex items-center gap-4">
                   {scannedProduct.image_url && (
                     <div className="w-16 h-20 rounded-lg overflow-hidden bg-slate-100 flex-shrink-0">
@@ -167,6 +168,12 @@ export default function AdminBarcodePage() {
                     <h4 className="font-semibold text-slate-900">{scannedProduct.name}</h4>
                     <p className="text-sm text-slate-600">₮{scannedProduct.price?.toLocaleString()}</p>
                     <p className="text-xs text-slate-500">Нөөц: {scannedProduct.stock_quantity}</p>
+                    {scannedProduct.sizes && scannedProduct.sizes.length > 0 && (
+                      <p className="text-xs text-slate-500">Хэмжээ: {scannedProduct.sizes.join(', ')}</p>
+                    )}
+                    {scannedProduct.colors && scannedProduct.colors.length > 0 && (
+                      <p className="text-xs text-slate-500">Өнгө: {scannedProduct.colors.join(', ')}</p>
+                    )}
                   </div>
                   <Link
                     href={`/admin/products`}
