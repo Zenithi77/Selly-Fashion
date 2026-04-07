@@ -88,6 +88,27 @@ export async function GET(request: Request) {
       return NextResponse.json({ found: true, product: obfResult, source: 'OpenBeautyFacts' })
     }
 
+    // 7. EAN-Search.org API (free: 20 lookups/day)
+    const eanSearchKey = process.env.EAN_SEARCH_API_KEY
+    if (eanSearchKey) {
+      const eanResult = await lookupEanSearch(sanitized, eanSearchKey)
+      if (eanResult) {
+        return NextResponse.json({ found: true, product: eanResult, source: 'EAN-Search' })
+      }
+    }
+
+    // 8. Barcode Spider (free, no key needed)
+    const spiderResult = await lookupBarcodeSpider(sanitized)
+    if (spiderResult) {
+      return NextResponse.json({ found: true, product: spiderResult, source: 'BarcodeSpider' })
+    }
+
+    // 9. Open Product Data (free, community database)
+    const opdResult = await lookupOpenProductData(sanitized)
+    if (opdResult) {
+      return NextResponse.json({ found: true, product: opdResult, source: 'OpenProductData' })
+    }
+
     const message = errors.length > 0
       ? `Олдсонгүй. ${errors.join('; ')}. API key тохируулснаар илүү олон бараа олдох боломжтой.`
       : 'Энэ баркод дэлхийн мэдээллийн санд олдсонгүй. API key тохируулснаар илүү олон бараа олдох боломжтой.'
@@ -438,6 +459,118 @@ async function lookupOpenBeautyFacts(barcode: string): Promise<BarcodeProduct | 
         weight: p.quantity || '',
         ingredients: p.ingredients_text || '',
         manufacturer: p.manufacturing_places || '',
+        ean: barcode,
+      }
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
+// ==========================================
+// 7. EAN-Search.org API
+// Бүртгүүлэх: https://www.ean-search.org/ean-database-api.html
+// Үнэгүй: Өдөрт 20 хүсэлт
+// Хувцас, электроник зэрэг бүхий л бараа
+// ==========================================
+async function lookupEanSearch(barcode: string, apiKey: string): Promise<BarcodeProduct | null> {
+  try {
+    const response = await fetch(
+      `https://api.ean-search.org/api?token=${apiKey}&op=barcode-lookup&ean=${encodeURIComponent(barcode)}&format=json`,
+      { headers: { 'Accept': 'application/json' } }
+    )
+
+    if (!response.ok) return null
+    const data = await response.json()
+
+    // EAN-Search returns array or object
+    const item = Array.isArray(data) ? data[0] : data
+    if (!item || item.error || !item.name) return null
+
+    return {
+      ...emptyProduct(),
+      title: item.name || '',
+      category: item.categoryName || item.category || '',
+      ean: item.ean || barcode,
+      brand: item.brand || '',
+    }
+  } catch {
+    return null
+  }
+}
+
+// ==========================================
+// 8. Barcode Spider
+// API: https://api.barcodespider.com/v1/lookup?token=KEY&upc=BARCODE
+// token нь query parameter дээр явна
+// ==========================================
+async function lookupBarcodeSpider(barcode: string): Promise<BarcodeProduct | null> {
+  try {
+    const apiToken = process.env.BARCODE_SPIDER_API_KEY
+    if (!apiToken) return null
+
+    const response = await fetch(
+      `https://api.barcodespider.com/v1/lookup?token=${apiToken}&upc=${encodeURIComponent(barcode)}`,
+      { headers: { 'Accept': 'application/json' } }
+    )
+
+    if (!response.ok) return null
+    const data = await response.json()
+
+    if (data.item_response?.code === 200 && data.item_attributes) {
+      const item = data.item_attributes
+      const images: string[] = []
+      if (item.image) images.push(item.image)
+
+      return {
+        ...emptyProduct(),
+        title: item.title || '',
+        description: item.description || '',
+        brand: item.brand || item.manufacturer || '',
+        images,
+        category: item.category || '',
+        ean: item.ean || barcode,
+        upc: item.upc || barcode,
+        manufacturer: item.manufacturer || '',
+        model: item.model || '',
+        color: item.color || '',
+        size: item.size || '',
+        weight: item.weight || '',
+      }
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
+// ==========================================
+// 9. Open Product Data (community, free)
+// https://product-open-data.com
+// ==========================================
+async function lookupOpenProductData(barcode: string): Promise<BarcodeProduct | null> {
+  try {
+    const response = await fetch(
+      `https://product-open-data.com/api/v0/product/${encodeURIComponent(barcode)}.json`,
+      { headers: { 'Accept': 'application/json' } }
+    )
+
+    if (!response.ok) return null
+    const data = await response.json()
+
+    if (data.status === 'success' && data.product) {
+      const p = data.product
+      const images: string[] = []
+      if (p.image_url) images.push(p.image_url)
+
+      return {
+        ...emptyProduct(),
+        title: p.name || p.product_name || '',
+        description: p.description || '',
+        brand: p.brand || '',
+        images,
+        category: p.category || '',
         ean: barcode,
       }
     }
