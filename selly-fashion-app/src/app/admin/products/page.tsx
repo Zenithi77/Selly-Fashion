@@ -129,6 +129,7 @@ function AdminProductsContent() {
     description: '',
     price: '',
     original_price: '',
+    cost_price: '',
     image_url: '',
     barcode: '',
     country: '',
@@ -191,6 +192,7 @@ function AdminProductsContent() {
         description: formData.description.trim(),
         price: parseFloat(formData.price) || 0,
         original_price: formData.original_price ? parseFloat(formData.original_price) : undefined,
+        cost_price: formData.cost_price ? parseFloat(formData.cost_price) : undefined,
         image_url: formData.image_url.trim(),
         barcode: formData.barcode.trim() || undefined,
         country: formData.country.trim() || undefined,
@@ -233,6 +235,7 @@ function AdminProductsContent() {
       description: product.description || '',
       price: product.price?.toString() || '',
       original_price: product.original_price?.toString() || '',
+      cost_price: product.cost_price?.toString() || '',
       image_url: product.image_url || '',
       barcode: product.barcode || '',
       country: product.country || '',
@@ -263,6 +266,7 @@ function AdminProductsContent() {
       description: '',
       price: '',
       original_price: '',
+      cost_price: '',
       image_url: '',
       barcode: '',
       country: '',
@@ -810,6 +814,7 @@ function AdminProductsContent() {
                 <tr>
                   <th className="text-left px-6 py-4 text-sm font-semibold text-slate-600">Бүтээгдэхүүн</th>
                   <th className="text-left px-6 py-4 text-sm font-semibold text-slate-600">Үнэ</th>
+                  <th className="text-left px-6 py-4 text-sm font-semibold text-slate-600">Өртөг үнэ</th>
                   <th className="text-left px-6 py-4 text-sm font-semibold text-slate-600">Брэнд</th>
                   <th className="text-left px-6 py-4 text-sm font-semibold text-slate-600">Нөөц</th>
                   <th className="text-left px-6 py-4 text-sm font-semibold text-slate-600">Статус</th>
@@ -838,6 +843,13 @@ function AdminProductsContent() {
                       <span className="font-semibold text-pink-500">{product.price.toLocaleString()}₮</span>
                       {product.original_price && product.original_price > product.price && (
                         <span className="text-sm text-slate-400 line-through ml-2">{product.original_price.toLocaleString()}₮</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      {product.cost_price ? (
+                        <span className="font-medium text-amber-600">{product.cost_price.toLocaleString()}₮</span>
+                      ) : (
+                        <span className="text-slate-400">-</span>
                       )}
                     </td>
                     <td className="px-6 py-4 text-slate-600">
@@ -1006,7 +1018,7 @@ function AdminProductsContent() {
                   ></textarea>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-4 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Үнэ (₮) <span className="text-red-500">*</span></label>
                     <input
@@ -1031,6 +1043,20 @@ function AdminProductsContent() {
                       onChange={(e) => {
                         const value = e.target.value.replace(/[^0-9]/g, '')
                         setFormData({ ...formData, original_price: value })
+                      }}
+                      placeholder="Хоосон үлдээх"
+                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Өртөг үнэ (₮) <span className="text-xs text-slate-400">(зөвхөн админ)</span></label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={formData.cost_price}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/[^0-9]/g, '')
+                        setFormData({ ...formData, cost_price: value })
                       }}
                       placeholder="Хоосон үлдээх"
                       className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"

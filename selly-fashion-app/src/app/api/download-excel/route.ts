@@ -35,6 +35,7 @@ export async function GET() {
       'Тайлбар (description)': product.description || '',
       'Үнэ (price)': product.price || 0,
       'Хуучин үнэ (original_price)': product.original_price || '',
+      'Өртөг үнэ (cost_price)': product.cost_price || '',
       'Брэнд (brand)': product.brand?.name || '',
       'Ангилал (category)': product.clothing_type?.name || '',
       'Дэд ангилал (subcategory)': product.subcategory?.name || '',

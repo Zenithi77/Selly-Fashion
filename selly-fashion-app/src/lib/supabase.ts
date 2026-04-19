@@ -114,6 +114,7 @@ export interface Product {
   description: string
   price: number
   original_price?: number
+  cost_price?: number
   image_url: string
   images?: string[]
   barcode?: string

@@ -56,6 +56,7 @@ interface ExcelProduct {
   description?: string
   price: number
   original_price?: number
+  cost_price?: number
   brand_name?: string
   category_name?: string
   subcategory_name?: string
@@ -153,6 +154,9 @@ export async function POST(request: NextRequest) {
         original_price: findValue('original_price', 'хуучин_үнэ', 'Хуучин үнэ', 'Хуучин')
           ? parseNumber(findValue('original_price', 'хуучин_үнэ', 'Хуучин үнэ', 'Хуучин'))
           : undefined,
+        cost_price: findValue('cost_price', 'өртөг', 'Өртөг', 'Өртөг үнэ', 'urtug', 'cost')
+          ? parseNumber(findValue('cost_price', 'өртөг', 'Өртөг', 'Өртөг үнэ', 'urtug', 'cost'))
+          : undefined,
         brand_name: (findValue('brand', 'брэнд', 'Брэнд', 'Brand') || '') as string,
         category_name: (findValue('category', 'ангилал', 'Ангилал', 'Category') || '') as string,
         subcategory_name: (findValue('subcategory', 'дэд_ангилал', 'Дэд ангилал', 'Subcategory', 'Дэд') || '') as string,
@@ -212,6 +216,7 @@ export async function POST(request: NextRequest) {
         description: productData.description?.trim() || '',
         price: productData.price,
         original_price: productData.original_price,
+        cost_price: productData.cost_price,
         image_url: productData.image_url?.trim() || PLACEHOLDER_IMAGE,
         barcode: productData.barcode?.trim() || undefined,
         country: productData.country?.trim() || undefined,
