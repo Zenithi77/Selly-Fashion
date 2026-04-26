@@ -30,9 +30,10 @@ export default function AdminDeliveriesPage() {
   async function loadOrders() {
     setLoading(true)
     try {
-      const data = await api.getOrders()
+      const res = await api.getOrders()
+      const data = res?.data || []
       // зөвхөн хүргэлтэнд хамаарах статустай захиалгууд
-      const filtered = (data || []).filter(o => {
+      const filtered = data.filter(o => {
         const status = (o.delivery_status || o.status) as OrderStatus
         return DELIVERY_STATUSES.includes(status) || status === 'confirmed' || status === 'processing'
       })
@@ -75,8 +76,8 @@ export default function AdminDeliveriesPage() {
     try {
       await api.updateDeliveryStatus(order.id, {
         delivery_status: newStatus,
-        delivery_notes: noteInput || order.delivery_notes,
-        delivery_courier: courierInput || order.delivery_courier,
+        delivery_notes: noteInput || order.delivery_notes || undefined,
+        delivery_courier: courierInput || order.delivery_courier || undefined,
       })
       await loadOrders()
       setSelected(null)

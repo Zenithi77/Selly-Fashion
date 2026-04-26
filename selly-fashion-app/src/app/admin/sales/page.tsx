@@ -53,11 +53,11 @@ export default function AdminSalesPage() {
   async function loadData() {
     setLoading(true)
     try {
-      const [pData, mRes] = await Promise.all([
+      const [pRes, mRes] = await Promise.all([
         api.getProducts(),
         api.getStockMovements(50),
       ])
-      setProducts(pData || [])
+      setProducts(pRes?.data || [])
       setMovements(mRes.data || [])
     } catch (e) {
       console.error(e)
@@ -401,7 +401,7 @@ export default function AdminSalesPage() {
                       </div>
                       <div className="text-right">
                         <div className="font-bold text-red-500">−{m.quantity}</div>
-                        {m.total_amount > 0 && (
+                        {!!m.total_amount && m.total_amount > 0 && (
                           <div className="text-xs text-emerald-600">{m.total_amount.toLocaleString()}₮</div>
                         )}
                       </div>
