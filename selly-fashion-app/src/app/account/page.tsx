@@ -91,25 +91,41 @@ export default function AccountPage() {
   }
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending': return 'bg-amber-100 text-amber-700'
-      case 'confirmed': return 'bg-blue-100 text-blue-700'
-      case 'shipped': return 'bg-purple-100 text-purple-700'
-      case 'delivered': return 'bg-green-100 text-green-700'
-      case 'cancelled': return 'bg-red-100 text-red-700'
-      default: return 'bg-gray-100 text-gray-700'
+    const map: Record<string, string> = {
+      pending: 'bg-amber-100 text-amber-700',
+      confirmed: 'bg-blue-100 text-blue-700',
+      processing: 'bg-indigo-100 text-indigo-700',
+      ready_for_pickup: 'bg-cyan-100 text-cyan-700',
+      assigned_to_courier: 'bg-sky-100 text-sky-700',
+      picked_up: 'bg-violet-100 text-violet-700',
+      in_transit: 'bg-purple-100 text-purple-700',
+      out_for_delivery: 'bg-fuchsia-100 text-fuchsia-700',
+      shipped: 'bg-purple-100 text-purple-700',
+      delivered: 'bg-green-100 text-green-700',
+      failed_delivery: 'bg-orange-100 text-orange-700',
+      returned: 'bg-amber-100 text-amber-700',
+      cancelled: 'bg-red-100 text-red-700',
     }
+    return map[status] || 'bg-gray-100 text-gray-700'
   }
 
   const getStatusText = (status: string) => {
-    switch (status) {
-      case 'pending': return 'Хүлээгдэж буй'
-      case 'confirmed': return 'Баталгаажсан'
-      case 'shipped': return 'Хүргэгдэж буй'
-      case 'delivered': return 'Хүргэгдсэн'
-      case 'cancelled': return 'Цуцлагдсан'
-      default: return status
+    const map: Record<string, string> = {
+      pending: 'Хүлээгдэж буй',
+      confirmed: 'Баталгаажсан',
+      processing: 'Бэлдэж буй',
+      ready_for_pickup: 'Авахад бэлэн',
+      assigned_to_courier: 'Курьерт хуваарилагдсан',
+      picked_up: 'Курьер хүлээн авсан',
+      in_transit: 'Замдаа',
+      out_for_delivery: 'Хүргэлтэнд гарсан',
+      shipped: 'Хүргэгдэж буй',
+      delivered: 'Хүргэгдсэн',
+      failed_delivery: 'Хүргэлт амжилтгүй',
+      returned: 'Буцаагдсан',
+      cancelled: 'Цуцлагдсан',
     }
+    return map[status] || status
   }
 
   const getInitials = (name: string) => {
@@ -378,8 +394,8 @@ export default function AccountPage() {
                               <p className="font-semibold text-gray-900">
                                 {order.total_amount.toLocaleString()}₮
                               </p>
-                              <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
-                                {getStatusText(order.status)}
+                              <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(order.delivery_status || order.status)}`}>
+                                {getStatusText(order.delivery_status || order.status)}
                               </span>
                             </div>
                           </div>
@@ -612,8 +628,8 @@ export default function AccountPage() {
                                 </p>
                               </div>
                             </div>
-                            <span className={`px-4 py-2 rounded-xl text-sm font-medium ${getStatusColor(order.status)}`}>
-                              {getStatusText(order.status)}
+                            <span className={`px-4 py-2 rounded-xl text-sm font-medium ${getStatusColor(order.delivery_status || order.status)}`}>
+                              {getStatusText(order.delivery_status || order.status)}
                             </span>
                           </div>
 
