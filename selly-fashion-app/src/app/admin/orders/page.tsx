@@ -3,15 +3,9 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { api, Order } from '@/lib/supabase'
+import { ORDER_STATUS } from '@/lib/order-status'
 
-const statusLabels: Record<string, { label: string; color: string }> = {
-  pending: { label: 'Хүлээгдэж буй', color: 'yellow' },
-  confirmed: { label: 'Баталгаажсан', color: 'blue' },
-  processing: { label: 'Бэлдэж буй', color: 'indigo' },
-  shipped: { label: 'Хүргэлтэнд', color: 'purple' },
-  delivered: { label: 'Хүргэгдсэн', color: 'green' },
-  cancelled: { label: 'Цуцлагдсан', color: 'red' }
-}
+const statusLabels = ORDER_STATUS
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([])

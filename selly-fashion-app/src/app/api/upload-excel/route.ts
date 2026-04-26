@@ -57,6 +57,8 @@ interface ExcelProduct {
   price: number
   original_price?: number
   cost_price?: number
+  bulk_min_quantity?: number
+  bulk_price?: number
   brand_name?: string
   category_name?: string
   subcategory_name?: string
@@ -67,6 +69,8 @@ interface ExcelProduct {
   is_featured?: boolean
   is_new_arrival?: boolean
   is_on_sale?: boolean
+  store_quantity?: number
+  warehouse_quantity?: number
   stock_quantity?: number
   image_url?: string
 }
@@ -157,6 +161,12 @@ export async function POST(request: NextRequest) {
         cost_price: findValue('cost_price', 'өртөг', 'Өртөг', 'Өртөг үнэ', 'urtug', 'cost')
           ? parseNumber(findValue('cost_price', 'өртөг', 'Өртөг', 'Өртөг үнэ', 'urtug', 'cost'))
           : undefined,
+        bulk_min_quantity: findValue('bulk_min_quantity', 'багц_бага', 'багц бага', 'min_quantity', 'bulk min')
+          ? parseNumber(findValue('bulk_min_quantity', 'багц_бага', 'багц бага', 'min_quantity', 'bulk min'))
+          : undefined,
+        bulk_price: findValue('bulk_price', 'багцын_үнэ', 'багцын үнэ', 'бууни үнэ')
+          ? parseNumber(findValue('bulk_price', 'багцын_үнэ', 'багцын үнэ', 'бууни үнэ'))
+          : undefined,
         brand_name: (findValue('brand', 'брэнд', 'Брэнд', 'Brand') || '') as string,
         category_name: (findValue('category', 'ангилал', 'Ангилал', 'Category') || '') as string,
         subcategory_name: (findValue('subcategory', 'дэд_ангилал', 'Дэд ангилал', 'Subcategory', 'Дэд') || '') as string,
@@ -167,6 +177,12 @@ export async function POST(request: NextRequest) {
         is_featured: parseBoolean(findValue('is_featured', 'онцлох', 'Онцлох', 'featured')),
         is_new_arrival: parseBoolean(findValue('is_new_arrival', 'шинэ', 'Шинэ', 'new')),
         is_on_sale: parseBoolean(findValue('is_on_sale', 'хямдрал', 'Хямдрал', 'sale')),
+        store_quantity: findValue('store_quantity', 'дэлгүүр', 'Дэлгүүр', 'store')
+          ? parseNumber(findValue('store_quantity', 'дэлгүүр', 'Дэлгүүр', 'store'), 0)
+          : undefined,
+        warehouse_quantity: findValue('warehouse_quantity', 'агуулах', 'Агуулах', 'warehouse')
+          ? parseNumber(findValue('warehouse_quantity', 'агуулах', 'Агуулах', 'warehouse'), 0)
+          : undefined,
         stock_quantity: parseNumber(findValue('stock', 'stock_quantity', 'нөөц', 'Нөөц'), 0),
         image_url: (findValue('image_url', 'зураг', 'Зураг', 'image') || '') as string,
       }
@@ -210,6 +226,13 @@ export async function POST(request: NextRequest) {
       }
 
       // Prepare product for insert
+      const storeQty = productData.store_quantity ?? 0
+      const warehouseQty = productData.warehouse_quantity ?? 0
+      // Хэрэв store/warehouse бичигдсэн байвал тэднийг ашиглана, үгүй бол stock_quantity-ыг store-руу өгнө.
+      const finalStore = (productData.store_quantity !== undefined) ? storeQty : (productData.stock_quantity || 0)
+      const finalWarehouse = warehouseQty
+      const totalStock = finalStore + finalWarehouse
+
       const product = {
         name: productData.name.trim(),
         slug: generateSlug(productData.name),
@@ -217,6 +240,8 @@ export async function POST(request: NextRequest) {
         price: productData.price,
         original_price: productData.original_price,
         cost_price: productData.cost_price,
+        bulk_min_quantity: productData.bulk_min_quantity ?? null,
+        bulk_price: productData.bulk_price ?? null,
         image_url: productData.image_url?.trim() || PLACEHOLDER_IMAGE,
         barcode: productData.barcode?.trim() || undefined,
         country: productData.country?.trim() || undefined,
@@ -228,7 +253,9 @@ export async function POST(request: NextRequest) {
         is_featured: productData.is_featured || false,
         is_new_arrival: productData.is_new_arrival || false,
         is_on_sale: productData.is_on_sale || false,
-        stock_quantity: productData.stock_quantity || 0,
+        store_quantity: finalStore,
+        warehouse_quantity: finalWarehouse,
+        stock_quantity: totalStock,
       }
 
       productsToInsert.push(product)
@@ -241,6 +268,8 @@ export async function POST(request: NextRequest) {
     // ========================================
     const mergedProducts: typeof productsToInsert = []
     const variantMap = new Map<string, number>() // key -> index in mergedProducts
+    // Variant rows: тус бүтээгдэхүүний өвөрмөц (size, color, store, warehouse) хослолууд
+    const variantRows = new Map<number, Array<{ size: string; color: string; store_quantity: number; warehouse_quantity: number }>>()
 
     for (const product of productsToInsert) {
       // Create a unique key based on: name + brand + price + description + category + subcategory + country
@@ -253,6 +282,10 @@ export async function POST(request: NextRequest) {
         product.subcategory_id || '',
         product.country || '',
       ].join('|||')
+
+      // Тухайн мөрөөс size/color гарган авна
+      const rowSize = product.sizes[0] || ''
+      const rowColor = product.colors[0] || ''
 
       const existingIdx = variantMap.get(variantKey)
 
@@ -270,6 +303,8 @@ export async function POST(request: NextRequest) {
 
         // Sum stock quantities
         existing.stock_quantity = (existing.stock_quantity || 0) + (product.stock_quantity || 0)
+        existing.store_quantity = (existing.store_quantity || 0) + (product.store_quantity || 0)
+        existing.warehouse_quantity = (existing.warehouse_quantity || 0) + (product.warehouse_quantity || 0)
 
         // Take barcode if the existing one doesn't have one
         if (!existing.barcode && product.barcode) {
@@ -280,10 +315,31 @@ export async function POST(request: NextRequest) {
         if ((!existing.image_url || existing.image_url === PLACEHOLDER_IMAGE) && product.image_url && product.image_url !== PLACEHOLDER_IMAGE) {
           existing.image_url = product.image_url
         }
+
+        // Variant мөр нэмэх
+        if (rowSize || rowColor) {
+          const list = variantRows.get(existingIdx) || []
+          list.push({
+            size: rowSize,
+            color: rowColor,
+            store_quantity: product.store_quantity || 0,
+            warehouse_quantity: product.warehouse_quantity || 0,
+          })
+          variantRows.set(existingIdx, list)
+        }
       } else {
         // New unique product
-        variantMap.set(variantKey, mergedProducts.length)
+        const newIdx = mergedProducts.length
+        variantMap.set(variantKey, newIdx)
         mergedProducts.push({ ...product })
+        if (rowSize || rowColor) {
+          variantRows.set(newIdx, [{
+            size: rowSize,
+            color: rowColor,
+            store_quantity: product.store_quantity || 0,
+            warehouse_quantity: product.warehouse_quantity || 0,
+          }])
+        }
       }
     }
 
@@ -294,7 +350,11 @@ export async function POST(request: NextRequest) {
     // If a product with same name+brand already exists → update sizes/colors  
     // ========================================
     const toInsert: typeof mergedProducts = []
-    const toUpdate: { id: string; sizes: string[]; colors: string[]; stock_quantity: number; barcode?: string; country?: string }[] = []
+    const toUpdate: { id: string; sizes: string[]; colors: string[]; stock_quantity: number; store_quantity?: number; warehouse_quantity?: number; barcode?: string; country?: string }[] = []
+    // toInsert индекс → mergedProducts (variant rows холбоход хэрэгтэй)
+    const insertIdxToMergedIdx = new Map<number, number>()
+    // toUpdate-д тохирох product_id → variant rows
+    const updateVariants = new Map<string, Array<{ size: string; color: string; store_quantity: number; warehouse_quantity: number }>>()
 
     // Fetch existing products for comparison
     const { data: existingProducts } = await supabase
@@ -313,7 +373,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    for (const product of mergedProducts) {
+    for (let mIdx = 0; mIdx < mergedProducts.length; mIdx++) {
+      const product = mergedProducts[mIdx]
       const lookupKey = [
         product.name.toLowerCase().trim(),
         product.brand_id || '',
@@ -341,18 +402,27 @@ export async function POST(request: NextRequest) {
             sizes: allSizes,
             colors: allColors,
             stock_quantity: (existing.stock_quantity || 0) + (product.stock_quantity || 0),
+            store_quantity: product.store_quantity,
+            warehouse_quantity: product.warehouse_quantity,
             barcode: product.barcode || existing.barcode || undefined,
             country: product.country || existing.country || undefined,
           })
         }
+        // Variant rows-г одоо байгаа product_id дээр хадгална
+        const rows = variantRows.get(mIdx)
+        if (rows && rows.length > 0) {
+          updateVariants.set(existing.id, rows)
+        }
       } else {
         // Ensure unique slug
         product.slug = `${product.slug}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
+        insertIdxToMergedIdx.set(toInsert.length, mIdx)
         toInsert.push(product)
       }
     }
 
     // Execute inserts
+    let insertedProducts: Array<{ id: string }> = []
     if (toInsert.length > 0) {
       const { data, error } = await supabase
         .from('products')
@@ -368,23 +438,94 @@ export async function POST(request: NextRequest) {
       }
 
       successCount = data?.length || 0
+      insertedProducts = data || []
     }
 
     // Execute updates
     let updatedCount = 0
     for (const upd of toUpdate) {
+      const updatePayload: Record<string, unknown> = {
+        sizes: upd.sizes,
+        colors: upd.colors,
+        stock_quantity: upd.stock_quantity,
+        barcode: upd.barcode,
+        country: upd.country,
+      }
+      if (upd.store_quantity !== undefined) updatePayload.store_quantity = upd.store_quantity
+      if (upd.warehouse_quantity !== undefined) updatePayload.warehouse_quantity = upd.warehouse_quantity
+
       const { error } = await supabase
         .from('products')
-        .update({
-          sizes: upd.sizes,
-          colors: upd.colors,
-          stock_quantity: upd.stock_quantity,
-          barcode: upd.barcode,
-          country: upd.country,
-        })
+        .update(updatePayload)
         .eq('id', upd.id)
 
       if (!error) updatedCount++
+    }
+
+    // ========================================
+    // Variants хадгалах: шинээр insert хийгдсэн болон upsert хийсэн
+    // бүтээгдэхүүн бүрд size+color бүрийн store/warehouse-г product_variants хүснэгтэд бичнэ
+    // ========================================
+    let variantCount = 0
+    // Insert хийгдсэн product-уудын variants
+    for (let i = 0; i < insertedProducts.length; i++) {
+      const productRecord = insertedProducts[i]
+      const mergedIdx = insertIdxToMergedIdx.get(i)
+      if (mergedIdx === undefined) continue
+      const rows = variantRows.get(mergedIdx)
+      if (!rows || rows.length === 0) continue
+
+      // Ижил size+color combination-уудыг нэгтгэх
+      const map = new Map<string, { size: string; color: string; store_quantity: number; warehouse_quantity: number }>()
+      for (const r of rows) {
+        const k = `${r.size}|||${r.color}`
+        const existing = map.get(k)
+        if (existing) {
+          existing.store_quantity += r.store_quantity
+          existing.warehouse_quantity += r.warehouse_quantity
+        } else {
+          map.set(k, { ...r })
+        }
+      }
+      const variantPayload = Array.from(map.values()).map(v => ({
+        product_id: productRecord.id,
+        size: v.size || null,
+        color: v.color || null,
+        store_quantity: v.store_quantity,
+        warehouse_quantity: v.warehouse_quantity,
+      }))
+      if (variantPayload.length > 0) {
+        const { error: vErr } = await supabase.from('product_variants').insert(variantPayload)
+        if (!vErr) variantCount += variantPayload.length
+      }
+    }
+    // Update хийгдсэн product-уудын variants (хуучныг устгаж шинээр оруулна)
+    for (const [productId, rows] of updateVariants.entries()) {
+      const map = new Map<string, { size: string; color: string; store_quantity: number; warehouse_quantity: number }>()
+      for (const r of rows) {
+        const k = `${r.size}|||${r.color}`
+        const existing = map.get(k)
+        if (existing) {
+          existing.store_quantity += r.store_quantity
+          existing.warehouse_quantity += r.warehouse_quantity
+        } else {
+          map.set(k, { ...r })
+        }
+      }
+      const variantPayload = Array.from(map.values()).map(v => ({
+        product_id: productId,
+        size: v.size || null,
+        color: v.color || null,
+        store_quantity: v.store_quantity,
+        warehouse_quantity: v.warehouse_quantity,
+      }))
+      if (variantPayload.length > 0) {
+        // upsert: нэг бүтээгдэхүүний доорх (size, color) давхцахгүй гэсэн UNIQUE constraint
+        const { error: vErr } = await supabase
+          .from('product_variants')
+          .upsert(variantPayload, { onConflict: 'product_id,size,color' })
+        if (!vErr) variantCount += variantPayload.length
+      }
     }
 
     // Build detailed result message
@@ -392,6 +533,7 @@ export async function POST(request: NextRequest) {
     if (successCount > 0) parts.push(`${successCount} шинэ бүтээгдэхүүн нэмэгдлээ`)
     if (updatedCount > 0) parts.push(`${updatedCount} бүтээгдэхүүн шинэчлэгдлээ (өнгө/размер нэмэгдсэн)`)
     if (mergedCount > 0) parts.push(`${mergedCount} мөр variant болгож нэгтгэгдсэн`)
+    if (variantCount > 0) parts.push(`${variantCount} variant (size×өнгө) хадгалагдсан`)
 
     return NextResponse.json({
       success: true,

@@ -1,6 +1,6 @@
 'use client'
 
-import { useCartStore } from '@/lib/store'
+import { useCartStore, getEffectiveUnitPrice } from '@/lib/store'
 import Link from 'next/link'
 import { useEffect, useState, useCallback } from 'react'
 
@@ -90,7 +90,12 @@ export default function FloatingCart() {
                     {item.size && <span>Хэмжээ: {item.size}</span>}
                     {item.color && <span className="ml-2">Өнгө: {item.color}</span>}
                   </p>
-                  <p className="font-bold text-pink-500">{item.product.price.toLocaleString()}₮</p>
+                  <p className="font-bold text-pink-500">
+                    {getEffectiveUnitPrice(item.product, item.quantity).toLocaleString()}₮
+                    {getEffectiveUnitPrice(item.product, item.quantity) < item.product.price && (
+                      <span className="ml-2 text-xs text-amber-600">ПБагцын үнэ</span>
+                    )}
+                  </p>
                   
                   <div className="flex items-center justify-between mt-2">
                     <div className="flex items-center gap-2">

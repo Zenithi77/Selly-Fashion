@@ -107,6 +107,18 @@ export interface Subcategory {
   clothing_type?: ClothingType
 }
 
+export interface ProductVariant {
+  id: string
+  product_id: string
+  size: string | null
+  color: string | null
+  barcode?: string | null
+  store_quantity: number
+  warehouse_quantity: number
+  created_at?: string
+  updated_at?: string
+}
+
 export interface Product {
   id: string
   name: string
@@ -115,6 +127,9 @@ export interface Product {
   price: number
   original_price?: number
   cost_price?: number
+  // Багцын үнэ: хэрэв хэрэглэгч bulk_min_quantity ширхэгээс илүү авбал bulk_price үйлчилнэ
+  bulk_min_quantity?: number | null
+  bulk_price?: number | null
   image_url: string
   images?: string[]
   barcode?: string
@@ -127,12 +142,37 @@ export interface Product {
   is_featured: boolean
   is_new_arrival: boolean
   is_on_sale: boolean
+  // Хуучин нийт нөөц (backward-compat). Шинэ систем: store + warehouse
   stock_quantity: number
+  store_quantity?: number
+  warehouse_quantity?: number
   created_at: string
   updated_at: string
   brand?: Brand
   clothing_type?: ClothingType
   subcategory?: Subcategory
+  variants?: ProductVariant[]
+}
+
+export type StockPaymentMethod = 'cash' | 'bank' | 'personal_loan' | 'own_use'
+export type StockReason = 'sale' | 'personal_use' | 'damaged' | 'lost' | 'return' | 'adjustment' | 'other'
+export type StockSource = 'store' | 'warehouse'
+
+export interface StockMovement {
+  id: string
+  product_id: string | null
+  variant_id: string | null
+  quantity: number
+  source: StockSource
+  payment_method: StockPaymentMethod | null
+  reason: StockReason
+  unit_price?: number | null
+  total_amount?: number | null
+  note?: string | null
+  created_by?: string | null
+  created_at: string
+  product?: Product
+  variant?: ProductVariant
 }
 
 export interface UserProfile {
@@ -161,10 +201,27 @@ export interface CartItem {
   product?: Product
 }
 
+// Захиалгын ерөнхий статус
+export type OrderStatus =
+  | 'pending'
+  | 'confirmed'
+  | 'processing'
+  | 'ready_for_pickup'
+  | 'assigned_to_courier'
+  | 'picked_up'
+  | 'in_transit'
+  | 'out_for_delivery'
+  | 'delivered'
+  | 'failed_delivery'
+  | 'returned'
+  | 'cancelled'
+  // backward-compat
+  | 'shipped'
+
 export interface Order {
   id: string
   user_id: string
-  status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
+  status: OrderStatus
   payment_status: 'Pending' | 'Paid' | 'Failed' | 'Refunded'
   payment_method: string
   payment_ref: string
@@ -176,6 +233,11 @@ export interface Order {
   shipping_phone: string
   shipping_name: string
   notes: string
+  // Хүргэлтийн нэмэлт мэдээлэл
+  delivery_status?: string | null
+  delivery_notes?: string | null
+  delivery_courier?: string | null
+  delivery_updated_at?: string | null
   created_at: string
   updated_at: string
   user?: UserProfile
@@ -210,7 +272,8 @@ export const api = {
       .select(`
         *,
         brand:brands(*),
-        clothing_type:clothing_types(*)
+        clothing_type:clothing_types(*),
+        variants:product_variants(*)
       `)
       .order('created_at', { ascending: false })
 
@@ -232,7 +295,8 @@ export const api = {
       .select(`
         *,
         brand:brands(*),
-        clothing_type:clothing_types(*)
+        clothing_type:clothing_types(*),
+        variants:product_variants(*)
       `)
       .eq('slug', slug)
       .single()
@@ -245,7 +309,8 @@ export const api = {
       .select(`
         *,
         brand:brands(*),
-        clothing_type:clothing_types(*)
+        clothing_type:clothing_types(*),
+        variants:product_variants(*)
       `)
       .eq('id', id)
       .single()
@@ -474,6 +539,123 @@ export const api = {
       .select()
       .single()
     return { data, error }
+  },
+
+  // Хүргэлтийн статус болон тэмдэглэл шинэчлэх
+  async updateDeliveryStatus(
+    id: string,
+    payload: { status?: Order['status']; delivery_status?: string; delivery_notes?: string; delivery_courier?: string }
+  ) {
+    const update: Record<string, unknown> = {
+      ...payload,
+      delivery_updated_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }
+    const { data, error } = await supabase
+      .from('orders')
+      .update(update)
+      .eq('id', id)
+      .select()
+      .single()
+    return { data, error }
+  },
+
+  // ===== Product Variants =====
+  async getVariantsByProduct(productId: string) {
+    const { data, error } = await supabase
+      .from('product_variants')
+      .select('*')
+      .eq('product_id', productId)
+      .order('size', { ascending: true })
+    return { data: (data || []) as ProductVariant[], error }
+  },
+
+  async upsertVariants(productId: string, variants: Partial<ProductVariant>[]) {
+    // Эхлээд тухайн бүтээгдэхүүний бүх variant-ыг устгана, дараа нь шинээр оруулна.
+    // Энэ нь хамгийн энгийн бөгөөд найдвартай арга.
+    const { error: delError } = await supabase
+      .from('product_variants')
+      .delete()
+      .eq('product_id', productId)
+    if (delError) return { data: null, error: delError }
+
+    const cleaned = variants
+      .filter((v) => (v.size || v.color))
+      .map((v) => ({
+        product_id: productId,
+        size: v.size || null,
+        color: v.color || null,
+        barcode: v.barcode || null,
+        store_quantity: v.store_quantity ?? 0,
+        warehouse_quantity: v.warehouse_quantity ?? 0,
+      }))
+
+    if (cleaned.length === 0) return { data: [], error: null }
+
+    const { data, error } = await supabase
+      .from('product_variants')
+      .insert(cleaned)
+      .select()
+    return { data: (data || []) as ProductVariant[], error }
+  },
+
+  // ===== Stock Movements (POS борлуулалт) =====
+  async createStockMovement(movement: Partial<StockMovement>) {
+    const { data, error } = await supabase
+      .from('stock_movements')
+      .insert(movement)
+      .select()
+      .single()
+    if (error) return { data: null, error }
+
+    // Variant эсвэл product дээрх нөөцийг хасна
+    const qty = movement.quantity || 0
+    const source = movement.source || 'store'
+    const field = source === 'warehouse' ? 'warehouse_quantity' : 'store_quantity'
+
+    if (movement.variant_id) {
+      const { data: variant } = await supabase
+        .from('product_variants')
+        .select(`${field}`)
+        .eq('id', movement.variant_id)
+        .single()
+      const current = (variant as Record<string, number> | null)?.[field] ?? 0
+      await supabase
+        .from('product_variants')
+        .update({ [field]: Math.max(0, current - qty) })
+        .eq('id', movement.variant_id)
+    } else if (movement.product_id) {
+      const { data: product } = await supabase
+        .from('products')
+        .select(`${field}, stock_quantity`)
+        .eq('id', movement.product_id)
+        .single()
+      const productData = product as Record<string, number> | null
+      const current = productData?.[field] ?? 0
+      const totalCurrent = productData?.stock_quantity ?? 0
+      await supabase
+        .from('products')
+        .update({
+          [field]: Math.max(0, current - qty),
+          stock_quantity: Math.max(0, totalCurrent - qty),
+        })
+        .eq('id', movement.product_id)
+    }
+
+    return { data: data as StockMovement, error: null }
+  },
+
+  async getStockMovements(limit: number = 100) {
+    const { data, error } = await supabase
+      .from('stock_movements')
+      .select(`
+        *,
+        product:products(id, name, image_url, price),
+        variant:product_variants(id, size, color)
+      `)
+      .order('created_at', { ascending: false })
+      .limit(limit)
+    return { data: (data || []) as StockMovement[], error }
   },
 
   // Users

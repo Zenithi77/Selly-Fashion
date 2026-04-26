@@ -2,6 +2,19 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { Product, UserProfile } from './supabase'
 
+// Багцын үнэ: Хэрэв тоо ширхэг bulk_min_quantity-аас их буюу тэнцүү бол bulk_price-аар тооцно
+export function getEffectiveUnitPrice(product: Product, quantity: number): number {
+  if (
+    product.bulk_min_quantity &&
+    product.bulk_price &&
+    product.bulk_price > 0 &&
+    quantity >= product.bulk_min_quantity
+  ) {
+    return product.bulk_price
+  }
+  return product.price
+}
+
 export interface CartItemStore {
   id: string
   product: Product
@@ -96,7 +109,11 @@ export const useCartStore = create<CartStore>()(
       closeCart: () => set({ isOpen: false }),
 
       getTotalItems: () => get().items.reduce((sum, item) => sum + item.quantity, 0),
-      getTotalPrice: () => get().items.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
+      getTotalPrice: () =>
+        get().items.reduce(
+          (sum, item) => sum + getEffectiveUnitPrice(item.product, item.quantity) * item.quantity,
+          0
+        ),
     }),
     {
       name: 'selly-cart',

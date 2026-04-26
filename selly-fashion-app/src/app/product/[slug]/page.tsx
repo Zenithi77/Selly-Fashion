@@ -219,6 +219,18 @@ export default function ProductDetailPage() {
                   <span className="text-xl text-slate-400 line-through">{product.original_price.toLocaleString()}₮</span>
                 )}
               </div>
+              {product.bulk_min_quantity && product.bulk_price && product.bulk_price > 0 && (
+                <div className="mt-3 inline-flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg text-sm">
+                  <span className="text-lg">📦</span>
+                  <span className="text-amber-700">
+                    <strong>{product.bulk_min_quantity}+ ширхэг</strong> авбал нэг бүрийн үнэ{' '}
+                    <strong className="text-amber-900">{product.bulk_price.toLocaleString()}₮</strong>
+                    <span className="text-xs text-amber-600 ml-1">
+                      ({Math.round((1 - product.bulk_price / product.price) * 100)}% хямд)
+                    </span>
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Rating */}

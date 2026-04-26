@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
-import { api, Product, Brand, ClothingType, Subcategory, supabase } from '@/lib/supabase'
+import { api, Product, Brand, ClothingType, Subcategory, ProductVariant, supabase } from '@/lib/supabase'
 
 const BarcodeScanner = dynamic(() => import('@/components/BarcodeScanner'), { ssr: false })
 
@@ -130,6 +130,8 @@ function AdminProductsContent() {
     price: '',
     original_price: '',
     cost_price: '',
+    bulk_min_quantity: '',
+    bulk_price: '',
     image_url: '',
     barcode: '',
     country: '',
@@ -141,8 +143,18 @@ function AdminProductsContent() {
     is_featured: false,
     is_new_arrival: false,
     is_on_sale: false,
-    stock_quantity: ''
+    // Нөөц: дэлгүүр + агуулах (variant байхгүй эсвэл ерөнхий)
+    store_quantity: '',
+    warehouse_quantity: '',
   })
+
+  // Variants state - {size+color: {store_quantity, warehouse_quantity}}
+  const [variants, setVariants] = useState<Array<{
+    size: string
+    color: string
+    store_quantity: string
+    warehouse_quantity: string
+  }>>([])
 
   const searchParams = useSearchParams()
 
@@ -193,6 +205,8 @@ function AdminProductsContent() {
         price: parseFloat(formData.price) || 0,
         original_price: formData.original_price ? parseFloat(formData.original_price) : undefined,
         cost_price: formData.cost_price ? parseFloat(formData.cost_price) : undefined,
+        bulk_min_quantity: formData.bulk_min_quantity ? parseInt(formData.bulk_min_quantity) : null,
+        bulk_price: formData.bulk_price ? parseFloat(formData.bulk_price) : null,
         image_url: formData.image_url.trim(),
         barcode: formData.barcode.trim() || undefined,
         country: formData.country.trim() || undefined,
@@ -204,15 +218,40 @@ function AdminProductsContent() {
         is_featured: formData.is_featured,
         is_new_arrival: formData.is_new_arrival,
         is_on_sale: formData.is_on_sale,
-        stock_quantity: formData.stock_quantity ? parseInt(formData.stock_quantity) : 0
+        // Дэлгүүр + агуулах
+        store_quantity: formData.store_quantity ? parseInt(formData.store_quantity) : 0,
+        warehouse_quantity: formData.warehouse_quantity ? parseInt(formData.warehouse_quantity) : 0,
+        // stock_quantity = нийт (backward-compat)
+        stock_quantity:
+          (formData.store_quantity ? parseInt(formData.store_quantity) : 0) +
+          (formData.warehouse_quantity ? parseInt(formData.warehouse_quantity) : 0),
       }
+
+      let productId: string | undefined
 
       if (editingProduct) {
         const result = await api.updateProduct(editingProduct.id, submitData)
         if (result.error) throw result.error
+        productId = editingProduct.id
       } else {
         const result = await api.createProduct(submitData)
         if (result.error) throw result.error
+        productId = result.data?.id
+      }
+
+      // Сайжруулсан variants байвал хадгална
+      if (productId && variants.length > 0) {
+        const cleaned: Partial<ProductVariant>[] = variants
+          .filter(v => v.size || v.color)
+          .map(v => ({
+            size: v.size || null,
+            color: v.color || null,
+            store_quantity: v.store_quantity ? parseInt(v.store_quantity) : 0,
+            warehouse_quantity: v.warehouse_quantity ? parseInt(v.warehouse_quantity) : 0,
+          }))
+        if (cleaned.length > 0) {
+          await api.upsertVariants(productId, cleaned)
+        }
       }
       
       setShowModal(false)
@@ -236,6 +275,8 @@ function AdminProductsContent() {
       price: product.price?.toString() || '',
       original_price: product.original_price?.toString() || '',
       cost_price: product.cost_price?.toString() || '',
+      bulk_min_quantity: product.bulk_min_quantity?.toString() || '',
+      bulk_price: product.bulk_price?.toString() || '',
       image_url: product.image_url || '',
       barcode: product.barcode || '',
       country: product.country || '',
@@ -247,8 +288,20 @@ function AdminProductsContent() {
       is_featured: product.is_featured || false,
       is_new_arrival: product.is_new_arrival || false,
       is_on_sale: product.is_on_sale || false,
-      stock_quantity: product.stock_quantity?.toString() || ''
+      store_quantity: product.store_quantity?.toString() || '',
+      warehouse_quantity: product.warehouse_quantity?.toString() || '',
     })
+    // Хуучин variants авч харуулна
+    if (product.variants && product.variants.length > 0) {
+      setVariants(product.variants.map(v => ({
+        size: v.size || '',
+        color: v.color || '',
+        store_quantity: (v.store_quantity ?? 0).toString(),
+        warehouse_quantity: (v.warehouse_quantity ?? 0).toString(),
+      })))
+    } else {
+      setVariants([])
+    }
     setShowModal(true)
   }
 
@@ -267,6 +320,8 @@ function AdminProductsContent() {
       price: '',
       original_price: '',
       cost_price: '',
+      bulk_min_quantity: '',
+      bulk_price: '',
       image_url: '',
       barcode: '',
       country: '',
@@ -278,8 +333,10 @@ function AdminProductsContent() {
       is_featured: false,
       is_new_arrival: false,
       is_on_sale: false,
-      stock_quantity: ''
+      store_quantity: '',
+      warehouse_quantity: '',
     })
+    setVariants([])
     setCustomSize('')
   }
 
@@ -1018,7 +1075,7 @@ function AdminProductsContent() {
                   ></textarea>
                 </div>
 
-                <div className="grid grid-cols-4 gap-4">
+                <div className="grid grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Үнэ (₮) <span className="text-red-500">*</span></label>
                     <input
@@ -1062,19 +1119,82 @@ function AdminProductsContent() {
                       className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
                     />
                   </div>
+                </div>
+
+                {/* Bulk pricing - багцын үнэ */}
+                <div className="grid grid-cols-2 gap-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                  <div className="col-span-2">
+                    <p className="text-sm font-semibold text-amber-700 mb-1">📦 Багцын үнэ (бөөний/буурсан үнэ)</p>
+                    <p className="text-xs text-amber-600">Тогтсон тооноос дээш авбал хямдарсан үнээр борлуулагдана</p>
+                  </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Нөөц (ш)</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Хамгийн бага тоо (ш)</label>
                     <input
                       type="text"
                       inputMode="numeric"
-                      value={formData.stock_quantity}
+                      value={formData.bulk_min_quantity}
                       onChange={(e) => {
                         const value = e.target.value.replace(/[^0-9]/g, '')
-                        setFormData({ ...formData, stock_quantity: value })
+                        setFormData({ ...formData, bulk_min_quantity: value })
+                      }}
+                      placeholder="Жишээ: 5"
+                      className="w-full px-4 py-2.5 bg-white border border-amber-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Багцын үнэ (₮)</label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={formData.bulk_price}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/[^0-9]/g, '')
+                        setFormData({ ...formData, bulk_price: value })
+                      }}
+                      placeholder="Жишээ: 75000"
+                      className="w-full px-4 py-2.5 bg-white border border-amber-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Нөөц: Дэлгүүр + Агуулах */}
+                <div className="grid grid-cols-2 gap-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                  <div className="col-span-2">
+                    <p className="text-sm font-semibold text-blue-700 mb-1">🏪 Ерөнхий нөөц (variant байхгүй үед)</p>
+                    <p className="text-xs text-blue-600">Хэрвээ доор хэмжээ × өнгө variant нэмбэл, тэдгээр variant-уудын нөөцийг бичнэ үү.</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Дэлгүүр (ш)</label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={formData.store_quantity}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/[^0-9]/g, '')
+                        setFormData({ ...formData, store_quantity: value })
                       }}
                       placeholder="0"
-                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
+                      className="w-full px-4 py-2.5 bg-white border border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
                     />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Агуулах (ш)</label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={formData.warehouse_quantity}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/[^0-9]/g, '')
+                        setFormData({ ...formData, warehouse_quantity: value })
+                      }}
+                      placeholder="0"
+                      className="w-full px-4 py-2.5 bg-white border border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                    />
+                  </div>
+                  <div className="col-span-2 text-xs text-slate-600">
+                    Нийт: <span className="font-bold text-blue-700">
+                      {(parseInt(formData.store_quantity || '0') + parseInt(formData.warehouse_quantity || '0')).toLocaleString()} ш
+                    </span>
                   </div>
                 </div>
 
@@ -1369,6 +1489,122 @@ function AdminProductsContent() {
                     </div>
                   )}
                 </div>
+
+                {/* Variants editor: Хэмжээ × Өнгө бүрийн нөөц */}
+                {(formData.sizes.length > 0 || formData.colors.length > 0) && (
+                  <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-emerald-700">🎨 Хэмжээ × Өнгө бүрийн нөөц (variants)</p>
+                        <p className="text-xs text-emerald-600">Тус бүрийн дэлгүүр/агуулахын тоог тусад нь оруулна</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          // Auto-generate бүх size × color combination-уудыг
+                          const gen: typeof variants = []
+                          const sizes = formData.sizes.length > 0 ? formData.sizes : ['']
+                          const colors = formData.colors.length > 0 ? formData.colors : ['']
+                          for (const s of sizes) {
+                            for (const c of colors) {
+                              const exists = variants.find(v => v.size === s && v.color === c)
+                              gen.push(exists || { size: s, color: c, store_quantity: '0', warehouse_quantity: '0' })
+                            }
+                          }
+                          setVariants(gen)
+                        }}
+                        className="px-3 py-1.5 bg-emerald-500 text-white text-xs font-medium rounded-lg hover:bg-emerald-600"
+                      >
+                        Бүгдийг үүсгэх
+                      </button>
+                    </div>
+
+                    {variants.length === 0 ? (
+                      <p className="text-xs text-slate-500 italic">Хоосон. Дээрх "Бүгдийг үүсгэх" товчийг дарж бүх хослолыг авна уу.</p>
+                    ) : (
+                      <div className="space-y-2 max-h-72 overflow-y-auto">
+                        <div className="grid grid-cols-12 gap-2 text-xs font-semibold text-slate-600 px-1">
+                          <div className="col-span-3">Хэмжээ</div>
+                          <div className="col-span-3">Өнгө</div>
+                          <div className="col-span-3">Дэлгүүр</div>
+                          <div className="col-span-2">Агуулах</div>
+                          <div className="col-span-1"></div>
+                        </div>
+                        {variants.map((v, idx) => (
+                          <div key={idx} className="grid grid-cols-12 gap-2 items-center bg-white p-2 rounded-lg">
+                            <input
+                              type="text"
+                              value={v.size}
+                              onChange={(e) => {
+                                const next = [...variants]
+                                next[idx] = { ...next[idx], size: e.target.value }
+                                setVariants(next)
+                              }}
+                              placeholder="M"
+                              className="col-span-3 px-2 py-1.5 text-sm bg-slate-50 border border-slate-200 rounded focus:ring-2 focus:ring-emerald-500 outline-none"
+                            />
+                            <input
+                              type="text"
+                              value={v.color}
+                              onChange={(e) => {
+                                const next = [...variants]
+                                next[idx] = { ...next[idx], color: e.target.value }
+                                setVariants(next)
+                              }}
+                              placeholder="Black"
+                              className="col-span-3 px-2 py-1.5 text-sm bg-slate-50 border border-slate-200 rounded focus:ring-2 focus:ring-emerald-500 outline-none"
+                            />
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              value={v.store_quantity}
+                              onChange={(e) => {
+                                const next = [...variants]
+                                next[idx] = { ...next[idx], store_quantity: e.target.value.replace(/[^0-9]/g, '') }
+                                setVariants(next)
+                              }}
+                              placeholder="0"
+                              className="col-span-3 px-2 py-1.5 text-sm bg-blue-50 border border-blue-200 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                            />
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              value={v.warehouse_quantity}
+                              onChange={(e) => {
+                                const next = [...variants]
+                                next[idx] = { ...next[idx], warehouse_quantity: e.target.value.replace(/[^0-9]/g, '') }
+                                setVariants(next)
+                              }}
+                              placeholder="0"
+                              className="col-span-2 px-2 py-1.5 text-sm bg-blue-50 border border-blue-200 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setVariants(variants.filter((_, i) => i !== idx))}
+                              className="col-span-1 text-red-500 hover:text-red-700 text-lg"
+                              title="Устгах"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => setVariants([...variants, { size: '', color: '', store_quantity: '0', warehouse_quantity: '0' }])}
+                          className="w-full py-2 text-xs text-emerald-600 hover:bg-emerald-100 rounded border border-dashed border-emerald-300"
+                        >
+                          + Variant нэмэх
+                        </button>
+                        <div className="text-xs text-slate-600 pt-2 border-t border-emerald-200">
+                          <span>Variants нийт нөөц: </span>
+                          <span className="font-bold text-emerald-700">
+                            {variants.reduce((s, v) => s + parseInt(v.store_quantity || '0') + parseInt(v.warehouse_quantity || '0'), 0).toLocaleString()} ш
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 <div className="flex flex-wrap gap-4 p-4 bg-slate-50 rounded-xl">
                   <label className="flex items-center gap-2 cursor-pointer">

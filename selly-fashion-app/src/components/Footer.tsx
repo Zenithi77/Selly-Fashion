@@ -81,11 +81,11 @@ export default function Footer() {
           <div>
             <h4 className="font-semibold text-sm tracking-wide mb-4 text-pink-500">HELP</h4>
             <ul className="space-y-3 text-slate-600 text-sm">
-              <li><Link href="/about" className="hover:text-pink-500 transition-colors">Contact Us</Link></li>
-              <li><Link href="/about" className="hover:text-pink-500 transition-colors">FAQ</Link></li>
-              <li><Link href="/about" className="hover:text-pink-500 transition-colors">Shipping</Link></li>
-              <li><Link href="/about" className="hover:text-pink-500 transition-colors">Returns</Link></li>
-              <li><Link href="/about" className="hover:text-pink-500 transition-colors">Size Guide</Link></li>
+              <li><a href="mailto:info@selly.mn" className="hover:text-pink-500 transition-colors">Contact Us</a></li>
+              <li><Link href="/privacy" className="hover:text-pink-500 transition-colors">FAQ</Link></li>
+              <li><Link href="/privacy" className="hover:text-pink-500 transition-colors">Shipping</Link></li>
+              <li><Link href="/privacy" className="hover:text-pink-500 transition-colors">Returns</Link></li>
+              <li><Link href="/privacy" className="hover:text-pink-500 transition-colors">Size Guide</Link></li>
             </ul>
           </div>
 
@@ -93,10 +93,9 @@ export default function Footer() {
           <div>
             <h4 className="font-semibold text-sm tracking-wide mb-4 text-pink-500">COMPANY</h4>
             <ul className="space-y-3 text-slate-600 text-sm">
-              <li><Link href="/about" className="hover:text-pink-500 transition-colors">About Us</Link></li>
-              <li><Link href="/about" className="hover:text-pink-500 transition-colors">Careers</Link></li>
-              <li><Link href="/about" className="hover:text-pink-500 transition-colors">Sustainability</Link></li>
-              <li><Link href="/about" className="hover:text-pink-500 transition-colors">Press</Link></li>
+              <li><Link href="/privacy" className="hover:text-pink-500 transition-colors">Privacy Policy</Link></li>
+              <li><Link href="/cookies" className="hover:text-pink-500 transition-colors">Cookie Policy</Link></li>
+              <li><Link href="/accessibility" className="hover:text-pink-500 transition-colors">Accessibility</Link></li>
             </ul>
           </div>
         </div>
@@ -108,7 +107,7 @@ export default function Footer() {
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-slate-500">
             <p>© 2026 SELLY. All rights reserved.</p>
             <div className="flex flex-wrap justify-center gap-6">
-              <Link href="/about" className="hover:text-pink-500 transition-colors">Terms of Service</Link>
+              <Link href="/privacy" className="hover:text-pink-500 transition-colors">Terms of Service</Link>
               <Link href="/privacy" className="hover:text-pink-500 transition-colors">Privacy Policy</Link>
               <Link href="/cookies" className="hover:text-pink-500 transition-colors">Cookie Policy</Link>
               <Link href="/accessibility" className="hover:text-pink-500 transition-colors">Accessibility</Link>
