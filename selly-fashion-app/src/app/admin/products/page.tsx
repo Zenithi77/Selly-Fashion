@@ -640,28 +640,28 @@ function AdminProductsContent() {
 
   return (
     <main className="min-h-screen pt-[104px] bg-slate-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 md:mb-8">
           <div className="flex items-center gap-4">
             <Link 
               href="/admin"
-              className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-sm hover:shadow-md transition-shadow"
+              className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-sm hover:shadow-md transition-shadow flex-shrink-0"
             >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
               </svg>
             </Link>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Бүтээгдэхүүн</h1>
+              <h1 className="text-xl md:text-2xl font-bold text-slate-900">Бүтээгдэхүүн</h1>
               <p className="text-sm text-slate-500">{products.length} бүтээгдэхүүн</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <button
               onClick={handleExcelDownload}
               disabled={excelDownloading || products.length === 0}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {excelDownloading ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -674,7 +674,7 @@ function AdminProductsContent() {
             </button>
             <button
               onClick={() => setShowExcelModal(true)}
-              className="px-4 py-2 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-600 transition-colors flex items-center gap-2"
+              className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-emerald-500 text-white rounded-lg text-sm font-medium hover:bg-emerald-600 transition-colors flex items-center justify-center gap-2"
             >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
@@ -683,7 +683,7 @@ function AdminProductsContent() {
             </button>
             <button
               onClick={() => { resetForm(); setEditingProduct(null); setShowModal(true) }}
-              className="px-4 py-2 bg-pink-500 text-white rounded-lg font-medium hover:bg-pink-600 transition-colors flex items-center gap-2"
+              className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-pink-500 text-white rounded-lg text-sm font-medium hover:bg-pink-600 transition-colors flex items-center justify-center gap-2"
             >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -699,20 +699,20 @@ function AdminProductsContent() {
             <table className="w-full">
               <thead className="bg-slate-50">
                 <tr>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-slate-600">Бүтээгдэхүүн</th>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-slate-600">Үнэ</th>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-slate-600">Өртөг үнэ</th>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-slate-600">Брэнд</th>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-slate-600">Нөөц</th>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-slate-600">Статус</th>
-                  <th className="text-right px-6 py-4 text-sm font-semibold text-slate-600">Үйлдэл</th>
+                  <th className="text-left px-4 sm:px-6 py-4 text-sm font-semibold text-slate-600">Бүтээгдэхүүн</th>
+                  <th className="text-left px-4 sm:px-6 py-4 text-sm font-semibold text-slate-600">Үнэ</th>
+                  <th className="hidden md:table-cell text-left px-6 py-4 text-sm font-semibold text-slate-600">Өртөг үнэ</th>
+                  <th className="hidden lg:table-cell text-left px-6 py-4 text-sm font-semibold text-slate-600">Брэнд</th>
+                  <th className="hidden sm:table-cell text-left px-6 py-4 text-sm font-semibold text-slate-600">Нөөц</th>
+                  <th className="hidden lg:table-cell text-left px-6 py-4 text-sm font-semibold text-slate-600">Статус</th>
+                  <th className="text-right px-4 sm:px-6 py-4 text-sm font-semibold text-slate-600">Үйлдэл</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {products.map((product) => (
                   <tr key={product.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-4">
+                    <td className="px-4 sm:px-6 py-4">
+                      <div className="flex items-center gap-3 sm:gap-4">
                         <div className="w-12 h-14 rounded-lg overflow-hidden bg-slate-100 flex-shrink-0">
                           <img 
                             src={product.image_url || '/placeholder-product.svg'} 
@@ -720,34 +720,34 @@ function AdminProductsContent() {
                             className="w-full h-full object-cover" 
                           />
                         </div>
-                        <div>
-                          <p className="font-medium text-slate-900">{product.name}</p>
-                          <p className="text-sm text-slate-500">{product.slug}</p>
+                        <div className="min-w-0">
+                          <p className="font-medium text-slate-900 truncate">{product.name}</p>
+                          <p className="text-sm text-slate-500 truncate">{product.slug}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                       <span className="font-semibold text-pink-500">{product.price.toLocaleString()}₮</span>
                       {product.original_price && product.original_price > product.price && (
-                        <span className="text-sm text-slate-400 line-through ml-2">{product.original_price.toLocaleString()}₮</span>
+                        <span className="hidden sm:inline text-sm text-slate-400 line-through ml-2">{product.original_price.toLocaleString()}₮</span>
                       )}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="hidden md:table-cell px-6 py-4">
                       {product.cost_price ? (
                         <span className="font-medium text-amber-600">{product.cost_price.toLocaleString()}₮</span>
                       ) : (
                         <span className="text-slate-400">-</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-slate-600">
+                    <td className="hidden lg:table-cell px-6 py-4 text-slate-600">
                       {product.brand?.name || '-'}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="hidden sm:table-cell px-6 py-4">
                       <span className={`font-medium ${product.stock_quantity > 10 ? 'text-green-500' : product.stock_quantity > 0 ? 'text-orange-500' : 'text-red-500'}`}>
                         {product.stock_quantity}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="hidden lg:table-cell px-6 py-4">
                       <div className="flex gap-1">
                         {product.is_featured && (
                           <span className="px-2 py-1 bg-pink-100 text-pink-600 text-xs rounded-full">Онцлох</span>
@@ -760,7 +760,7 @@ function AdminProductsContent() {
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 sm:px-6 py-4">
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => handleEdit(product)}
@@ -803,8 +803,8 @@ function AdminProductsContent() {
                 </button>
               </div>
               
-              <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+              <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Нэр</label>
                     <input
@@ -864,7 +864,7 @@ function AdminProductsContent() {
                   ></textarea>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Үнэ (₮) <span className="text-red-500">*</span></label>
                     <input
@@ -911,7 +911,7 @@ function AdminProductsContent() {
                 </div>
 
                 {/* Bulk pricing - багцын үнэ */}
-                <div className="grid grid-cols-2 gap-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
                   <div className="col-span-2">
                     <p className="text-sm font-semibold text-amber-700 mb-1">📦 Багцын үнэ (бөөний/буурсан үнэ)</p>
                     <p className="text-xs text-amber-600">Тогтсон тооноос дээш авбал хямдарсан үнээр борлуулагдана</p>
@@ -947,7 +947,7 @@ function AdminProductsContent() {
                 </div>
 
                 {/* Нөөц: Дэлгүүр + Агуулах */}
-                <div className="grid grid-cols-2 gap-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
                   <div className="col-span-2">
                     <p className="text-sm font-semibold text-blue-700 mb-1">🏪 Ерөнхий нөөц (variant байхгүй үед)</p>
                     <p className="text-xs text-blue-600">Хэрвээ доор хэмжээ × өнгө variant нэмбэл, тэдгээр variant-уудын нөөцийг бичнэ үү.</p>
@@ -1034,7 +1034,7 @@ function AdminProductsContent() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Брэнд</label>
                     <div className="flex gap-2">
@@ -1198,7 +1198,7 @@ function AdminProductsContent() {
                   )}
 
                   {/* Color swatch grid */}
-                  <div className="grid grid-cols-9 gap-1.5 mb-3">
+                  <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-9 gap-1.5 mb-3">
                     {COMMON_COLORS.map((color) => {
                       const isSelected = formData.colors.includes(color.value)
                       return (

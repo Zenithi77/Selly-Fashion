@@ -260,7 +260,7 @@ export default function AdminHeroPage() {
             {/* Featured Brands Preview */}
             <div className="bg-white rounded-2xl p-6 border border-slate-100 mb-6">
               <h3 className="font-bold mb-4 text-slate-900">Hero Section Preview</h3>
-              <div className="grid grid-cols-5 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
                 {[1, 2, 3, 4, 5].map((order) => {
                   const brand = featuredBrands.find(b => b.featured_order === order)
                   return (
@@ -350,7 +350,7 @@ export default function AdminHeroPage() {
             {/* Featured Categories Preview */}
             <div className="bg-white rounded-2xl p-6 border border-slate-100 mb-6">
               <h3 className="font-bold mb-4 text-slate-900">Shop by Category Preview</h3>
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[1, 2, 3, 4].map((order) => {
                   const category = featuredCategories.find(c => c.featured_order === order)
                   return (
