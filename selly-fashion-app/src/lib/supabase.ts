@@ -255,6 +255,30 @@ export interface OrderItem {
   product?: Product
 }
 
+// Авто-баркод үүсгэгч: YYMMNNNNN (он 2 орон + сар 2 орон + тухайн сарын дараалал 5 орон)
+// Унших боломжтой, тоон шинжтэй: эхний 4 орон нь огноо, сүүлийн 5 орон нь дугаар
+async function generateNextBarcode(): Promise<string> {
+  const now = new Date()
+  const yy = String(now.getFullYear() % 100).padStart(2, '0')
+  const mm = String(now.getMonth() + 1).padStart(2, '0')
+  const prefix = `${yy}${mm}`
+
+  // Тухайн сард үүсгэгдсэн хамгийн сүүлийн баркодыг олж дараагийнхыг өгөх
+  const { data } = await supabase
+    .from('products')
+    .select('barcode')
+    .like('barcode', `${prefix}%`)
+    .order('barcode', { ascending: false })
+    .limit(1)
+
+  let next = 1
+  if (data && data.length > 0 && data[0].barcode) {
+    const lastSeq = parseInt(String(data[0].barcode).slice(4), 10)
+    if (!isNaN(lastSeq)) next = lastSeq + 1
+  }
+  return `${prefix}${String(next).padStart(5, '0')}`
+}
+
 // API Functions
 export const api = {
   // Products
@@ -687,9 +711,16 @@ export const api = {
 
   // Admin - Products
   async createProduct(product: Partial<Product>) {
+    // Авто-баркод үүсгэх: YYMMNNNNN форматтай (он 2 орон + сар 2 орон + тухайн сарын дараалал 5 орон)
+    // Жишээ: 2026 оны 4 сарын 7 дахь бараа => "260400007"
+    const productToInsert: Partial<Product> = { ...product }
+    if (!productToInsert.barcode || !productToInsert.barcode.trim()) {
+      productToInsert.barcode = await generateNextBarcode()
+    }
+
     const { data, error } = await supabase
       .from('products')
-      .insert(product)
+      .insert(productToInsert)
       .select()
       .single()
     return { data, error }
