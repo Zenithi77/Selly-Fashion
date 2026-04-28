@@ -86,18 +86,18 @@ export default function AdminDeliveriesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-cyan-500">Ачааллаж байна...</div>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="text-slate-500">Ачааллаж байна...</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-blue-50 to-indigo-50 p-3 md:p-6">
+    <div className="min-h-screen bg-slate-50 p-3 md:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-4">
-          <Link href="/admin" className="text-sm text-cyan-600 hover:underline">← Админ</Link>
+          <Link href="/admin" className="text-sm text-slate-500 hover:text-slate-900">← Админ</Link>
           <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mt-1">🚚 Хүргэлт</h1>
           <p className="text-slate-600 text-sm">Хүргэлтийн ажилчдын хяналтын самбар</p>
         </div>
@@ -109,9 +109,9 @@ export default function AdminDeliveriesPage() {
             placeholder="🔍 Хайх (нэр, утас, хаяг)..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="flex-1 min-w-[200px] px-4 py-2 rounded-lg border border-slate-200 bg-white text-sm"
+            className="flex-1 min-w-[200px] px-4 py-2 rounded-lg border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
           />
-          <button onClick={loadOrders} className="px-4 py-2 bg-cyan-500 text-white rounded-lg text-sm hover:bg-cyan-600">
+          <button onClick={loadOrders} className="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm hover:bg-slate-800">
             ⟳ Шинэчлэх
           </button>
         </div>
@@ -120,8 +120,8 @@ export default function AdminDeliveriesPage() {
         <div className="flex flex-wrap gap-2 mb-4 overflow-x-auto pb-2">
           <button
             onClick={() => setFilter('all')}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap ${
-              filter === 'all' ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 border border-slate-200'
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors ${
+              filter === 'all' ? 'bg-slate-900 text-white' : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
             }`}
           >
             Бүгд ({orders.length})
@@ -130,10 +130,10 @@ export default function AdminDeliveriesPage() {
             <button
               key={s}
               onClick={() => setFilter(s)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap ${
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors ${
                 filter === s
-                  ? 'bg-cyan-500 text-white'
-                  : 'bg-white text-slate-600 border border-slate-200'
+                  ? 'bg-slate-900 text-white'
+                  : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
               }`}
             >
               {ORDER_STATUS[s].label} ({counts[s] || 0})
@@ -182,7 +182,7 @@ export default function AdminDeliveriesPage() {
                           </a>
                         </td>
                         <td className="p-3 text-sm max-w-xs truncate">{order.shipping_address || '-'}</td>
-                        <td className="p-3 text-sm text-right font-bold text-pink-500">
+                        <td className="p-3 text-sm text-right font-bold text-slate-900">
                           {order.total_amount?.toLocaleString()}₮
                         </td>
                         <td className="p-3 text-center">
@@ -196,7 +196,7 @@ export default function AdminDeliveriesPage() {
                               e.stopPropagation()
                               setExpanded(isExpanded ? null : order.id)
                             }}
-                            className="text-cyan-600 text-sm hover:underline"
+                            className="text-slate-700 text-sm font-medium hover:text-slate-900"
                           >
                             {isExpanded ? 'Хаах' : 'Үйлдэл ▼'}
                           </button>
@@ -269,7 +269,7 @@ export default function AdminDeliveriesPage() {
                       <span className={`inline-block px-2 py-1 rounded-full text-[10px] font-semibold ${info?.badge || ''}`}>
                         {info?.label || currentStatus}
                       </span>
-                      <div className="text-base font-bold text-pink-500 mt-1">
+                      <div className="text-base font-bold text-slate-900 mt-1">
                         {order.total_amount?.toLocaleString()}₮
                       </div>
                     </div>
@@ -281,7 +281,7 @@ export default function AdminDeliveriesPage() {
 
                   <button
                     onClick={() => setExpanded(isExpanded ? null : order.id)}
-                    className="w-full py-2 bg-cyan-50 text-cyan-700 rounded-lg text-sm font-medium border border-cyan-200"
+                    className="w-full py-2 bg-slate-900 text-white rounded-lg text-sm font-medium hover:bg-slate-800"
                   >
                     {isExpanded ? '✕ Хаах' : '⚡ Статус солих'}
                   </button>
