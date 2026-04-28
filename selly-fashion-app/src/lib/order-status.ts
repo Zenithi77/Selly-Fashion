@@ -36,16 +36,16 @@ export const ORDER_STATUS: Record<OrderStatus, StatusInfo> = {
     customer: 'Дэлгүүрээс авахад бэлэн',
   },
   assigned_to_courier: {
-    label: 'Курьерт хуваарилсан', color: 'sky',
+    label: 'Хүргэлтийн ажилтанд хуваарилсан', color: 'sky',
     badge: 'bg-sky-100 text-sky-700',
     button: 'bg-sky-50 border-sky-200 text-sky-700 hover:bg-sky-100',
     customer: 'Хүргэлтийн ажилтанд хуваарилсан',
   },
   picked_up: {
-    label: 'Курьер авсан', color: 'violet',
+    label: 'Хүргэлтийн ажилтан авсан', color: 'violet',
     badge: 'bg-violet-100 text-violet-700',
     button: 'bg-violet-50 border-violet-200 text-violet-700 hover:bg-violet-100',
-    customer: 'Курьер таны барааг хүлээн авлаа',
+    customer: 'Хүргэлтийн ажилтан таны барааг хүлээн авлаа',
   },
   in_transit: {
     label: 'Замдаа', color: 'purple',
