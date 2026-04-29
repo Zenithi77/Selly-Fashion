@@ -198,12 +198,9 @@ function AdminProductsContent() {
     setSaving(true)
     
     try {
-      // Шинэ бүтээгдэхүүнд үргэлж timestamp-тай unique slug үүсгэх — давхардахгүй
-      const isNewProduct = !editingProduct
-      const userSlug = formData.slug.trim()
-      const slugValue = isNewProduct
-        ? (userSlug ? `${userSlug}-${Date.now()}` : generateSlug(formData.name, true))
-        : (userSlug || generateSlug(formData.name, false))
+      // Slug: хэрэглэгч өөрөө бичсэн бол түүнийг, үгүй бол нэрнээс үүсгэнэ
+      // Давхардвал createProduct өөрөө -2, -3... залгаж retry хийнэ
+      const slugValue = formData.slug.trim() || generateSlug(formData.name, false)
       
       const submitData = {
         name: formData.name.trim(),

@@ -739,12 +739,26 @@ export const api = {
       productToInsert.barcode = await generateNextBarcode()
     }
 
-    const { data, error } = await supabase
-      .from('products')
-      .insert(productToInsert)
-      .select()
-      .single()
-    return { data, error }
+    // Slug давхардвал -2, -3, ... залгаж ретрай хийнэ
+    const baseSlug = (productToInsert.slug || '').trim()
+    let attempt = 0
+    let lastError: unknown = null
+    while (attempt < 50) {
+      const trySlug = attempt === 0 ? baseSlug : `${baseSlug}-${attempt + 1}`
+      const payload = baseSlug ? { ...productToInsert, slug: trySlug } : productToInsert
+      const { data, error } = await supabase
+        .from('products')
+        .insert(payload)
+        .select()
+        .single()
+      if (!error) return { data, error: null }
+      lastError = error
+      // 23505 = unique_violation. Бусад алдаа бол шууд буцаана
+      const code = (error as { code?: string }).code
+      if (code !== '23505' || !baseSlug) return { data: null, error }
+      attempt += 1
+    }
+    return { data: null, error: lastError as Error }
   },
 
   async updateProduct(id: string, product: Partial<Product>) {
