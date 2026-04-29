@@ -112,6 +112,9 @@ function AdminProductsContent() {
 
   // Variant detail modal (size×color нөөцийн дэлгэрэнгүй)
   const [variantDetailProduct, setVariantDetailProduct] = useState<Product | null>(null)
+  // Edit-able variant rows for the detail modal
+  const [variantEdits, setVariantEdits] = useState<{ id?: string; size: string; color: string; store_quantity: string; warehouse_quantity: string }[]>([])
+  const [variantSaving, setVariantSaving] = useState(false)
   
   // Form state with string values for better UX (no leading zeros issue)
   const [formData, setFormData] = useState({
@@ -795,7 +798,17 @@ function AdminProductsContent() {
                       </span>
                       <button
                         type="button"
-                        onClick={() => setVariantDetailProduct(product)}
+                        onClick={() => {
+                          setVariantDetailProduct(product)
+                          const vs = product.variants || []
+                          setVariantEdits(vs.map(v => ({
+                            id: v.id,
+                            size: v.size || '',
+                            color: v.color || '',
+                            store_quantity: String(v.store_quantity ?? 0),
+                            warehouse_quantity: String(v.warehouse_quantity ?? 0),
+                          })))
+                        }}
                         className={`block mt-1 px-2 py-1 text-[11px] rounded border transition ${
                           product.variants && product.variants.length > 0
                             ? 'text-emerald-700 border-emerald-300 bg-emerald-50 hover:bg-emerald-100'
@@ -1340,121 +1353,8 @@ function AdminProductsContent() {
                   )}
                 </div>
 
-                {/* Variants editor: Хэмжээ × Өнгө бүрийн нөөц */}
-                {(formData.sizes.length > 0 || formData.colors.length > 0) && (
-                  <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-semibold text-emerald-700">🎨 Хэмжээ × Өнгө бүрийн нөөц (variants)</p>
-                        <p className="text-xs text-emerald-600">Тус бүрийн дэлгүүр/агуулахын тоог тусад нь оруулна</p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          // Auto-generate бүх size × color combination-уудыг
-                          const gen: typeof variants = []
-                          const sizes = formData.sizes.length > 0 ? formData.sizes : ['']
-                          const colors = formData.colors.length > 0 ? formData.colors : ['']
-                          for (const s of sizes) {
-                            for (const c of colors) {
-                              const exists = variants.find(v => v.size === s && v.color === c)
-                              gen.push(exists || { size: s, color: c, store_quantity: '0', warehouse_quantity: '0' })
-                            }
-                          }
-                          setVariants(gen)
-                        }}
-                        className="px-3 py-1.5 bg-emerald-500 text-white text-xs font-medium rounded-lg hover:bg-emerald-600"
-                      >
-                        Бүгдийг үүсгэх
-                      </button>
-                    </div>
-
-                    {variants.length === 0 ? (
-                      <p className="text-xs text-slate-500 italic">Хоосон. Дээрх "Бүгдийг үүсгэх" товчийг дарж бүх хослолыг авна уу.</p>
-                    ) : (
-                      <div className="space-y-2 max-h-72 overflow-y-auto">
-                        <div className="grid grid-cols-12 gap-2 text-xs font-semibold text-slate-600 px-1">
-                          <div className="col-span-3">Хэмжээ</div>
-                          <div className="col-span-3">Өнгө</div>
-                          <div className="col-span-3">Дэлгүүр</div>
-                          <div className="col-span-2">Агуулах</div>
-                          <div className="col-span-1"></div>
-                        </div>
-                        {variants.map((v, idx) => (
-                          <div key={idx} className="grid grid-cols-12 gap-2 items-center bg-white p-2 rounded-lg">
-                            <input
-                              type="text"
-                              value={v.size}
-                              onChange={(e) => {
-                                const next = [...variants]
-                                next[idx] = { ...next[idx], size: e.target.value }
-                                setVariants(next)
-                              }}
-                              placeholder="M"
-                              className="col-span-3 px-2 py-1.5 text-sm bg-slate-50 border border-slate-200 rounded focus:ring-2 focus:ring-emerald-500 outline-none"
-                            />
-                            <input
-                              type="text"
-                              value={v.color}
-                              onChange={(e) => {
-                                const next = [...variants]
-                                next[idx] = { ...next[idx], color: e.target.value }
-                                setVariants(next)
-                              }}
-                              placeholder="Black"
-                              className="col-span-3 px-2 py-1.5 text-sm bg-slate-50 border border-slate-200 rounded focus:ring-2 focus:ring-emerald-500 outline-none"
-                            />
-                            <input
-                              type="text"
-                              inputMode="numeric"
-                              value={v.store_quantity}
-                              onChange={(e) => {
-                                const next = [...variants]
-                                next[idx] = { ...next[idx], store_quantity: e.target.value.replace(/[^0-9]/g, '') }
-                                setVariants(next)
-                              }}
-                              placeholder="0"
-                              className="col-span-3 px-2 py-1.5 text-sm bg-blue-50 border border-blue-200 rounded focus:ring-2 focus:ring-blue-500 outline-none"
-                            />
-                            <input
-                              type="text"
-                              inputMode="numeric"
-                              value={v.warehouse_quantity}
-                              onChange={(e) => {
-                                const next = [...variants]
-                                next[idx] = { ...next[idx], warehouse_quantity: e.target.value.replace(/[^0-9]/g, '') }
-                                setVariants(next)
-                              }}
-                              placeholder="0"
-                              className="col-span-2 px-2 py-1.5 text-sm bg-blue-50 border border-blue-200 rounded focus:ring-2 focus:ring-blue-500 outline-none"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setVariants(variants.filter((_, i) => i !== idx))}
-                              className="col-span-1 text-red-500 hover:text-red-700 text-lg"
-                              title="Устгах"
-                            >
-                              ×
-                            </button>
-                          </div>
-                        ))}
-                        <button
-                          type="button"
-                          onClick={() => setVariants([...variants, { size: '', color: '', store_quantity: '0', warehouse_quantity: '0' }])}
-                          className="w-full py-2 text-xs text-emerald-600 hover:bg-emerald-100 rounded border border-dashed border-emerald-300"
-                        >
-                          + Variant нэмэх
-                        </button>
-                        <div className="text-xs text-slate-600 pt-2 border-t border-emerald-200">
-                          <span>Variants нийт нөөц: </span>
-                          <span className="font-bold text-emerald-700">
-                            {variants.reduce((s, v) => s + parseInt(v.store_quantity || '0') + parseInt(v.warehouse_quantity || '0'), 0).toLocaleString()} ш
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
+                {/* Variants editor хасагдсан — Excel-ээс автоматаар үүсэх ба
+                    "📦 N variant ▾" товчоор нээгдэх Variant Detail Modal дотор засна */}
 
                 <div className="flex flex-wrap gap-4 p-4 bg-slate-50 rounded-xl">
                   <label className="flex items-center gap-2 cursor-pointer">
@@ -1742,12 +1642,22 @@ function AdminProductsContent() {
               </div>
               <div className="p-6">
                 {(() => {
-                  const variants = variantDetailProduct.variants || []
-                  if (variants.length === 0) {
-                    return <p className="text-slate-500">Variant байхгүй. Ерөнхий нөөц: <span className="font-bold">{variantDetailProduct.stock_quantity}</span></p>
+                  if (variantEdits.length === 0) {
+                    return (
+                      <div className="text-center py-8">
+                        <p className="text-slate-500 mb-4">Variant байхгүй. Ерөнхий нөөц: <span className="font-bold">{variantDetailProduct.stock_quantity}</span></p>
+                        <button
+                          type="button"
+                          onClick={() => setVariantEdits([{ size: '', color: '', store_quantity: '0', warehouse_quantity: '0' }])}
+                          className="px-4 py-2 bg-emerald-500 text-white text-sm font-medium rounded-lg hover:bg-emerald-600"
+                        >
+                          + Variant нэмэх
+                        </button>
+                      </div>
+                    )
                   }
-                  const totalStore = variants.reduce((sum, v) => sum + (v.store_quantity ?? 0), 0)
-                  const totalWh = variants.reduce((sum, v) => sum + (v.warehouse_quantity ?? 0), 0)
+                  const totalStore = variantEdits.reduce((sum, v) => sum + (parseInt(v.store_quantity) || 0), 0)
+                  const totalWh = variantEdits.reduce((sum, v) => sum + (parseInt(v.warehouse_quantity) || 0), 0)
                   return (
                     <>
                       <div className="grid grid-cols-3 gap-3 mb-4">
@@ -1764,34 +1674,133 @@ function AdminProductsContent() {
                           <p className="text-2xl font-bold text-emerald-700">{totalStore + totalWh}</p>
                         </div>
                       </div>
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                          <thead className="bg-slate-50">
-                            <tr>
-                              <th className="text-left px-4 py-2 font-semibold text-slate-600">Хэмжээ</th>
-                              <th className="text-left px-4 py-2 font-semibold text-slate-600">Өнгө</th>
-                              <th className="text-right px-4 py-2 font-semibold text-blue-600">Дэлгүүр</th>
-                              <th className="text-right px-4 py-2 font-semibold text-amber-600">Агуулах</th>
-                              <th className="text-right px-4 py-2 font-semibold text-emerald-600">Нийт</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-100">
-                            {[...variants]
-                              .sort((a, b) => (a.size || '').localeCompare(b.size || '') || (a.color || '').localeCompare(b.color || ''))
-                              .map((v, idx) => {
-                                const total = (v.store_quantity ?? 0) + (v.warehouse_quantity ?? 0)
-                                return (
-                                  <tr key={idx} className={total === 0 ? 'bg-red-50' : ''}>
-                                    <td className="px-4 py-2 font-semibold text-slate-700">{v.size || '—'}</td>
-                                    <td className="px-4 py-2 text-slate-600">{v.color || '—'}</td>
-                                    <td className="px-4 py-2 text-right text-blue-700">{v.store_quantity ?? 0}</td>
-                                    <td className="px-4 py-2 text-right text-amber-700">{v.warehouse_quantity ?? 0}</td>
-                                    <td className={`px-4 py-2 text-right font-bold ${total > 0 ? 'text-emerald-700' : 'text-red-500'}`}>{total}</td>
-                                  </tr>
-                                )
-                              })}
-                          </tbody>
-                        </table>
+                      <div className="space-y-2 max-h-[50vh] overflow-y-auto">
+                        <div className="grid grid-cols-12 gap-2 text-xs font-semibold text-slate-600 px-2 sticky top-0 bg-white py-1">
+                          <div className="col-span-3">Хэмжээ</div>
+                          <div className="col-span-3">Өнгө</div>
+                          <div className="col-span-2">Дэлгүүр</div>
+                          <div className="col-span-2">Агуулах</div>
+                          <div className="col-span-1 text-right">Нийт</div>
+                          <div className="col-span-1"></div>
+                        </div>
+                        {variantEdits.map((v, idx) => {
+                          const total = (parseInt(v.store_quantity) || 0) + (parseInt(v.warehouse_quantity) || 0)
+                          return (
+                            <div key={idx} className={`grid grid-cols-12 gap-2 items-center p-2 rounded-lg ${total === 0 ? 'bg-red-50' : 'bg-slate-50'}`}>
+                              <input
+                                type="text"
+                                value={v.size}
+                                onChange={(e) => {
+                                  const next = [...variantEdits]
+                                  next[idx] = { ...next[idx], size: e.target.value }
+                                  setVariantEdits(next)
+                                }}
+                                placeholder="M"
+                                className="col-span-3 px-2 py-1.5 text-sm bg-white border border-slate-200 rounded focus:ring-2 focus:ring-emerald-500 outline-none"
+                              />
+                              <input
+                                type="text"
+                                value={v.color}
+                                onChange={(e) => {
+                                  const next = [...variantEdits]
+                                  next[idx] = { ...next[idx], color: e.target.value }
+                                  setVariantEdits(next)
+                                }}
+                                placeholder="Хар"
+                                className="col-span-3 px-2 py-1.5 text-sm bg-white border border-slate-200 rounded focus:ring-2 focus:ring-emerald-500 outline-none"
+                              />
+                              <input
+                                type="text"
+                                inputMode="numeric"
+                                value={v.store_quantity}
+                                onChange={(e) => {
+                                  const next = [...variantEdits]
+                                  next[idx] = { ...next[idx], store_quantity: e.target.value.replace(/[^0-9]/g, '') }
+                                  setVariantEdits(next)
+                                }}
+                                placeholder="0"
+                                className="col-span-2 px-2 py-1.5 text-sm bg-blue-50 border border-blue-200 rounded focus:ring-2 focus:ring-blue-500 outline-none text-right"
+                              />
+                              <input
+                                type="text"
+                                inputMode="numeric"
+                                value={v.warehouse_quantity}
+                                onChange={(e) => {
+                                  const next = [...variantEdits]
+                                  next[idx] = { ...next[idx], warehouse_quantity: e.target.value.replace(/[^0-9]/g, '') }
+                                  setVariantEdits(next)
+                                }}
+                                placeholder="0"
+                                className="col-span-2 px-2 py-1.5 text-sm bg-amber-50 border border-amber-200 rounded focus:ring-2 focus:ring-amber-500 outline-none text-right"
+                              />
+                              <div className={`col-span-1 text-right text-sm font-bold ${total > 0 ? 'text-emerald-700' : 'text-red-500'}`}>{total}</div>
+                              <button
+                                type="button"
+                                onClick={() => setVariantEdits(variantEdits.filter((_, i) => i !== idx))}
+                                className="col-span-1 text-red-500 hover:text-red-700 text-lg"
+                                title="Устгах"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          )
+                        })}
+                        <button
+                          type="button"
+                          onClick={() => setVariantEdits([...variantEdits, { size: '', color: '', store_quantity: '0', warehouse_quantity: '0' }])}
+                          className="w-full py-2 text-xs text-emerald-600 hover:bg-emerald-100 rounded border border-dashed border-emerald-300"
+                        >
+                          + Variant нэмэх
+                        </button>
+                      </div>
+                      <div className="mt-4 flex gap-2 justify-end pt-4 border-t border-slate-100">
+                        <button
+                          type="button"
+                          onClick={() => setVariantDetailProduct(null)}
+                          disabled={variantSaving}
+                          className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg disabled:opacity-50"
+                        >
+                          Болих
+                        </button>
+                        <button
+                          type="button"
+                          disabled={variantSaving}
+                          onClick={async () => {
+                            if (!variantDetailProduct) return
+                            setVariantSaving(true)
+                            try {
+                              const cleaned = variantEdits
+                                .filter(v => v.size.trim() || v.color.trim())
+                                .map(v => ({
+                                  size: v.size.trim(),
+                                  color: v.color.trim(),
+                                  store_quantity: parseInt(v.store_quantity) || 0,
+                                  warehouse_quantity: parseInt(v.warehouse_quantity) || 0,
+                                }))
+                              const { error } = await api.upsertVariants(variantDetailProduct.id, cleaned)
+                              if (error) {
+                                alert('Хадгалахад алдаа: ' + error.message)
+                              } else {
+                                // products дээрх stock_quantity-г нийтэд дүйцүүлж шинэчилнэ
+                                const total = cleaned.reduce((s, v) => s + v.store_quantity + v.warehouse_quantity, 0)
+                                const totalStoreQty = cleaned.reduce((s, v) => s + v.store_quantity, 0)
+                                const totalWhQty = cleaned.reduce((s, v) => s + v.warehouse_quantity, 0)
+                                await api.updateProduct(variantDetailProduct.id, {
+                                  stock_quantity: total,
+                                  store_quantity: totalStoreQty,
+                                  warehouse_quantity: totalWhQty,
+                                })
+                                setVariantDetailProduct(null)
+                                fetchData()
+                              }
+                            } finally {
+                              setVariantSaving(false)
+                            }
+                          }}
+                          className="px-4 py-2 text-sm bg-emerald-500 text-white font-medium rounded-lg hover:bg-emerald-600 disabled:opacity-50"
+                        >
+                          {variantSaving ? 'Хадгалж байна...' : '💾 Хадгалах'}
+                        </button>
                       </div>
                     </>
                   )
