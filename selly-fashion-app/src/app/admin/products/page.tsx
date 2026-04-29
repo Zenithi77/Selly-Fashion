@@ -198,9 +198,12 @@ function AdminProductsContent() {
     setSaving(true)
     
     try {
-      // Generate unique slug with timestamp for new products
+      // Шинэ бүтээгдэхүүнд үргэлж timestamp-тай unique slug үүсгэх — давхардахгүй
       const isNewProduct = !editingProduct
-      const slugValue = formData.slug.trim() || generateSlug(formData.name, isNewProduct)
+      const userSlug = formData.slug.trim()
+      const slugValue = isNewProduct
+        ? (userSlug ? `${userSlug}-${Date.now()}` : generateSlug(formData.name, true))
+        : (userSlug || generateSlug(formData.name, false))
       
       const submitData = {
         name: formData.name.trim(),
@@ -377,7 +380,8 @@ function AdminProductsContent() {
         setFormData((prev) => ({
           ...prev,
           name: p.title || prev.name,
-          slug: p.title ? generateSlug(p.title) : prev.slug,
+          // slug-ыг хоослоно — handleSubmit нь timestamp-тай unique slug үүсгэнэ
+          slug: '',
           description: p.description || prev.description,
           // Лоокапаас барсан бол энэ кодыг хадгална — авто-генерация хийхгүй
           barcode: p.ean || p.upc || code,
