@@ -109,6 +109,9 @@ function AdminProductsContent() {
 
   // Excel download state
   const [excelDownloading, setExcelDownloading] = useState(false)
+
+  // Variant detail modal (size×color нөөцийн дэлгэрэнгүй)
+  const [variantDetailProduct, setVariantDetailProduct] = useState<Product | null>(null)
   
   // Form state with string values for better UX (no leading zeros issue)
   const [formData, setFormData] = useState({
@@ -790,6 +793,16 @@ function AdminProductsContent() {
                       <span className={`font-medium ${product.stock_quantity > 10 ? 'text-green-500' : product.stock_quantity > 0 ? 'text-orange-500' : 'text-red-500'}`}>
                         {product.stock_quantity}
                       </span>
+                      {product.variants && product.variants.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setVariantDetailProduct(product)}
+                          className="block mt-1 text-[11px] text-emerald-600 hover:text-emerald-700 underline"
+                          title="Хэмжээ × Өнгө бүрийн нөөц харах"
+                        >
+                          {product.variants.length} variant ▾
+                        </button>
+                      )}
                     </td>
                     <td className="hidden lg:table-cell px-6 py-4">
                       <div className="flex gap-1">
@@ -1706,6 +1719,83 @@ function AdminProductsContent() {
         )}
 
         {/* Barcode Scanner Modal removed (авто-үүсгэгдэхээр өөрчлөгдсөн) */}
+
+        {/* Variant Detail Modal — Хэмжээ × Өнгө бүрийн нөөц */}
+        {variantDetailProduct && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setVariantDetailProduct(null)}></div>
+            <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-white px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold text-slate-900">{variantDetailProduct.name}</h2>
+                  <p className="text-sm text-slate-500">Хэмжээ × Өнгө бүрийн нөөц</p>
+                </div>
+                <button onClick={() => setVariantDetailProduct(null)} className="p-2 hover:bg-slate-100 rounded-lg">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div className="p-6">
+                {(() => {
+                  const variants = variantDetailProduct.variants || []
+                  if (variants.length === 0) {
+                    return <p className="text-slate-500">Variant байхгүй. Ерөнхий нөөц: <span className="font-bold">{variantDetailProduct.stock_quantity}</span></p>
+                  }
+                  const totalStore = variants.reduce((sum, v) => sum + (v.store_quantity ?? 0), 0)
+                  const totalWh = variants.reduce((sum, v) => sum + (v.warehouse_quantity ?? 0), 0)
+                  return (
+                    <>
+                      <div className="grid grid-cols-3 gap-3 mb-4">
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                          <p className="text-xs text-blue-600">Дэлгүүр</p>
+                          <p className="text-2xl font-bold text-blue-700">{totalStore}</p>
+                        </div>
+                        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                          <p className="text-xs text-amber-600">Агуулах</p>
+                          <p className="text-2xl font-bold text-amber-700">{totalWh}</p>
+                        </div>
+                        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+                          <p className="text-xs text-emerald-600">Нийт</p>
+                          <p className="text-2xl font-bold text-emerald-700">{totalStore + totalWh}</p>
+                        </div>
+                      </div>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead className="bg-slate-50">
+                            <tr>
+                              <th className="text-left px-4 py-2 font-semibold text-slate-600">Хэмжээ</th>
+                              <th className="text-left px-4 py-2 font-semibold text-slate-600">Өнгө</th>
+                              <th className="text-right px-4 py-2 font-semibold text-blue-600">Дэлгүүр</th>
+                              <th className="text-right px-4 py-2 font-semibold text-amber-600">Агуулах</th>
+                              <th className="text-right px-4 py-2 font-semibold text-emerald-600">Нийт</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                            {[...variants]
+                              .sort((a, b) => (a.size || '').localeCompare(b.size || '') || (a.color || '').localeCompare(b.color || ''))
+                              .map((v, idx) => {
+                                const total = (v.store_quantity ?? 0) + (v.warehouse_quantity ?? 0)
+                                return (
+                                  <tr key={idx} className={total === 0 ? 'bg-red-50' : ''}>
+                                    <td className="px-4 py-2 font-semibold text-slate-700">{v.size || '—'}</td>
+                                    <td className="px-4 py-2 text-slate-600">{v.color || '—'}</td>
+                                    <td className="px-4 py-2 text-right text-blue-700">{v.store_quantity ?? 0}</td>
+                                    <td className="px-4 py-2 text-right text-amber-700">{v.warehouse_quantity ?? 0}</td>
+                                    <td className={`px-4 py-2 text-right font-bold ${total > 0 ? 'text-emerald-700' : 'text-red-500'}`}>{total}</td>
+                                  </tr>
+                                )
+                              })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </>
+                  )
+                })()}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </main>
   )
