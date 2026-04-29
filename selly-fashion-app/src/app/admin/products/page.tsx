@@ -115,6 +115,11 @@ function AdminProductsContent() {
   // Edit-able variant rows for the detail modal
   const [variantEdits, setVariantEdits] = useState<{ id?: string; size: string; color: string; store_quantity: string; warehouse_quantity: string }[]>([])
   const [variantSaving, setVariantSaving] = useState(false)
+
+  // Barcode lookup (онлайн API-аар бараа хайж бөглөх)
+  const [lookupBarcode, setLookupBarcode] = useState('')
+  const [lookupLoading, setLookupLoading] = useState(false)
+  const [lookupMessage, setLookupMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null)
   
   // Form state with string values for better UX (no leading zeros issue)
   const [formData, setFormData] = useState({
@@ -330,6 +335,8 @@ function AdminProductsContent() {
     })
     setVariants([])
     setCustomSize('')
+    setLookupBarcode('')
+    setLookupMessage(null)
   }
 
   const generateSlug = (name: string, addTimestamp: boolean = false) => {
@@ -878,6 +885,69 @@ function AdminProductsContent() {
               </div>
               
               <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4">
+                {/* 🔍 Баркодоор автомат хайлт (онлайн API) */}
+                {!editingProduct && (
+                  <div className="p-4 bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-xl">
+                    <p className="text-sm font-semibold text-indigo-700 mb-2">🔍 Баркодоор бараа хайж автоматаар бөглөх</p>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={lookupBarcode}
+                        onChange={(e) => setLookupBarcode(e.target.value.replace(/[^0-9a-zA-Z]/g, ''))}
+                        placeholder="EAN/UPC баркодыг бичиж эсвэл скан хийнэ үү (жишээ: 4006381333931)"
+                        className="flex-1 px-3 py-2 text-sm bg-white border border-indigo-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none font-mono"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault()
+                            ;(document.getElementById('barcode-lookup-btn') as HTMLButtonElement | null)?.click()
+                          }
+                        }}
+                      />
+                      <button
+                        id="barcode-lookup-btn"
+                        type="button"
+                        disabled={lookupLoading || !lookupBarcode.trim()}
+                        onClick={async () => {
+                          setLookupLoading(true)
+                          setLookupMessage(null)
+                          try {
+                            const res = await fetch(`/api/barcode-lookup?barcode=${encodeURIComponent(lookupBarcode.trim())}`)
+                            const data = await res.json()
+                            if (data.found && data.product) {
+                              const p = data.product
+                              setFormData((prev) => ({
+                                ...prev,
+                                name: p.title || prev.name,
+                                slug: p.title ? generateSlug(p.title) : prev.slug,
+                                description: p.description || prev.description,
+                                barcode: p.ean || p.upc || lookupBarcode.trim(),
+                                country: p.manufacturer || prev.country,
+                                image_url: (p.images && p.images[0]) || prev.image_url,
+                              }))
+                              setLookupMessage({ type: 'success', text: `✅ Олдлоо (${data.source}): ${p.title || 'Бараа'}` })
+                            } else {
+                              setLookupMessage({ type: 'info', text: data.message || 'Олдсонгүй. Гараар бөглөнө үү.' })
+                            }
+                          } catch (err) {
+                            setLookupMessage({ type: 'error', text: 'Хайлт амжилтгүй: ' + (err instanceof Error ? err.message : 'Network error') })
+                          } finally {
+                            setLookupLoading(false)
+                          }
+                        }}
+                        className="px-4 py-2 bg-indigo-500 text-white text-sm font-medium rounded-lg hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                      >
+                        {lookupLoading ? '⏳ Хайж байна...' : '🔍 Хайх'}
+                      </button>
+                    </div>
+                    {lookupMessage && (
+                      <p className={`text-xs mt-2 ${
+                        lookupMessage.type === 'success' ? 'text-emerald-700' :
+                        lookupMessage.type === 'error' ? 'text-red-600' : 'text-slate-600'
+                      }`}>{lookupMessage.text}</p>
+                    )}
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Нэр</label>
