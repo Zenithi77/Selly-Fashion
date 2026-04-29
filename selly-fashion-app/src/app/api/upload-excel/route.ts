@@ -578,6 +578,7 @@ export async function POST(request: NextRequest) {
     // бүтээгдэхүүн бүрд size+color бүрийн store/warehouse-г product_variants хүснэгтэд бичнэ
     // ========================================
     let variantCount = 0
+    const variantErrors: string[] = []
     // Insert хийгдсэн product-уудын variants
     for (let i = 0; i < insertedProducts.length; i++) {
       const productRecord = insertedProducts[i]
@@ -607,7 +608,12 @@ export async function POST(request: NextRequest) {
       }))
       if (variantPayload.length > 0) {
         const { error: vErr } = await supabase.from('product_variants').insert(variantPayload)
-        if (!vErr) variantCount += variantPayload.length
+        if (vErr) {
+          console.error(`[upload-excel] variant insert error for product ${productRecord.id}:`, vErr)
+          variantErrors.push(`product_id=${productRecord.id} — ${vErr.message}`)
+        } else {
+          variantCount += variantPayload.length
+        }
       }
     }
     // Update хийгдсэн product-уудын variants (хуучныг устгаж шинээр оруулна)
@@ -635,7 +641,12 @@ export async function POST(request: NextRequest) {
         const { error: vErr } = await supabase
           .from('product_variants')
           .upsert(variantPayload, { onConflict: 'product_id,size,color' })
-        if (!vErr) variantCount += variantPayload.length
+        if (vErr) {
+          console.error(`[upload-excel] variant upsert error for product ${productId}:`, vErr)
+          variantErrors.push(`product_id=${productId} — ${vErr.message}`)
+        } else {
+          variantCount += variantPayload.length
+        }
       }
     }
 
@@ -645,6 +656,9 @@ export async function POST(request: NextRequest) {
     if (updatedCount > 0) parts.push(`${updatedCount} бүтээгдэхүүн шинэчлэгдлээ (өнгө/размер нэмэгдсэн)`)
     if (mergedCount > 0) parts.push(`${mergedCount} мөр variant болгож нэгтгэгдсэн`)
     if (variantCount > 0) parts.push(`${variantCount} variant (size×өнгө) хадгалагдсан`)
+    if (variantErrors.length > 0) {
+      parts.push(`⚠️ ${variantErrors.length} variant хадгалагдаагүй (RLS эсвэл schema алдаа)`)
+    }
 
     return NextResponse.json({
       success: true,
@@ -652,8 +666,10 @@ export async function POST(request: NextRequest) {
       successCount,
       updatedCount,
       mergedCount,
+      variantCount,
       totalRows: rawData.length,
-      errors: errors.length > 0 ? errors : undefined
+      errors: errors.length > 0 ? errors : undefined,
+      variantErrors: variantErrors.length > 0 ? variantErrors : undefined,
     })
 
   } catch (error) {

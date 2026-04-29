@@ -102,8 +102,11 @@ function AdminProductsContent() {
     success?: boolean
     message?: string
     successCount?: number
+    updatedCount?: number
+    variantCount?: number
     totalRows?: number
     errors?: string[]
+    variantErrors?: string[]
   } | null>(null)
   const excelInputRef = useRef<HTMLInputElement>(null)
 
@@ -1679,6 +1682,22 @@ function AdminProductsContent() {
                               ))}
                               {excelResult.errors.length > 10 && (
                                 <li>... + {excelResult.errors.length - 10} бусад</li>
+                              )}
+                            </ul>
+                          </div>
+                        )}
+                        {excelResult.variantErrors && excelResult.variantErrors.length > 0 && (
+                          <div className="mt-2 p-3 bg-red-100 border border-red-300 rounded-lg">
+                            <p className="text-sm font-bold text-red-700">⚠️ Variant хадгалагдаагүй ({excelResult.variantErrors.length}):</p>
+                            <p className="text-xs text-red-600 mt-1">
+                              Шалтгаан нь ихэвчлэн RLS policy дутуу. <code className="bg-white px-1 rounded">migrations/fix-product-variants-rls.sql</code>-ийг Supabase SQL Editor дээр ажиллуул, эсвэл Vercel дээр <code className="bg-white px-1 rounded">SUPABASE_SERVICE_ROLE_KEY</code>-г тохируул.
+                            </p>
+                            <ul className="text-xs text-red-600 mt-2 max-h-24 overflow-y-auto font-mono">
+                              {excelResult.variantErrors.slice(0, 5).map((err, i) => (
+                                <li key={i}>• {err}</li>
+                              ))}
+                              {excelResult.variantErrors.length > 5 && (
+                                <li>... + {excelResult.variantErrors.length - 5} бусад</li>
                               )}
                             </ul>
                           </div>
