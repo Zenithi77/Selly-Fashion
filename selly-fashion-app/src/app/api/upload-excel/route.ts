@@ -149,55 +149,56 @@ export async function POST(request: NextRequest) {
       const row = rawData[i]
       const rowNum = i + 2 // Excel rows start at 1, header is row 1
       
-      // Helper function to find value by multiple possible column names
-      const findValue = (...keys: string[]): unknown => {
+      // Helper function to find value by multiple possible column names.
+      // ⚠️ "Утга байгаа эсэх"-ийг falsy (0, false) утгуудаас ялгахын тулд
+      // sentinel `null`-г "олдсонгүй" гэж тооцно.
+      const NOT_FOUND = Symbol('not_found')
+      const findRaw = (...keys: string[]): unknown => {
         for (const key of keys) {
-          // Check exact match
-          if (row[key] !== undefined) return row[key]
-          // Check if any column contains this key (for combined headers like "Нэр (name)")
+          if (row[key] !== undefined && row[key] !== null && row[key] !== '') return row[key]
+          const target = key.toLowerCase().trim()
           for (const colName of Object.keys(row)) {
-            if (colName.toLowerCase().includes(key.toLowerCase())) {
-              return row[colName]
+            if (colName.toLowerCase().trim().includes(target)) {
+              const v = row[colName]
+              if (v !== undefined && v !== null && v !== '') return v
             }
           }
         }
-        return ''
+        return NOT_FOUND
+      }
+      const findValue = (...keys: string[]): unknown => {
+        const v = findRaw(...keys)
+        return v === NOT_FOUND ? '' : v
+      }
+      // Тоон утга авах (0-г хоосон гэж үзэхгүй)
+      const findOptionalNumber = (...keys: string[]): number | undefined => {
+        const v = findRaw(...keys)
+        if (v === NOT_FOUND) return undefined
+        return parseNumber(v, 0)
       }
       
-      // Map column names (support both Mongolian and English, and combined headers)
+      // Map column names (support Mongolian Cyrillic, Latin transliteration, English & combined headers)
       const productData: ExcelProduct = {
-        name: toStr(findValue('name', 'нэр', 'Нэр', 'Name')),
-        description: toStr(findValue('description', 'тайлбар', 'Тайлбар', 'Description')),
-        price: parseNumber(findValue('price', 'үнэ', 'Үнэ', 'Price')),
-        original_price: findValue('original_price', 'хуучин_үнэ', 'Хуучин үнэ', 'Хуучин')
-          ? parseNumber(findValue('original_price', 'хуучин_үнэ', 'Хуучин үнэ', 'Хуучин'))
-          : undefined,
-        cost_price: findValue('cost_price', 'өртөг', 'Өртөг', 'Өртөг үнэ', 'urtug', 'cost')
-          ? parseNumber(findValue('cost_price', 'өртөг', 'Өртөг', 'Өртөг үнэ', 'urtug', 'cost'))
-          : undefined,
-        bulk_min_quantity: findValue('bulk_min_quantity', 'багц_бага', 'багц бага', 'min_quantity', 'bulk min')
-          ? parseNumber(findValue('bulk_min_quantity', 'багц_бага', 'багц бага', 'min_quantity', 'bulk min'))
-          : undefined,
-        bulk_price: findValue('bulk_price', 'багцын_үнэ', 'багцын үнэ', 'бууни үнэ')
-          ? parseNumber(findValue('bulk_price', 'багцын_үнэ', 'багцын үнэ', 'бууни үнэ'))
-          : undefined,
-        brand_name: toStr(findValue('brand', 'брэнд', 'Брэнд', 'Brand')),
-        category_name: toStr(findValue('category', 'ангилал', 'Ангилал', 'Category')),
-        subcategory_name: toStr(findValue('subcategory', 'дэд_ангилал', 'Дэд ангилал', 'Subcategory', 'Дэд')),
-        country: toStr(findValue('country', 'улс', 'Улс', 'Country', 'Origin', 'Гарал')),
-        barcode: toStr(findValue('barcode', 'баркод', 'Баркод', 'Barcode', 'EAN', 'UPC')),
-        sizes: toStr(findValue('sizes', 'хэмжээ', 'Хэмжээ', 'Sizes')),
-        colors: toStr(findValue('colors', 'өнгө', 'Өнгө', 'Colors')),
-        is_featured: parseBoolean(findValue('is_featured', 'онцлох', 'Онцлох', 'featured')),
-        is_new_arrival: parseBoolean(findValue('is_new_arrival', 'шинэ', 'Шинэ', 'new')),
-        is_on_sale: parseBoolean(findValue('is_on_sale', 'хямдрал', 'Хямдрал', 'sale')),
-        store_quantity: findValue('store_quantity', 'дэлгүүр', 'Дэлгүүр', 'store')
-          ? parseNumber(findValue('store_quantity', 'дэлгүүр', 'Дэлгүүр', 'store'), 0)
-          : undefined,
-        warehouse_quantity: findValue('warehouse_quantity', 'агуулах', 'Агуулах', 'warehouse')
-          ? parseNumber(findValue('warehouse_quantity', 'агуулах', 'Агуулах', 'warehouse'), 0)
-          : undefined,
-        stock_quantity: parseNumber(findValue('stock', 'stock_quantity', 'нөөц', 'Нөөц'), 0),
+        name: toStr(findValue('name', 'нэр', 'Нэр', 'Name', 'baraa', 'бараа', 'Бараа', 'ner')),
+        description: toStr(findValue('description', 'тайлбар', 'Тайлбар', 'Description', 'tailbar')),
+        price: parseNumber(findValue('price', 'үнэ', 'Үнэ', 'Price', 'une', 'үне')),
+        original_price: findOptionalNumber('original_price', 'хуучин_үнэ', 'Хуучин үнэ', 'Хуучин', 'huuchin'),
+        cost_price: findOptionalNumber('cost_price', 'өртөг', 'Өртөг', 'Өртөг үнэ', 'urtug', 'urtog', 'ortog', 'cost'),
+        bulk_min_quantity: findOptionalNumber('bulk_min_quantity', 'багц_бага', 'багц бага', 'min_quantity', 'bulk min', 'bagts'),
+        bulk_price: findOptionalNumber('bulk_price', 'багцын_үнэ', 'багцын үнэ', 'бууни үнэ', 'bagtsiin'),
+        brand_name: toStr(findValue('brand', 'брэнд', 'Брэнд', 'Brand', 'brend')),
+        category_name: toStr(findValue('category', 'ангилал', 'Ангилал', 'Category', 'angilal')),
+        subcategory_name: toStr(findValue('subcategory', 'дэд_ангилал', 'Дэд ангилал', 'Subcategory', 'Дэд', 'ded angilal', 'ded_angilal', 'ded')),
+        country: toStr(findValue('country', 'улс', 'Улс', 'Country', 'Origin', 'Гарал', 'uls')),
+        barcode: toStr(findValue('barcode', 'баркод', 'Баркод', 'Barcode', 'EAN', 'UPC', 'barkod')),
+        sizes: toStr(findValue('sizes', 'хэмжээ', 'Хэмжээ', 'Sizes', 'size', 'hemjee', 'hemjeee', 'размер', 'razmer')),
+        colors: toStr(findValue('colors', 'өнгө', 'Өнгө', 'Colors', 'color', 'ungu', 'ongo', 'ungo', 'ongu', 'ӨНГӨ')),
+        is_featured: parseBoolean(findValue('is_featured', 'онцлох', 'Онцлох', 'featured', 'ontsloh')),
+        is_new_arrival: parseBoolean(findValue('is_new_arrival', 'шинэ', 'Шинэ', 'new', 'shine')),
+        is_on_sale: parseBoolean(findValue('is_on_sale', 'хямдрал', 'Хямдрал', 'sale', 'hyamdral')),
+        store_quantity: findOptionalNumber('store_quantity', 'дэлгүүр', 'Дэлгүүр', 'store', 'delguur', 'delguer', 'delguir'),
+        warehouse_quantity: findOptionalNumber('warehouse_quantity', 'агуулах', 'Агуулах', 'warehouse', 'aguulah', 'aguulakh', 'aguulax'),
+        stock_quantity: parseNumber(findValue('stock', 'stock_quantity', 'нөөц', 'Нөөц', 'noots', 'nuuts'), 0),
         image_url: toStr(findValue('image_url', 'зураг', 'Зураг', 'image')),
       }
 
