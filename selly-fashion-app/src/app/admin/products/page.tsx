@@ -789,20 +789,24 @@ function AdminProductsContent() {
                     <td className="hidden lg:table-cell px-6 py-4 text-slate-600">
                       {product.brand?.name || '-'}
                     </td>
-                    <td className="hidden sm:table-cell px-6 py-4">
+                    <td className="px-4 sm:px-6 py-4">
                       <span className={`font-medium ${product.stock_quantity > 10 ? 'text-green-500' : product.stock_quantity > 0 ? 'text-orange-500' : 'text-red-500'}`}>
                         {product.stock_quantity}
                       </span>
-                      {product.variants && product.variants.length > 0 && (
-                        <button
-                          type="button"
-                          onClick={() => setVariantDetailProduct(product)}
-                          className="block mt-1 text-[11px] text-emerald-600 hover:text-emerald-700 underline"
-                          title="Хэмжээ × Өнгө бүрийн нөөц харах"
-                        >
-                          {product.variants.length} variant ▾
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        onClick={() => setVariantDetailProduct(product)}
+                        className={`block mt-1 px-2 py-1 text-[11px] rounded border transition ${
+                          product.variants && product.variants.length > 0
+                            ? 'text-emerald-700 border-emerald-300 bg-emerald-50 hover:bg-emerald-100'
+                            : 'text-slate-500 border-slate-200 bg-slate-50 hover:bg-slate-100'
+                        }`}
+                        title="Хэмжээ × Өнгө бүрийн нөөц харах"
+                      >
+                        {product.variants && product.variants.length > 0
+                          ? `📦 ${product.variants.length} variant ▾`
+                          : '📦 Variant харах ▾'}
+                      </button>
                     </td>
                     <td className="hidden lg:table-cell px-6 py-4">
                       <div className="flex gap-1">
