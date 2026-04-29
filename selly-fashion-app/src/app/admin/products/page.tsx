@@ -138,6 +138,7 @@ function AdminProductsContent() {
     bulk_min_quantity: '',
     bulk_price: '',
     image_url: '',
+    images: [] as string[],
     barcode: '',
     country: '',
     brand_id: '',
@@ -210,7 +211,8 @@ function AdminProductsContent() {
         cost_price: formData.cost_price ? parseFloat(formData.cost_price) : undefined,
         bulk_min_quantity: formData.bulk_min_quantity ? parseInt(formData.bulk_min_quantity) : null,
         bulk_price: formData.bulk_price ? parseFloat(formData.bulk_price) : null,
-        image_url: formData.image_url.trim(),
+        image_url: (formData.images[0] || formData.image_url || '').trim(),
+        images: formData.images.filter(u => u && u.trim()),
         barcode: formData.barcode.trim() || undefined,
         country: formData.country.trim() || undefined,
         brand_id: formData.brand_id || undefined,
@@ -281,6 +283,9 @@ function AdminProductsContent() {
       bulk_min_quantity: product.bulk_min_quantity?.toString() || '',
       bulk_price: product.bulk_price?.toString() || '',
       image_url: product.image_url || '',
+      images: (product.images && product.images.length > 0)
+        ? product.images
+        : (product.image_url ? [product.image_url] : []),
       barcode: product.barcode || '',
       country: product.country || '',
       brand_id: product.brand_id || '',
@@ -326,6 +331,7 @@ function AdminProductsContent() {
       bulk_min_quantity: '',
       bulk_price: '',
       image_url: '',
+      images: [],
       barcode: '',
       country: '',
       brand_id: '',
@@ -377,6 +383,9 @@ function AdminProductsContent() {
           barcode: p.ean || p.upc || code,
           country: p.manufacturer || p.country || prev.country,
           image_url: (p.images && p.images[0]) || prev.image_url,
+          images: Array.isArray(p.images) && p.images.length > 0
+            ? Array.from(new Set([...(prev.images || []), ...p.images.filter(Boolean)]))
+            : prev.images,
           sizes: sizesFromLookup.length > 0 ? Array.from(new Set([...prev.sizes, ...sizesFromLookup])) : prev.sizes,
           colors: colorsFromLookup.length > 0 ? Array.from(new Set([...prev.colors, ...colorsFromLookup])) : prev.colors,
         }))
@@ -459,35 +468,44 @@ function AdminProductsContent() {
     setShowColorPicker(false)
   }
 
-  // Зураг upload хийх
+  // Зураг upload хийх (олон файл дэмждэг)
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const files = Array.from(e.target.files || [])
+    if (files.length === 0) return
 
-    // Validate file size (max 10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      alert('Зургийн хэмжээ 10MB-аас бага байх ёстой')
+    // 10MB limit per file
+    const tooBig = files.find(f => f.size > 10 * 1024 * 1024)
+    if (tooBig) {
+      alert(`"${tooBig.name}" файл 10MB-аас их байна`)
       return
     }
 
     setUploading(true)
+    const newUrls: string[] = []
     try {
-      const uploadFormData = new FormData()
-      uploadFormData.append('file', file)
-      uploadFormData.append('folder', 'products')
+      for (const file of files) {
+        const uploadFormData = new FormData()
+        uploadFormData.append('file', file)
+        uploadFormData.append('folder', 'products')
 
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: uploadFormData,
-      })
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: uploadFormData,
+        })
 
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Upload failed')
+        if (!response.ok) {
+          const error = await response.json()
+          throw new Error(error.error || 'Upload failed')
+        }
+
+        const result = await response.json()
+        if (result.url) newUrls.push(result.url)
       }
 
-      const result = await response.json()
-      setFormData(prev => ({ ...prev, image_url: result.url }))
+      setFormData(prev => {
+        const merged = [...(prev.images || []), ...newUrls]
+        return { ...prev, images: merged, image_url: prev.image_url || merged[0] || '' }
+      })
     } catch (error) {
       console.error('Upload error:', error)
       alert('Зураг оруулахад алдаа гарлаа')
@@ -959,11 +977,20 @@ function AdminProductsContent() {
                 <h2 className="text-xl font-bold text-slate-900">
                   {editingProduct ? 'Бүтээгдэхүүн засах' : 'Шинэ бүтээгдэхүүн'}
                 </h2>
-                <button onClick={() => setShowModal(false)} className="p-2 hover:bg-slate-100 rounded-lg">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-                  </svg>
-                </button>
+                <div className="flex items-center gap-2">
+                  {editingProduct && (
+                    <a
+                      href={`/api/product-barcodes/${editingProduct.id}`}
+                      className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-xs font-bold flex items-center gap-1"
+                      title="Variant баркодуудыг Excel-ээр татах"
+                    >⬇ Excel</a>
+                  )}
+                  <button onClick={() => setShowModal(false)} className="p-2 hover:bg-slate-100 rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
               </div>
               
               <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4">
@@ -1195,33 +1222,56 @@ function AdminProductsContent() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Зураг</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Зургууд ({formData.images.length})</label>
                   <div className="space-y-3">
-                    {/* Preview */}
-                    {formData.image_url && (
-                      <div className="relative w-32 h-40 rounded-xl overflow-hidden bg-slate-100">
-                        <img src={formData.image_url} alt="Preview" className="w-full h-full object-cover" />
-                        <button
-                          type="button"
-                          onClick={() => setFormData({ ...formData, image_url: '' })}
-                          className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-sm hover:bg-red-600"
-                        >
-                          ×
-                        </button>
+                    {/* Gallery preview */}
+                    {formData.images.length > 0 && (
+                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                        {formData.images.map((url, idx) => (
+                          <div key={idx} className={`relative aspect-[3/4] rounded-xl overflow-hidden bg-slate-100 border-2 ${idx === 0 ? 'border-pink-500' : 'border-transparent'}`}>
+                            <img src={url} alt={`img-${idx}`} className="w-full h-full object-cover" />
+                            {idx === 0 && (
+                              <span className="absolute top-1 left-1 bg-pink-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">ҮНДСЭН</span>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => setFormData(prev => {
+                                const next = prev.images.filter((_, i) => i !== idx)
+                                return { ...prev, images: next, image_url: next[0] || '' }
+                              })}
+                              className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-sm hover:bg-red-600"
+                              title="Устгах"
+                            >×</button>
+                            {idx > 0 && (
+                              <button
+                                type="button"
+                                onClick={() => setFormData(prev => {
+                                  const next = [...prev.images]
+                                  const [moved] = next.splice(idx, 1)
+                                  next.unshift(moved)
+                                  return { ...prev, images: next, image_url: next[0] || '' }
+                                })}
+                                className="absolute bottom-1 left-1 right-1 bg-slate-900/70 hover:bg-slate-900 text-white text-[10px] py-1 rounded"
+                                title="Эхэн болгох"
+                              >⬆ Үндсэн</button>
+                            )}
+                          </div>
+                        ))}
                       </div>
                     )}
-                    {/* Upload button */}
+                    {/* Upload button (multi) */}
                     <div className="flex gap-2">
                       <label className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-pink-50 border-2 border-dashed border-pink-300 rounded-xl cursor-pointer hover:bg-pink-100 transition-colors ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-pink-500">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
                         </svg>
                         <span className="text-sm font-medium text-pink-600">
-                          {uploading ? 'Оруулж байна...' : 'Зураг сонгох'}
+                          {uploading ? 'Оруулж байна...' : 'Зураг сонгох (олон файл)'}
                         </span>
                         <input
                           type="file"
                           accept="image/*"
+                          multiple
                           onChange={handleImageUpload}
                           disabled={uploading}
                           className="hidden"
@@ -1234,9 +1284,22 @@ function AdminProductsContent() {
                         type="url"
                         value={formData.image_url}
                         onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                        placeholder="Эсвэл URL оруулах..."
+                        placeholder="Эсвэл URL оруулаад + дарах..."
                         className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none text-sm"
                       />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const url = formData.image_url.trim()
+                          if (!url) return
+                          setFormData(prev => ({
+                            ...prev,
+                            images: prev.images.includes(url) ? prev.images : [...prev.images, url],
+                            image_url: prev.images.length === 0 ? url : prev.image_url,
+                          }))
+                        }}
+                        className="px-4 py-2.5 bg-pink-500 hover:bg-pink-600 text-white rounded-xl font-bold"
+                      >+</button>
                     </div>
                   </div>
                 </div>
