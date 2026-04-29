@@ -212,30 +212,70 @@ export async function POST(request: NextRequest) {
         continue
       }
 
-      // Find brand ID by name
+      // Find or auto-create brand by name
       let brand_id: string | undefined
       if (productData.brand_name) {
-        brand_id = brandMap.get(productData.brand_name.toLowerCase())
+        const bKey = productData.brand_name.toLowerCase()
+        brand_id = brandMap.get(bKey)
         if (!brand_id) {
-          errors.push(`Мөр ${rowNum}: "${productData.brand_name}" брэнд олдсонгүй (${productData.name})`)
+          const newSlug = `${generateSlug(productData.brand_name) || 'brand'}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
+          const { data: newBrand, error: bErr } = await supabase
+            .from('brands')
+            .insert({ name: productData.brand_name.trim(), slug: newSlug })
+            .select('id, name')
+            .single()
+          if (bErr || !newBrand) {
+            errors.push(`Мөр ${rowNum}: "${productData.brand_name}" брэнд үүсгэхэд алдаа гарлаа (${productData.name})`)
+          } else {
+            brand_id = newBrand.id
+            brandMap.set(bKey, newBrand.id)
+          }
         }
       }
 
-      // Find category ID by name
+      // Find or auto-create category by name
       let clothing_type_id: string | undefined
       if (productData.category_name) {
-        clothing_type_id = categoryMap.get(productData.category_name.toLowerCase())
+        const cKey = productData.category_name.toLowerCase()
+        clothing_type_id = categoryMap.get(cKey)
         if (!clothing_type_id) {
-          errors.push(`Мөр ${rowNum}: "${productData.category_name}" ангилал олдсонгүй (${productData.name})`)
+          const newSlug = `${generateSlug(productData.category_name) || 'category'}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
+          const { data: newCat, error: cErr } = await supabase
+            .from('clothing_types')
+            .insert({ name: productData.category_name.trim(), slug: newSlug })
+            .select('id, name')
+            .single()
+          if (cErr || !newCat) {
+            errors.push(`Мөр ${rowNum}: "${productData.category_name}" ангилал үүсгэхэд алдаа гарлаа (${productData.name})`)
+          } else {
+            clothing_type_id = newCat.id
+            categoryMap.set(cKey, newCat.id)
+          }
         }
       }
 
-      // Find subcategory ID by name
+      // Find or auto-create subcategory by name
       let subcategory_id: string | undefined
       if (productData.subcategory_name) {
-        subcategory_id = subcategoryMap.get(productData.subcategory_name.toLowerCase())
+        const sKey = productData.subcategory_name.toLowerCase()
+        subcategory_id = subcategoryMap.get(sKey)
         if (!subcategory_id) {
-          errors.push(`Мөр ${rowNum}: "${productData.subcategory_name}" дэд ангилал олдсонгүй (${productData.name})`)
+          const newSlug = `${generateSlug(productData.subcategory_name) || 'subcategory'}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
+          const { data: newSub, error: sErr } = await supabase
+            .from('subcategories')
+            .insert({
+              name: productData.subcategory_name.trim(),
+              slug: newSlug,
+              clothing_type_id: clothing_type_id || null,
+            })
+            .select('id, name')
+            .single()
+          if (sErr || !newSub) {
+            errors.push(`Мөр ${rowNum}: "${productData.subcategory_name}" дэд ангилал үүсгэхэд алдаа гарлаа (${productData.name})`)
+          } else {
+            subcategory_id = newSub.id
+            subcategoryMap.set(sKey, newSub.id)
+          }
         }
       }
 
