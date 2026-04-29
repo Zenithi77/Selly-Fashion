@@ -11,24 +11,38 @@ const supabase = createClient(supabaseUrl, supabaseKey)
 // Placeholder image for products without images
 const PLACEHOLDER_IMAGE = '/placeholder-product.svg'
 
+// Safely coerce any value to a trimmed string
+function toStr(value: unknown): string {
+  if (value === null || value === undefined) return ''
+  if (typeof value === 'string') return value
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value)
+  try {
+    return String(value)
+  } catch {
+    return ''
+  }
+}
+
 // Generate slug from name
-function generateSlug(name: string): string {
-  return name
+function generateSlug(name: unknown): string {
+  return toStr(name)
     .toLowerCase()
     .replace(/\s+/g, '-')
     .replace(/[^a-z0-9-а-яөү]/gi, '')
 }
 
 // Parse sizes from string (comma separated)
-function parseSizes(sizes: string | undefined): string[] {
-  if (!sizes) return []
-  return sizes.split(',').map(s => s.trim().toUpperCase()).filter(Boolean)
+function parseSizes(sizes: unknown): string[] {
+  const str = toStr(sizes)
+  if (!str) return []
+  return str.split(',').map(s => s.trim().toUpperCase()).filter(Boolean)
 }
 
 // Parse colors from string (comma separated)
-function parseColors(colors: string | undefined): string[] {
-  if (!colors) return []
-  return colors.split(',').map(c => c.trim()).filter(Boolean)
+function parseColors(colors: unknown): string[] {
+  const str = toStr(colors)
+  if (!str) return []
+  return str.split(',').map(c => c.trim()).filter(Boolean)
 }
 
 // Parse boolean values
@@ -152,8 +166,8 @@ export async function POST(request: NextRequest) {
       
       // Map column names (support both Mongolian and English, and combined headers)
       const productData: ExcelProduct = {
-        name: (findValue('name', 'нэр', 'Нэр', 'Name') || '') as string,
-        description: (findValue('description', 'тайлбар', 'Тайлбар', 'Description') || '') as string,
+        name: toStr(findValue('name', 'нэр', 'Нэр', 'Name')),
+        description: toStr(findValue('description', 'тайлбар', 'Тайлбар', 'Description')),
         price: parseNumber(findValue('price', 'үнэ', 'Үнэ', 'Price')),
         original_price: findValue('original_price', 'хуучин_үнэ', 'Хуучин үнэ', 'Хуучин')
           ? parseNumber(findValue('original_price', 'хуучин_үнэ', 'Хуучин үнэ', 'Хуучин'))
@@ -167,13 +181,13 @@ export async function POST(request: NextRequest) {
         bulk_price: findValue('bulk_price', 'багцын_үнэ', 'багцын үнэ', 'бууни үнэ')
           ? parseNumber(findValue('bulk_price', 'багцын_үнэ', 'багцын үнэ', 'бууни үнэ'))
           : undefined,
-        brand_name: (findValue('brand', 'брэнд', 'Брэнд', 'Brand') || '') as string,
-        category_name: (findValue('category', 'ангилал', 'Ангилал', 'Category') || '') as string,
-        subcategory_name: (findValue('subcategory', 'дэд_ангилал', 'Дэд ангилал', 'Subcategory', 'Дэд') || '') as string,
-        country: (findValue('country', 'улс', 'Улс', 'Country', 'Origin', 'Гарал') || '') as string,
-        barcode: (findValue('barcode', 'баркод', 'Баркод', 'Barcode', 'EAN', 'UPC') || '') as string,
-        sizes: (findValue('sizes', 'хэмжээ', 'Хэмжээ', 'Sizes') || '') as string,
-        colors: (findValue('colors', 'өнгө', 'Өнгө', 'Colors') || '') as string,
+        brand_name: toStr(findValue('brand', 'брэнд', 'Брэнд', 'Brand')),
+        category_name: toStr(findValue('category', 'ангилал', 'Ангилал', 'Category')),
+        subcategory_name: toStr(findValue('subcategory', 'дэд_ангилал', 'Дэд ангилал', 'Subcategory', 'Дэд')),
+        country: toStr(findValue('country', 'улс', 'Улс', 'Country', 'Origin', 'Гарал')),
+        barcode: toStr(findValue('barcode', 'баркод', 'Баркод', 'Barcode', 'EAN', 'UPC')),
+        sizes: toStr(findValue('sizes', 'хэмжээ', 'Хэмжээ', 'Sizes')),
+        colors: toStr(findValue('colors', 'өнгө', 'Өнгө', 'Colors')),
         is_featured: parseBoolean(findValue('is_featured', 'онцлох', 'Онцлох', 'featured')),
         is_new_arrival: parseBoolean(findValue('is_new_arrival', 'шинэ', 'Шинэ', 'new')),
         is_on_sale: parseBoolean(findValue('is_on_sale', 'хямдрал', 'Хямдрал', 'sale')),
@@ -184,7 +198,7 @@ export async function POST(request: NextRequest) {
           ? parseNumber(findValue('warehouse_quantity', 'агуулах', 'Агуулах', 'warehouse'), 0)
           : undefined,
         stock_quantity: parseNumber(findValue('stock', 'stock_quantity', 'нөөц', 'Нөөц'), 0),
-        image_url: (findValue('image_url', 'зураг', 'Зураг', 'image') || '') as string,
+        image_url: toStr(findValue('image_url', 'зураг', 'Зураг', 'image')),
       }
 
       // Validate required fields
