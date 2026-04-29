@@ -338,8 +338,27 @@ export async function POST(request: NextRequest) {
       ].join('|||')
 
       // Тухайн мөрөөс size/color гарган авна
-      const rowSize = product.sizes[0] || ''
-      const rowColor = product.colors[0] || ''
+      // Хэрэв нэг мөрөнд олон size/color бичигдсэн бол бүх (size × color) хослолыг variant болгоно.
+      // Stock нь зөвхөн ЭХНИЙ хослолд олгогдоно (давхар тоологдох эрсдэлээс хамгаалах үүднээс).
+      const rowSizes = product.sizes.length > 0 ? product.sizes : ['']
+      const rowColors = product.colors.length > 0 ? product.colors : ['']
+      const buildRowVariants = (): Array<{ size: string; color: string; store_quantity: number; warehouse_quantity: number }> => {
+        const out: Array<{ size: string; color: string; store_quantity: number; warehouse_quantity: number }> = []
+        let isFirst = true
+        for (const s of rowSizes) {
+          for (const c of rowColors) {
+            if (!s && !c) continue
+            out.push({
+              size: s,
+              color: c,
+              store_quantity: isFirst ? (product.store_quantity || 0) : 0,
+              warehouse_quantity: isFirst ? (product.warehouse_quantity || 0) : 0,
+            })
+            isFirst = false
+          }
+        }
+        return out
+      }
 
       const existingIdx = variantMap.get(variantKey)
 
@@ -370,15 +389,11 @@ export async function POST(request: NextRequest) {
           existing.image_url = product.image_url
         }
 
-        // Variant мөр нэмэх
-        if (rowSize || rowColor) {
+        // Variant мөрүүд нэмэх (нэг мөрөнд олон size/color байсан бол бүх хослол)
+        const rowVariants = buildRowVariants()
+        if (rowVariants.length > 0) {
           const list = variantRows.get(existingIdx) || []
-          list.push({
-            size: rowSize,
-            color: rowColor,
-            store_quantity: product.store_quantity || 0,
-            warehouse_quantity: product.warehouse_quantity || 0,
-          })
+          list.push(...rowVariants)
           variantRows.set(existingIdx, list)
         }
       } else {
@@ -386,13 +401,9 @@ export async function POST(request: NextRequest) {
         const newIdx = mergedProducts.length
         variantMap.set(variantKey, newIdx)
         mergedProducts.push({ ...product })
-        if (rowSize || rowColor) {
-          variantRows.set(newIdx, [{
-            size: rowSize,
-            color: rowColor,
-            store_quantity: product.store_quantity || 0,
-            warehouse_quantity: product.warehouse_quantity || 0,
-          }])
+        const rowVariants = buildRowVariants()
+        if (rowVariants.length > 0) {
+          variantRows.set(newIdx, rowVariants)
         }
       }
     }
@@ -472,6 +483,51 @@ export async function POST(request: NextRequest) {
         product.slug = `${product.slug}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
         insertIdxToMergedIdx.set(toInsert.length, mIdx)
         toInsert.push(product)
+      }
+    }
+
+    // ========================================
+    // Авто-баркод үүсгэх (YYMMNNNNN формат)
+    // Excel-д баркод бичээгүй шинэ бүтээгдэхүүн бүрд автоматаар олгоно
+    // ========================================
+    {
+      const now = new Date()
+      const yy = String(now.getFullYear() % 100).padStart(2, '0')
+      const mm = String(now.getMonth() + 1).padStart(2, '0')
+      const prefix = `${yy}${mm}`
+
+      // Тухайн сард үүсгэгдсэн хамгийн сүүлийн баркодыг олох
+      const { data: lastBarcodes } = await supabase
+        .from('products')
+        .select('barcode')
+        .like('barcode', `${prefix}%`)
+        .order('barcode', { ascending: false })
+        .limit(1)
+
+      let nextSeq = 1
+      if (lastBarcodes && lastBarcodes.length > 0 && lastBarcodes[0].barcode) {
+        const lastSeq = parseInt(String(lastBarcodes[0].barcode).slice(4), 10)
+        if (!isNaN(lastSeq)) nextSeq = lastSeq + 1
+      }
+
+      // Одоогийн batch-д үүсгэгдсэн баркодуудтай давхцахгүй байх
+      const usedInBatch = new Set<string>()
+      for (const p of toInsert) {
+        if (p.barcode && p.barcode.trim()) {
+          usedInBatch.add(p.barcode.trim())
+        }
+      }
+      for (const p of toInsert) {
+        if (!p.barcode || !p.barcode.trim()) {
+          let candidate = `${prefix}${String(nextSeq).padStart(5, '0')}`
+          while (usedInBatch.has(candidate)) {
+            nextSeq++
+            candidate = `${prefix}${String(nextSeq).padStart(5, '0')}`
+          }
+          p.barcode = candidate
+          usedInBatch.add(candidate)
+          nextSeq++
+        }
       }
     }
 

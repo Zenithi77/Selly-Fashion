@@ -723,6 +723,50 @@ function AdminProductsContent() {
                         <div className="min-w-0">
                           <p className="font-medium text-slate-900 truncate">{product.name}</p>
                           <p className="text-sm text-slate-500 truncate">{product.slug}</p>
+                          {product.barcode && (
+                            <p className="text-[11px] font-mono text-slate-400 truncate">📊 {product.barcode}</p>
+                          )}
+                          {/* Variants summary: size + color бүрийн нөөц */}
+                          {product.variants && product.variants.length > 0 ? (
+                            <div className="mt-1.5 flex flex-wrap gap-1 max-w-md">
+                              {product.variants.slice(0, 8).map((v, idx) => {
+                                const total = (v.store_quantity ?? 0) + (v.warehouse_quantity ?? 0)
+                                return (
+                                  <span
+                                    key={idx}
+                                    title={`Дэлгүүр: ${v.store_quantity ?? 0} | Агуулах: ${v.warehouse_quantity ?? 0}`}
+                                    className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 border border-emerald-200 rounded-full text-[11px] text-emerald-700"
+                                  >
+                                    {v.size && <span className="font-semibold">{v.size}</span>}
+                                    {v.color && (
+                                      <span className="text-slate-600">
+                                        {v.size ? '·' : ''} {v.color}
+                                      </span>
+                                    )}
+                                    <span className="text-emerald-600 font-medium">×{total}</span>
+                                  </span>
+                                )
+                              })}
+                              {product.variants.length > 8 && (
+                                <span className="px-2 py-0.5 text-[11px] text-slate-500">
+                                  +{product.variants.length - 8}
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="mt-1.5 flex flex-wrap gap-1">
+                              {(product.sizes || []).slice(0, 6).map((s, idx) => (
+                                <span key={`s-${idx}`} className="px-1.5 py-0.5 bg-slate-100 text-slate-600 text-[11px] rounded">
+                                  {s}
+                                </span>
+                              ))}
+                              {(product.colors || []).slice(0, 6).map((c, idx) => (
+                                <span key={`c-${idx}`} className="px-1.5 py-0.5 bg-pink-50 text-pink-600 text-[11px] rounded">
+                                  {c}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </td>
