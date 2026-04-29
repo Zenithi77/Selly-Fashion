@@ -603,18 +603,39 @@ export const api = {
       .eq('product_id', productId)
     if (delError) return { data: null, error: delError }
 
-    const cleaned = variants
-      .filter((v) => (v.size || v.color))
-      .map((v) => ({
+    // Бүтээгдэхүүний барай авах — variant-уудын авто-баркодын prefix болгож ашиглана
+    let productBarcode: string | null = null
+    {
+      const { data: prod } = await supabase
+        .from('products')
+        .select('barcode')
+        .eq('id', productId)
+        .single()
+      productBarcode = prod?.barcode || null
+    }
+
+    const filtered = variants.filter((v) => (v.size || v.color))
+    if (filtered.length === 0) return { data: [], error: null }
+
+    // Variant барай ухаалаг үүсгэх:
+    //  - Хэрэв variant өөрөө барайтай (lookup-аас, эсвэл ашиглагч өгсөн) бол түүнийг үлдээнэ
+    //  - Үгүй бол: бүтээгдэхүүний барай (9 орон) + 2 оронт variant index = 11 оронт код
+    //  - Бүтээгдэхүүн барайгүй бол variant-д ч барай үүсгэхгүй (null)
+    const cleaned = filtered.map((v, idx) => {
+      let variantBarcode: string | null = v.barcode?.trim() || null
+      if (!variantBarcode && productBarcode) {
+        const suffix = String(idx + 1).padStart(2, '0')
+        variantBarcode = `${productBarcode}${suffix}`
+      }
+      return {
         product_id: productId,
         size: v.size || null,
         color: v.color || null,
-        barcode: v.barcode || null,
+        barcode: variantBarcode,
         store_quantity: v.store_quantity ?? 0,
         warehouse_quantity: v.warehouse_quantity ?? 0,
-      }))
-
-    if (cleaned.length === 0) return { data: [], error: null }
+      }
+    })
 
     const { data, error } = await supabase
       .from('product_variants')

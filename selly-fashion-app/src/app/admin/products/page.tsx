@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, Suspense } from 'react'
 import Link from 'next/link'
 import { api, Product, Brand, ClothingType, Subcategory, ProductVariant, supabase } from '@/lib/supabase'
+import BarcodeScanner from '@/components/BarcodeScanner'
 
 // Predefined sizes and colors for quick selection
 const COMMON_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '2XL', '3XL']
@@ -123,6 +124,8 @@ function AdminProductsContent() {
   const [lookupBarcode, setLookupBarcode] = useState('')
   const [lookupLoading, setLookupLoading] = useState(false)
   const [lookupMessage, setLookupMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null)
+  // Camera scanner modal
+  const [scannerOpen, setScannerOpen] = useState(false)
   
   // Form state with string values for better UX (no leading zeros issue)
   const [formData, setFormData] = useState({
@@ -340,6 +343,64 @@ function AdminProductsContent() {
     setCustomSize('')
     setLookupBarcode('')
     setLookupMessage(null)
+  }
+
+  // 🔍 Баркодоор хайж form-ыг бөглөх (manual эсвэл скан хоёуланд хэрэглэгдэнэ)
+  const performBarcodeLookup = async (barcode: string) => {
+    const code = barcode.trim()
+    if (!code) return
+    setLookupBarcode(code)
+    setLookupLoading(true)
+    setLookupMessage(null)
+    try {
+      const res = await fetch(`/api/barcode-lookup?barcode=${encodeURIComponent(code)}`)
+      const data = await res.json()
+      if (data.found && data.product) {
+        const p = data.product
+        // Бараг бүх боломжит талбарыг авах
+        // size/color: string (жишээ нь "Red, Blue" эсвэл "M") эсвэл array байж болно
+        const splitField = (v: unknown): string[] => {
+          if (Array.isArray(v)) return v.filter(Boolean).map(String)
+          if (typeof v === 'string' && v.trim()) {
+            return v.split(/[,;/|]/).map(s => s.trim()).filter(Boolean)
+          }
+          return []
+        }
+        const sizesFromLookup = splitField(p.sizes ?? p.size)
+        const colorsFromLookup = splitField(p.colors ?? p.color)
+        setFormData((prev) => ({
+          ...prev,
+          name: p.title || prev.name,
+          slug: p.title ? generateSlug(p.title) : prev.slug,
+          description: p.description || prev.description,
+          // Лоокапаас барсан бол энэ кодыг хадгална — авто-генерация хийхгүй
+          barcode: p.ean || p.upc || code,
+          country: p.manufacturer || p.country || prev.country,
+          image_url: (p.images && p.images[0]) || prev.image_url,
+          sizes: sizesFromLookup.length > 0 ? Array.from(new Set([...prev.sizes, ...sizesFromLookup])) : prev.sizes,
+          colors: colorsFromLookup.length > 0 ? Array.from(new Set([...prev.colors, ...colorsFromLookup])) : prev.colors,
+        }))
+        setLookupMessage({ type: 'success', text: `✅ Олдлоо (${data.source}): ${p.title || 'Бараа'}` })
+      } else {
+        // Олдоогүй ч баркодыг form-руу хадгална — ингэснээр энэ баркодыг үлдээж бараа нэмнэ
+        setFormData((prev) => ({ ...prev, barcode: code }))
+        setLookupMessage({ type: 'info', text: data.message || 'Олдсонгүй. Баркодыг үлдээж, бусдыг гараар бөглөнө үү.' })
+      }
+    } catch (err) {
+      setLookupMessage({ type: 'error', text: 'Хайлт амжилтгүй: ' + (err instanceof Error ? err.message : 'Network error') })
+    } finally {
+      setLookupLoading(false)
+    }
+  }
+
+  // 📷 Скан хийж амжилттай уншигдсаны дараа: modal нээх + лоокап
+  const handleBarcodeScanned = async (barcode: string) => {
+    setScannerOpen(false)
+    resetForm()
+    setEditingProduct(null)
+    setShowModal(true)
+    // Богино delay — modal нээгдсэний дараа state set хийнэ
+    setTimeout(() => performBarcodeLookup(barcode), 50)
   }
 
   const generateSlug = (name: string, addTimestamp: boolean = false) => {
@@ -698,13 +759,31 @@ function AdminProductsContent() {
               Excel оруулах
             </button>
             <button
+              onClick={() => setScannerOpen(true)}
+              className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-indigo-500 text-white rounded-lg text-sm font-medium hover:bg-indigo-600 transition-colors flex items-center justify-center gap-2"
+              title="Камераар баркод скан хийж бараа нэмэх"
+            >
+              {/* Barcode + camera icon */}
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                <rect x="3" y="6" width="2" height="12" />
+                <rect x="7" y="6" width="1" height="12" />
+                <rect x="10" y="6" width="3" height="12" />
+                <rect x="15" y="6" width="1" height="12" />
+                <rect x="18" y="6" width="3" height="12" />
+              </svg>
+              <span className="hidden sm:inline">Скан / Нэмэх</span>
+              <span className="sm:hidden">Скан</span>
+            </button>
+            <button
               onClick={() => { resetForm(); setEditingProduct(null); setShowModal(true) }}
               className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-pink-500 text-white rounded-lg text-sm font-medium hover:bg-pink-600 transition-colors flex items-center justify-center gap-2"
+              title="Гараар бараа нэмэх"
             >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
               </svg>
-              Нэмэх
+              <span className="hidden sm:inline">Гараар</span>
+              <span className="sm:hidden">+</span>
             </button>
           </div>
         </div>
@@ -898,48 +977,29 @@ function AdminProductsContent() {
                         value={lookupBarcode}
                         onChange={(e) => setLookupBarcode(e.target.value.replace(/[^0-9a-zA-Z]/g, ''))}
                         placeholder="EAN/UPC баркодыг бичиж эсвэл скан хийнэ үү (жишээ: 4006381333931)"
-                        className="flex-1 px-3 py-2 text-sm bg-white border border-indigo-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none font-mono"
+                        className="flex-1 min-w-0 px-3 py-2 text-sm bg-white border border-indigo-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none font-mono"
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
                             e.preventDefault()
-                            ;(document.getElementById('barcode-lookup-btn') as HTMLButtonElement | null)?.click()
+                            performBarcodeLookup(lookupBarcode)
                           }
                         }}
                       />
                       <button
-                        id="barcode-lookup-btn"
+                        type="button"
+                        onClick={() => setScannerOpen(true)}
+                        className="px-3 py-2 bg-white border border-indigo-300 text-indigo-600 text-sm font-medium rounded-lg hover:bg-indigo-50 whitespace-nowrap"
+                        title="Камераар скан"
+                      >
+                        📷
+                      </button>
+                      <button
                         type="button"
                         disabled={lookupLoading || !lookupBarcode.trim()}
-                        onClick={async () => {
-                          setLookupLoading(true)
-                          setLookupMessage(null)
-                          try {
-                            const res = await fetch(`/api/barcode-lookup?barcode=${encodeURIComponent(lookupBarcode.trim())}`)
-                            const data = await res.json()
-                            if (data.found && data.product) {
-                              const p = data.product
-                              setFormData((prev) => ({
-                                ...prev,
-                                name: p.title || prev.name,
-                                slug: p.title ? generateSlug(p.title) : prev.slug,
-                                description: p.description || prev.description,
-                                barcode: p.ean || p.upc || lookupBarcode.trim(),
-                                country: p.manufacturer || prev.country,
-                                image_url: (p.images && p.images[0]) || prev.image_url,
-                              }))
-                              setLookupMessage({ type: 'success', text: `✅ Олдлоо (${data.source}): ${p.title || 'Бараа'}` })
-                            } else {
-                              setLookupMessage({ type: 'info', text: data.message || 'Олдсонгүй. Гараар бөглөнө үү.' })
-                            }
-                          } catch (err) {
-                            setLookupMessage({ type: 'error', text: 'Хайлт амжилтгүй: ' + (err instanceof Error ? err.message : 'Network error') })
-                          } finally {
-                            setLookupLoading(false)
-                          }
-                        }}
+                        onClick={() => performBarcodeLookup(lookupBarcode)}
                         className="px-4 py-2 bg-indigo-500 text-white text-sm font-medium rounded-lg hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                       >
-                        {lookupLoading ? '⏳ Хайж байна...' : '🔍 Хайх'}
+                        {lookupLoading ? '⏳' : '🔍 Хайх'}
                       </button>
                     </div>
                     {lookupMessage && (
@@ -1899,6 +1959,14 @@ function AdminProductsContent() {
           </div>
         )}
       </div>
+
+      {/* 📷 Camera barcode scanner */}
+      <BarcodeScanner
+        open={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+        onDetected={handleBarcodeScanned}
+        title="Бараа нэмэх — баркод скан"
+      />
     </main>
   )
 }

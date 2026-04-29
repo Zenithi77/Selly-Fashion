@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { api, Product, ProductVariant, StockMovement, StockPaymentMethod, StockReason, StockSource } from '@/lib/supabase'
 import { useAuthStore } from '@/lib/store'
 import { useRouter } from 'next/navigation'
+import BarcodeScanner from '@/components/BarcodeScanner'
 
 const PAYMENT_METHODS: { value: StockPaymentMethod; label: string; icon: string; color: string }[] = [
   { value: 'cash', label: 'Бэлэн мөнгө', icon: '💵', color: 'green' },
@@ -47,6 +48,8 @@ export default function AdminSalesPage() {
   const [paymentMethod, setPaymentMethod] = useState<StockPaymentMethod>('cash')
   const [reason, setReason] = useState<StockReason>('sale')
   const [note, setNote] = useState('')
+  const [scannerOpen, setScannerOpen] = useState(false)
+  const [scanFlash, setScanFlash] = useState<{ ok: boolean; text: string } | null>(null)
 
   useEffect(() => {
     if (!isAuthenticated || !isAdmin) {
@@ -105,6 +108,39 @@ export default function AdminSalesPage() {
     } else {
       addToCart(product, null, 'store')
     }
+  }
+
+  // 🔎 Баркодоор бараа хайж олвол шууд сагсанд нэмэх (POS-ийн хурдан горим)
+  function findAndAddByBarcode(barcode: string): boolean {
+    const code = barcode.trim().toLowerCase()
+    if (!code) return false
+    // 1) Variant барай — хамгийн нарийн тохирол
+    for (const p of products) {
+      const variant = p.variants?.find(v => v.barcode?.toLowerCase() === code)
+      if (variant) {
+        addToCart(p, variant, 'store')
+        setScanFlash({ ok: true, text: `✅ ${p.name} — ${variant.size || ''} ${variant.color || ''}` })
+        return true
+      }
+    }
+    // 2) Бүтээгдэхүүний барай
+    const product = products.find(p => p.barcode?.toLowerCase() === code)
+    if (product) {
+      handleProductClick(product)
+      setScanFlash({ ok: true, text: `✅ ${product.name}` })
+      return true
+    }
+    setScanFlash({ ok: false, text: `❌ Олдсонгүй: ${barcode}` })
+    return false
+  }
+
+  function handleScanned(barcode: string) {
+    setScannerOpen(false)
+    if (!findAndAddByBarcode(barcode)) {
+      setSearch(barcode) // олдоогүй бол хайлтанд үлдээнэ
+    }
+    // Auto-clear flash after 2.5s
+    setTimeout(() => setScanFlash(null), 2500)
   }
 
   function updateQty(key: string, qty: number) {
@@ -195,25 +231,52 @@ export default function AdminSalesPage() {
 
         {/* Хайлтын мөр */}
         <div className="mb-4 sticky top-0 z-10 bg-white/90 backdrop-blur rounded-2xl p-3 shadow-sm border">
-          <div className="relative">
-            <input
-              type="text"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="🔍 Бараа эсвэл баркод хайх..."
-              autoFocus
-              className="w-full px-5 py-3 pl-12 border-2 border-emerald-200 rounded-xl text-base focus:border-emerald-500 focus:outline-none"
-            />
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-xl">🔍</div>
-            {search && (
-              <button
-                onClick={() => setSearch('')}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-500"
-              >
-                ✕
-              </button>
-            )}
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && search.trim()) {
+                    e.preventDefault()
+                    // Enter дарахад: яг тохирох барай байвал шууд сагсанд нэмнэ
+                    if (findAndAddByBarcode(search.trim())) {
+                      setSearch('')
+                      setTimeout(() => setScanFlash(null), 2500)
+                    }
+                  }
+                }}
+                placeholder="🔍 Бараа эсвэл баркод хайх (Enter — шууд нэмэх)..."
+                autoFocus
+                className="w-full px-5 py-3 pl-12 border-2 border-emerald-200 rounded-xl text-base focus:border-emerald-500 focus:outline-none"
+              />
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-xl">🔍</div>
+              {search && (
+                <button
+                  onClick={() => setSearch('')}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-500"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+            <button
+              onClick={() => setScannerOpen(true)}
+              className="px-3 sm:px-4 py-3 bg-emerald-500 text-white rounded-xl text-sm font-medium hover:bg-emerald-600 flex items-center gap-2 whitespace-nowrap"
+              title="Камераар баркод скан"
+            >
+              <span className="text-lg">📷</span>
+              <span className="hidden sm:inline">Скан</span>
+            </button>
           </div>
+          {scanFlash && (
+            <div className={`mt-2 text-sm font-medium px-3 py-1.5 rounded-lg ${
+              scanFlash.ok ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'
+            }`}>
+              {scanFlash.text}
+            </div>
+          )}
         </div>
 
         <div className="grid lg:grid-cols-3 gap-4">
@@ -258,6 +321,11 @@ export default function AdminSalesPage() {
                       </div>
                       <div className="p-2">
                         <div className="text-xs font-medium text-slate-900 truncate">{p.name}</div>
+                        {p.barcode && (
+                          <div className="text-[10px] text-slate-400 font-mono truncate" title={p.barcode}>
+                            #{p.barcode}
+                          </div>
+                        )}
                         <div className="flex items-center justify-between mt-1">
                           <span className="text-sm font-bold text-emerald-600">
                             {p.price?.toLocaleString()}₮
@@ -581,6 +649,14 @@ export default function AdminSalesPage() {
           </div>
         </div>
       )}
+
+      {/* 📷 Camera barcode scanner */}
+      <BarcodeScanner
+        open={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+        onDetected={handleScanned}
+        title="Борлуулалт — баркод скан"
+      />
     </div>
   )
 }
