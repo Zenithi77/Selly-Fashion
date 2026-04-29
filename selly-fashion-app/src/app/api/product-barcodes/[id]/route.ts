@@ -27,40 +27,26 @@ export async function GET(
       return NextResponse.json({ error: 'Бүтээгдэхүүн олдсонгүй' }, { status: 404 })
     }
 
-    type Row = Record<string, string | number>
+    type Row = Record<string, string>
     const rows: Row[] = []
 
-    // Эхний мөр: үндсэн бараа
+    // Эхний мөр: үндсэн бараа (зөвхөн нэр + барай)
     rows.push({
       'Нэр': product.name || '',
-      'Хэмжээ': '',
-      'Өнгө': '',
       'Баркод': product.barcode || '',
-      'Дэлгүүр': '',
-      'Агуулах': '',
-      'Нийт': '',
     })
 
     const variants = (product.variants || []) as Array<{
       size?: string | null
       color?: string | null
-      store_quantity?: number
-      warehouse_quantity?: number
       barcode?: string | null
     }>
 
     for (const v of variants) {
       const parts = [v.size, v.color].filter(Boolean).join(' / ')
-      const store = v.store_quantity ?? 0
-      const wh = v.warehouse_quantity ?? 0
       rows.push({
         'Нэр': `${product.name || ''}${parts ? ', ' + parts : ''}`,
-        'Хэмжээ': v.size || '',
-        'Өнгө': v.color || '',
         'Баркод': v.barcode || '',
-        'Дэлгүүр': store,
-        'Агуулах': wh,
-        'Нийт': store + wh,
       })
     }
 
