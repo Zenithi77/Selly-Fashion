@@ -175,8 +175,19 @@ export default function AdminHeroPage() {
     fetchData()
   }
 
+  // Монгол кирилл -> латин транслитераци хийж slug үүсгэнэ
   const generateSlug = (name: string) => {
-    return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+    const map: Record<string, string> = {
+      'а':'a','б':'b','в':'v','г':'g','д':'d','е':'ye','ё':'yo','ж':'j','з':'z','и':'i',
+      'й':'i','к':'k','л':'l','м':'m','н':'n','о':'o','ө':'o','п':'p','р':'r','с':'s',
+      'т':'t','у':'u','ү':'u','ф':'f','х':'kh','ц':'ts','ч':'ch','ш':'sh','щ':'sch',
+      'ъ':'','ы':'i','ь':'','э':'e','ю':'yu','я':'ya'
+    }
+    const transliterated = name.toLowerCase().split('').map(ch => map[ch] ?? ch).join('')
+    let slug = transliterated.replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '')
+    // Хэрэв бүх тэмдэгт хасагдаж хоосон болбол fallback тавина
+    if (!slug) slug = 'item-' + Date.now().toString(36)
+    return slug
   }
 
   if (loading) {

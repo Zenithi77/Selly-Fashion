@@ -121,7 +121,7 @@ export default function Header() {
                 </button>
                 <div className="absolute top-full left-0 w-48 bg-white shadow-xl rounded-xl py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 border border-gray-100">
                   {featuredBrands.map((brand) => (
-                    <Link key={brand.id} href={`/brand/${brand.slug}`} className="block px-4 py-2 text-sm text-gray-700 hover:bg-pink-50 hover:text-pink-500">{brand.name}</Link>
+                    <Link key={brand.id} href={brand.slug ? `/brand/${brand.slug}` : `/shop?brand=${brand.id}`} className="block px-4 py-2 text-sm text-gray-700 hover:bg-pink-50 hover:text-pink-500">{brand.name}</Link>
                   ))}
                   <Link href="/brands-types" className="block px-4 py-2 text-sm font-medium text-pink-500 border-t border-gray-100 mt-1 pt-2">Бүх брэнд үзэх →</Link>
                 </div>
@@ -222,7 +222,7 @@ export default function Header() {
                 </button>
                 <div className={`overflow-hidden transition-all duration-200 ${openSubmenu === 'brands' ? 'max-h-96 pb-2' : 'max-h-0'}`}>
                   {featuredBrands.map((brand) => (
-                    <Link key={brand.id} href={`/brand/${brand.slug}`} onClick={closeMenu} className="block py-2 pl-4 text-sm text-gray-600 hover:text-pink-500">{brand.name}</Link>
+                    <Link key={brand.id} href={brand.slug ? `/brand/${brand.slug}` : `/shop?brand=${brand.id}`} onClick={closeMenu} className="block py-2 pl-4 text-sm text-gray-600 hover:text-pink-500">{brand.name}</Link>
                   ))}
                   <Link href="/brands-types" onClick={closeMenu} className="block py-2 pl-4 text-sm text-pink-500 font-medium">Бүх брэнд үзэх →</Link>
                 </div>

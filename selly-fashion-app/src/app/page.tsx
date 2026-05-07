@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { api, Brand, ClothingType } from '@/lib/supabase'
+import { api, Brand, ClothingType, Product, supabase } from '@/lib/supabase'
 
 export default function Home() {
   const [featuredBrands, setFeaturedBrands] = useState<Brand[]>([])
   const [featuredCategories, setFeaturedCategories] = useState<ClothingType[]>([])
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
+  const [productsLoading, setProductsLoading] = useState(true)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -20,6 +22,32 @@ export default function Home() {
       setLoading(false)
     }
     fetchData()
+  }, [])
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      // Шинээр ирсэн эсвэл онцлох барааг өгөгдлийн сангаас татах
+      const { data } = await supabase
+        .from('products')
+        .select(`*, brand:brands(*), clothing_type:clothing_types(*)`)
+        .or('is_new_arrival.eq.true,is_featured.eq.true')
+        .order('created_at', { ascending: false })
+        .limit(8)
+
+      if (data && data.length > 0) {
+        setFeaturedProducts(data as Product[])
+      } else {
+        // Fallback: хамгийн сүүлд нэмэгдсэн 8 бараа
+        const { data: latest } = await supabase
+          .from('products')
+          .select(`*, brand:brands(*), clothing_type:clothing_types(*)`)
+          .order('created_at', { ascending: false })
+          .limit(8)
+        if (latest) setFeaturedProducts(latest as Product[])
+      }
+      setProductsLoading(false)
+    }
+    fetchProducts()
   }, [])
 
   // Default brands if none from database
@@ -201,74 +229,65 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-8">
-            {/* Product 1 */}
-            <Link href="/product/1" className="group bg-white rounded-2xl border border-pink-50 hover:border-pink-500/30 transition-all overflow-hidden">
-              <div className="aspect-[3/4] overflow-hidden mb-4">
-                <img
-                  src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=500&q=80"
-                  alt="Product"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
+            {productsLoading ? (
+              Array(4).fill(0).map((_, idx) => (
+                <div key={idx} className="bg-white rounded-2xl border border-pink-50 overflow-hidden">
+                  <div className="aspect-[3/4] bg-slate-200 animate-pulse"></div>
+                  <div className="p-4 space-y-2">
+                    <div className="h-3 bg-slate-200 rounded animate-pulse w-1/3"></div>
+                    <div className="h-4 bg-slate-200 rounded animate-pulse w-2/3"></div>
+                    <div className="h-3 bg-slate-200 rounded animate-pulse w-1/4"></div>
+                  </div>
+                </div>
+              ))
+            ) : featuredProducts.length === 0 ? (
+              <div className="col-span-full text-center py-12 text-slate-500">
+                Одоогоор бараа байхгүй байна.
               </div>
-              <div className="p-4">
-                <p className="text-xs text-pink-500 uppercase tracking-wide mb-1">LUMINA</p>
-                <h3 className="font-medium mb-1 text-slate-900">Silk Midi Dress</h3>
-                <p className="text-sm text-slate-600">$289.00</p>
-              </div>
-            </Link>
-
-            {/* Product 2 */}
-            <Link href="/product/2" className="group bg-white rounded-2xl border border-pink-50 hover:border-pink-500/30 transition-all overflow-hidden">
-              <div className="aspect-[3/4] overflow-hidden mb-4 relative">
-                <img
-                  src="https://images.unsplash.com/photo-1509631179647-0177331693ae?w=500&q=80"
-                  alt="Product"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <span className="absolute top-3 left-3 bg-pink-500 text-white text-xs px-2 py-1 rounded-full">NEW</span>
-              </div>
-              <div className="p-4">
-                <p className="text-xs text-pink-500 uppercase tracking-wide mb-1">AURA</p>
-                <h3 className="font-medium mb-1 text-slate-900">Oversized Blazer</h3>
-                <p className="text-sm text-slate-600">$425.00</p>
-              </div>
-            </Link>
-
-            {/* Product 3 */}
-            <Link href="/product/3" className="group bg-white rounded-2xl border border-pink-50 hover:border-pink-500/30 transition-all overflow-hidden">
-              <div className="aspect-[3/4] overflow-hidden mb-4">
-                <img
-                  src="https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=500&q=80"
-                  alt="Product"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-              </div>
-              <div className="p-4">
-                <p className="text-xs text-pink-500 uppercase tracking-wide mb-1">VELVET</p>
-                <h3 className="font-medium mb-1 text-slate-900">Cashmere Sweater</h3>
-                <p className="text-sm text-slate-600">$195.00</p>
-              </div>
-            </Link>
-
-            {/* Product 4 */}
-            <Link href="/product/4" className="group bg-white rounded-2xl border border-pink-50 hover:border-pink-500/30 transition-all overflow-hidden">
-              <div className="aspect-[3/4] overflow-hidden mb-4 relative">
-                <img
-                  src="https://images.unsplash.com/photo-1487222477894-8943e31ef7b2?w=500&q=80"
-                  alt="Product"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <span className="absolute top-3 left-3 bg-pink-500 text-white text-xs px-2 py-1 rounded-full">SALE</span>
-              </div>
-              <div className="p-4">
-                <p className="text-xs text-pink-500 uppercase tracking-wide mb-1">NOVA</p>
-                <h3 className="font-medium mb-1 text-slate-900">Leather Crossbody Bag</h3>
-                <p className="text-sm">
-                  <span className="text-pink-500 font-semibold">$159.00</span>
-                  <span className="text-slate-400 line-through ml-2">$249.00</span>
-                </p>
-              </div>
-            </Link>
+            ) : (
+              featuredProducts.map((product) => {
+                const imgSrc = (product.images && product.images[0]) || product.image_url || 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=500&q=80'
+                const showSale = product.is_on_sale && product.original_price && product.original_price > product.price
+                return (
+                  <Link
+                    key={product.id}
+                    href={`/product/${product.slug || product.id}`}
+                    className="group bg-white rounded-2xl border border-pink-50 hover:border-pink-500/30 transition-all overflow-hidden"
+                  >
+                    <div className="aspect-[3/4] overflow-hidden mb-4 relative">
+                      <img
+                        src={imgSrc}
+                        alt={product.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      {showSale ? (
+                        <span className="absolute top-3 left-3 bg-pink-500 text-white text-xs px-2 py-1 rounded-full">SALE</span>
+                      ) : product.is_new_arrival ? (
+                        <span className="absolute top-3 left-3 bg-pink-500 text-white text-xs px-2 py-1 rounded-full">NEW</span>
+                      ) : product.is_featured ? (
+                        <span className="absolute top-3 left-3 bg-amber-500 text-white text-xs px-2 py-1 rounded-full">HOT</span>
+                      ) : null}
+                    </div>
+                    <div className="p-4">
+                      <p className="text-xs text-pink-500 uppercase tracking-wide mb-1">
+                        {product.brand?.name || ''}
+                      </p>
+                      <h3 className="font-medium mb-1 text-slate-900 line-clamp-1">{product.name}</h3>
+                      <p className="text-sm">
+                        {showSale ? (
+                          <>
+                            <span className="text-pink-500 font-semibold">{product.price.toLocaleString()}₮</span>
+                            <span className="text-slate-400 line-through ml-2">{product.original_price!.toLocaleString()}₮</span>
+                          </>
+                        ) : (
+                          <span className="text-slate-600">{product.price.toLocaleString()}₮</span>
+                        )}
+                      </p>
+                    </div>
+                  </Link>
+                )
+              })
+            )}
           </div>
 
           <div className="text-center mt-12 sm:hidden">
