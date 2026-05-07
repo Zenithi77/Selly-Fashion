@@ -258,8 +258,9 @@ export default function AdminHeroPage() {
             <div className="bg-white rounded-2xl p-6 border border-slate-100 mb-6">
               <h3 className="font-bold mb-4 text-slate-900">Hero Section Preview</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-                {[1, 2, 3, 4, 5].map((order) => {
-                  const brand = featuredBrands.find(b => b.featured_order === order)
+                {Array.from({ length: 5 }).map((_, idx) => {
+                  const order = idx + 1
+                  const brand = featuredBrands[idx]
                   return (
                     <div
                       key={order}
@@ -304,7 +305,9 @@ export default function AdminHeroPage() {
                 <h3 className="font-bold text-slate-900">Бүх брэндүүд</h3>
               </div>
               <div className="divide-y divide-slate-100">
-                {brands.map((brand) => (
+                {brands.map((brand) => {
+                  const displayPos = brand.is_featured ? featuredBrands.findIndex(b => b.id === brand.id) + 1 : 0
+                  return (
                   <div key={brand.id} className="p-4 flex items-center gap-4 hover:bg-slate-50 transition-colors">
                     <div className="w-16 h-20 rounded-lg overflow-hidden bg-slate-100 flex-shrink-0">
                       {brand.image_url ? (
@@ -318,9 +321,9 @@ export default function AdminHeroPage() {
                       <p className="text-sm text-slate-500">{brand.tagline || 'Tagline байхгүй'}</p>
                     </div>
                     <div className="flex items-center gap-3">
-                      {brand.is_featured && (
+                      {brand.is_featured && displayPos > 0 && (
                         <span className="px-3 py-1 bg-pink-100 text-pink-600 rounded-full text-xs font-medium">
-                          #{brand.featured_order}
+                          #{displayPos}
                         </span>
                       )}
                       <button
@@ -331,7 +334,8 @@ export default function AdminHeroPage() {
                       </button>
                     </div>
                   </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           </div>
@@ -348,8 +352,9 @@ export default function AdminHeroPage() {
             <div className="bg-white rounded-2xl p-6 border border-slate-100 mb-6">
               <h3 className="font-bold mb-4 text-slate-900">Shop by Category Preview</h3>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {[1, 2, 3, 4].map((order) => {
-                  const category = featuredCategories.find(c => c.featured_order === order)
+                {Array.from({ length: 4 }).map((_, idx) => {
+                  const order = idx + 1
+                  const category = featuredCategories[idx]
                   return (
                     <div
                       key={order}
@@ -393,7 +398,9 @@ export default function AdminHeroPage() {
                 <h3 className="font-bold text-slate-900">Бүх категориуд</h3>
               </div>
               <div className="divide-y divide-slate-100">
-                {categories.map((category) => (
+                {categories.map((category) => {
+                  const displayPos = category.is_featured ? featuredCategories.findIndex(c => c.id === category.id) + 1 : 0
+                  return (
                   <div key={category.id} className="p-4 flex items-center gap-4 hover:bg-slate-50 transition-colors">
                     <div className="w-16 h-20 rounded-lg overflow-hidden bg-slate-100 flex-shrink-0">
                       {category.image_url ? (
@@ -407,9 +414,9 @@ export default function AdminHeroPage() {
                       <p className="text-sm text-slate-500">{category.slug}</p>
                     </div>
                     <div className="flex items-center gap-3">
-                      {category.is_featured && (
+                      {category.is_featured && displayPos > 0 && (
                         <span className="px-3 py-1 bg-pink-100 text-pink-600 rounded-full text-xs font-medium">
-                          #{category.featured_order}
+                          #{displayPos}
                         </span>
                       )}
                       <button
@@ -420,7 +427,8 @@ export default function AdminHeroPage() {
                       </button>
                     </div>
                   </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           </div>

@@ -3,16 +3,18 @@
 import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { api, Product, ClothingType, Subcategory } from '@/lib/supabase'
+import { api, Product, ClothingType, Subcategory, Brand } from '@/lib/supabase'
 import { useCartStore, useWishlistStore } from '@/lib/store'
 
 function ShopContent() {
   const searchParams = useSearchParams()
   const categoryParam = searchParams.get('category')
+  const brandParam = searchParams.get('brand')
   
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<ClothingType[]>([])
   const [subcategories, setSubcategories] = useState<Subcategory[]>([])
+  const [brands, setBrands] = useState<Brand[]>([])
   const [loading, setLoading] = useState(true)
   
   const [selectedCategory, setSelectedCategory] = useState<string | null>(categoryParam)
@@ -33,15 +35,17 @@ function ShopContent() {
     const fetchData = async () => {
       setLoading(true)
       
-      const [productsRes, categoriesRes, subcatsRes] = await Promise.all([
+      const [productsRes, categoriesRes, subcatsRes, brandsRes] = await Promise.all([
         api.getProducts(),
         api.getClothingTypes(),
-        api.getAllSubcategories()
+        api.getAllSubcategories(),
+        api.getBrands()
       ])
       
       if (productsRes.data) setProducts(productsRes.data)
       if (categoriesRes.data) setCategories(categoriesRes.data)
       if (subcatsRes.data) setSubcategories(subcatsRes.data)
+      if (brandsRes.data) setBrands(brandsRes.data)
       
       setLoading(false)
     }
@@ -61,6 +65,28 @@ function ShopContent() {
   }
   if (selectedSubcategory) {
     filteredProducts = filteredProducts.filter(p => p.subcategory_id === selectedSubcategory)
+  }
+  // Brand filter (from ?brand= URL param)
+  let brandHeading: string | null = null
+  if (brandParam) {
+    if (brandParam === 'other') {
+      // "Other Brands": Үндсэн hero ҮНД ОРООГҮЙ брэндүүдийн барааг үзүүлнэ
+      const featuredBrandIds = new Set(
+        brands
+          .filter(b => b.is_featured && b.slug !== 'other-brands' && b.slug !== 'other' &&
+                       (b.name || '').toLowerCase().trim() !== 'other brands')
+          .map(b => b.id)
+      )
+      filteredProducts = filteredProducts.filter(p => p.brand_id && !featuredBrandIds.has(p.brand_id))
+      brandHeading = 'Other Brands'
+    } else {
+      // Нэрийн slug эсвэл id байж болно
+      const matchedBrand = brands.find(b => b.slug === brandParam || b.id === brandParam)
+      if (matchedBrand) {
+        filteredProducts = filteredProducts.filter(p => p.brand_id === matchedBrand.id)
+        brandHeading = matchedBrand.name
+      }
+    }
   }
 
   // Sort products
@@ -110,8 +136,14 @@ function ShopContent() {
             <span className="text-slate-300">/</span>
             <span className="text-pink-500 font-medium">Дэлгүүр</span>
           </nav>
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">Бүх бүтээгдэхүүн</h1>
-          <p className="text-slate-600">Манай бүтээгдэхүүнүүдтэй танилцана уу</p>
+          <h1 className="text-4xl font-bold text-slate-900 mb-2">{brandHeading || 'Бүх бүтээгдэхүүн'}</h1>
+          <p className="text-slate-600">
+            {brandHeading
+              ? (brandParam === 'other'
+                  ? 'Үндсэн hero хэсэгт үзүүлэгдээгүй бусад брэндүүд'
+                  : `${brandHeading} брэндийн бараанууд`)
+              : 'Манай бүтээгдэхүүнүүдтэй танилцана уу'}
+          </p>
           <p className="text-sm text-slate-500 mt-3">{sortedProducts.length} бүтээгдэхүүн</p>
         </div>
       </div>

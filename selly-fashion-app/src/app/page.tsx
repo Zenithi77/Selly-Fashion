@@ -111,10 +111,17 @@ export default function Home() {
                 <div key={idx} className="aspect-[3/4] rounded-2xl bg-white/5 animate-pulse"></div>
               ))
             ) : (
-              brands.slice(0, 5).map((brand) => (
+              brands.slice(0, 5).map((brand) => {
+                // "Other Brands" тусгай карт: онцлох биш бусад бүх брэндийн бараа руу шилжүүлнэ
+                const isOther = (brand.slug === 'other-brands' || brand.slug === 'other' ||
+                                 (brand.name || '').toLowerCase().trim() === 'other brands')
+                const href = isOther
+                  ? `/shop?brand=other`
+                  : (brand.slug ? `/brand/${brand.slug}` : `/shop?brand=${brand.id}`)
+                return (
                 <Link 
                   key={brand.id} 
-                  href={brand.slug ? `/brand/${brand.slug}` : `/shop?brand=${brand.id}`} 
+                  href={href} 
                   className="group relative aspect-[3/4] rounded-2xl overflow-hidden cursor-pointer"
                 >
                   <img
@@ -142,7 +149,8 @@ export default function Home() {
                     </span>
                   </div>
                 </Link>
-              ))
+                )
+              })
             )}
           </div>
 
