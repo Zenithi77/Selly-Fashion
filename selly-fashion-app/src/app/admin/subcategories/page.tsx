@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { api, Subcategory, ClothingType } from '@/lib/supabase'
+import { generateSlug } from '@/lib/slug'
 
 export default function AdminSubcategoriesPage() {
   const [subcategories, setSubcategories] = useState<Subcategory[]>([])
@@ -122,10 +123,6 @@ export default function AdminSubcategoriesPage() {
       is_active: true,
       display_order: ''
     })
-  }
-
-  const generateSlug = (name: string) => {
-    return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-а-яөү]/gi, '')
   }
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {

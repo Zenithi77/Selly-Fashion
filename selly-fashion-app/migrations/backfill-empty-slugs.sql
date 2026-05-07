@@ -35,20 +35,25 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 
--- Backfill brands
+-- Backfill brands: empty OR contains non-ASCII (cyrillic) characters
 UPDATE brands
 SET slug = COALESCE(NULLIF(mn_slugify(name), ''), 'brand-' || substr(id::text, 1, 8))
-WHERE slug IS NULL OR trim(slug) = '';
+WHERE slug IS NULL OR trim(slug) = '' OR slug ~ '[^a-z0-9-]';
 
 -- Backfill clothing_types
 UPDATE clothing_types
 SET slug = COALESCE(NULLIF(mn_slugify(name), ''), 'category-' || substr(id::text, 1, 8))
-WHERE slug IS NULL OR trim(slug) = '';
+WHERE slug IS NULL OR trim(slug) = '' OR slug ~ '[^a-z0-9-]';
 
 -- Backfill subcategories (if exists)
 UPDATE subcategories
 SET slug = COALESCE(NULLIF(mn_slugify(name), ''), 'subcategory-' || substr(id::text, 1, 8))
-WHERE slug IS NULL OR trim(slug) = '';
+WHERE slug IS NULL OR trim(slug) = '' OR slug ~ '[^a-z0-9-]';
+
+-- Also backfill products that may have cyrillic slugs
+UPDATE products
+SET slug = COALESCE(NULLIF(mn_slugify(name), ''), 'product-' || substr(id::text, 1, 8)) || '-' || substr(id::text, 1, 4)
+WHERE slug IS NULL OR trim(slug) = '' OR slug ~ '[^a-z0-9-]';
 
 -- Optional: enforce non-empty slug going forward
 ALTER TABLE brands         ADD CONSTRAINT brands_slug_not_empty         CHECK (slug IS NOT NULL AND length(trim(slug)) > 0) NOT VALID;

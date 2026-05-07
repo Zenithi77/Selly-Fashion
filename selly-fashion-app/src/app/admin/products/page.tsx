@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, Suspense } from 'react'
 import Link from 'next/link'
 import { api, Product, Brand, ClothingType, Subcategory, ProductVariant, supabase } from '@/lib/supabase'
+import { generateSlug } from '@/lib/slug'
 import BarcodeScanner from '@/components/BarcodeScanner'
 
 // Predefined sizes and colors for quick selection
@@ -411,14 +412,6 @@ function AdminProductsContent() {
     setShowModal(true)
     // Богино delay — modal нээгдсэний дараа state set хийнэ
     setTimeout(() => performBarcodeLookup(barcode), 50)
-  }
-
-  const generateSlug = (name: string, addTimestamp: boolean = false) => {
-    const baseSlug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-а-яөү]/gi, '')
-    if (addTimestamp) {
-      return `${baseSlug}-${Date.now()}`
-    }
-    return baseSlug
   }
 
   // Toggle size selection
