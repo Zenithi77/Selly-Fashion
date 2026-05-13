@@ -32,8 +32,8 @@ export async function GET(
 
     // Эхний мөр: үндсэн бараа (зөвхөн нэр + барай)
     rows.push({
-      'Нэр': product.name || '',
-      'Баркод': product.barcode || '',
+      'Product name': product.name || '',
+      'Number': product.barcode || '',
     })
 
     const variants = (product.variants || []) as Array<{
@@ -45,8 +45,8 @@ export async function GET(
     for (const v of variants) {
       const parts = [v.size, v.color].filter(Boolean).join(' / ')
       rows.push({
-        'Нэр': `${product.name || ''}${parts ? ', ' + parts : ''}`,
-        'Баркод': v.barcode || '',
+        'Product name': `${product.name || ''}${parts ? ', ' + parts : ''}`,
+        'Number': v.barcode || '',
       })
     }
 

@@ -603,7 +603,8 @@ export const api = {
       .eq('product_id', productId)
     if (delError) return { data: null, error: delError }
 
-    // Бүтээгдэхүүний барай авах — variant-уудын авто-баркодын prefix болгож ашиглана
+    // Бүтээгдэхүүний барай авах — variant-уудын авто-баркодын prefix болгож ашиглана.
+    // Хэрэв бүтээгдэхүүн барайгүй бол энд автоматаар үүсгэж өгнө (variant барай null үлдэхээс сэргийлнэ).
     let productBarcode: string | null = null
     {
       const { data: prod } = await supabase
@@ -611,7 +612,22 @@ export const api = {
         .select('barcode')
         .eq('id', productId)
         .single()
-      productBarcode = prod?.barcode || null
+      productBarcode = prod?.barcode?.trim() || null
+      if (!productBarcode) {
+        const newProductBarcode = await generateNextBarcode()
+        const { data: updatedProd, error: updErr } = await supabase
+          .from('products')
+          .update({ barcode: newProductBarcode, updated_at: new Date().toISOString() })
+          .eq('id', productId)
+          .select('barcode')
+          .single()
+        if (!updErr) {
+          productBarcode = (updatedProd?.barcode as string | null) || newProductBarcode
+        } else {
+          // Хэрэв update амжилтгүй бол fallback болгож үүсгэсэн утгыг ашиглана
+          productBarcode = newProductBarcode
+        }
+      }
     }
 
     const filtered = variants.filter((v) => (v.size || v.color))
@@ -620,7 +636,7 @@ export const api = {
     // Variant барай ухаалаг үүсгэх:
     //  - Хэрэв variant өөрөө барайтай (lookup-аас, эсвэл ашиглагч өгсөн) бол түүнийг үлдээнэ
     //  - Үгүй бол: бүтээгдэхүүний барай (9 орон) + 2 оронт variant index = 11 оронт код
-    //  - Бүтээгдэхүүн барайгүй бол variant-д ч барай үүсгэхгүй (null)
+    //  - productBarcode энд заавал утгатай (дээр баталгаажсан)
     const cleaned = filtered.map((v, idx) => {
       let variantBarcode: string | null = v.barcode?.trim() || null
       if (!variantBarcode && productBarcode) {
