@@ -59,7 +59,7 @@ export async function GET(
       return { wch: Math.min(maxLen + 2, 50) }
     })
 
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Barcode')
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1')
 
     // Хуучин .xls (BIFF8) форматаар үүсгэнэ — баркод хэвлэх утасны аппууд (label printer) ихэвчлэн
     // зөвхөн энэ форматыг зөв уншдаг. .xlsx файлуудыг "xls/xlsx protocol failed, cannot parse" гэж
