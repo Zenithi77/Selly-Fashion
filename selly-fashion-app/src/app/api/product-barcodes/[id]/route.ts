@@ -59,17 +59,23 @@ export async function GET(
       return { wch: Math.min(maxLen + 2, 50) }
     })
 
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Баркод')
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Barcode')
 
-    const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' })
+    // Хуучин .xls (BIFF8) форматаар үүсгэнэ — баркод хэвлэх утасны аппууд (label printer) ихэвчлэн
+    // зөвхөн энэ форматыг зөв уншдаг. .xlsx файлуудыг "xls/xlsx protocol failed, cannot parse" гэж
+    // алдаа өгдөг.
+    const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'biff8' }) as Buffer
+    const body = new Uint8Array(buffer)
     const safeName = (product.name || 'product').replace(/[^a-zA-Z0-9-_]+/g, '_').slice(0, 40)
-    const filename = `barcodes-${safeName}-${Date.now()}.xlsx`
+    const filename = `barcodes-${safeName}-${Date.now()}.xls`
 
-    return new NextResponse(buffer, {
+    return new NextResponse(body, {
       status: 200,
       headers: {
-        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'Content-Type': 'application/vnd.ms-excel',
         'Content-Disposition': `attachment; filename="${filename}"`,
+        'Content-Length': String(body.byteLength),
+        'Cache-Control': 'no-store',
       },
     })
   } catch (e) {
