@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, Suspense } from 'react'
 import Link from 'next/link'
 import { api, Product, Brand, ClothingType, Subcategory, ProductVariant, supabase } from '@/lib/supabase'
 import { generateSlug } from '@/lib/slug'
+import { COUNTRIES, getCountryFromBarcode } from '@/lib/constants'
 import BarcodeScanner from '@/components/BarcodeScanner'
 
 // Predefined sizes and colors for quick selection
@@ -83,6 +84,7 @@ function AdminProductsContent() {
   
   // Brand/Category modal state
   const [showBrandModal, setShowBrandModal] = useState(false)
+  const [newBrandCountry, setNewBrandCountry] = useState('')
   const [showCategoryModal, setShowCategoryModal] = useState(false)
   const [newBrandName, setNewBrandName] = useState('')
   const [newCategoryName, setNewCategoryName] = useState('')
@@ -375,15 +377,22 @@ function AdminProductsContent() {
         }
         const sizesFromLookup = splitField(p.sizes ?? p.size)
         const colorsFromLookup = splitField(p.colors ?? p.color)
+        const finalBarcode = p.ean || p.upc || code
+        // GS1 prefix-аас улсыг тооцоолно (зөвхөн манай дэмждэг 6 улсаас)
+        const detectedCountry = getCountryFromBarcode(finalBarcode)
+        // Нэрнээс slug автоматаар үүсгэнэ — нэр байхгүй бол хоосон үлдэнэ
+        const lookupName = p.title || ''
         setFormData((prev) => ({
           ...prev,
-          name: p.title || prev.name,
-          // slug-ыг хоослоно — handleSubmit нь timestamp-тай unique slug үүсгэнэ
-          slug: '',
+          name: lookupName || prev.name,
+          // Нэр байгаа бол нэрнээсээ slug үүсгэнэ, үгүй бол өмнөхөө хадгална
+          slug: lookupName ? generateSlug(lookupName, false) : prev.slug,
           description: p.description || prev.description,
           // Лоокапаас барсан бол энэ кодыг хадгална — авто-генерация хийхгүй
-          barcode: p.ean || p.upc || code,
-          country: p.manufacturer || p.country || prev.country,
+          barcode: finalBarcode,
+          // Эхэнд: API-аас ирсэн manufacturer/country, дараа нь баркодын prefix-ээс илрүүлсэн улс,
+          // эцэст нь өмнөх утга
+          country: p.manufacturer || p.country || detectedCountry || prev.country,
           image_url: (p.images && p.images[0]) || prev.image_url,
           images: Array.isArray(p.images) && p.images.length > 0
             ? Array.from(new Set([...(prev.images || []), ...p.images.filter(Boolean)]))
@@ -394,7 +403,13 @@ function AdminProductsContent() {
         setLookupMessage({ type: 'success', text: `✅ Олдлоо (${data.source}): ${p.title || 'Бараа'}` })
       } else {
         // Олдоогүй ч баркодыг form-руу хадгална — ингэснээр энэ баркодыг үлдээж бараа нэмнэ
-        setFormData((prev) => ({ ...prev, barcode: code }))
+        // Баркодын prefix-ээс улсыг таамаглаж бөглөнө
+        const detectedCountry = getCountryFromBarcode(code)
+        setFormData((prev) => ({
+          ...prev,
+          barcode: code,
+          country: prev.country || detectedCountry || '',
+        }))
         setLookupMessage({ type: 'info', text: data.message || 'Олдсонгүй. Баркодыг үлдээж, бусдыг гараар бөглөнө үү.' })
       }
     } catch (err) {
@@ -517,9 +532,10 @@ function AdminProductsContent() {
     setSavingBrand(true)
     try {
       const slug = generateSlug(newBrandName)
+      const country = (newBrandCountry || formData.country || '').trim() || null
       const { data, error } = await supabase
         .from('brands')
-        .insert({ name: newBrandName.trim(), slug })
+        .insert({ name: newBrandName.trim(), slug, country })
         .select()
         .single()
       
@@ -531,9 +547,15 @@ function AdminProductsContent() {
         setBrands(brandsResult.data)
       }
       if (data) {
-        setFormData(prev => ({ ...prev, brand_id: data.id }))
+        setFormData(prev => ({
+          ...prev,
+          brand_id: data.id,
+          // Хэрэв product дээр улс хоосон бол брэндийн улсыг автоматаар тавина
+          country: prev.country || (country ?? ''),
+        }))
       }
       setNewBrandName('')
+      setNewBrandCountry('')
       setShowBrandModal(false)
     } catch (error) {
       console.error('Error adding brand:', error)
@@ -1073,13 +1095,29 @@ function AdminProductsContent() {
                 {/* Country field */}
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Улс</label>
-                  <input
-                    type="text"
+                  <select
                     value={formData.country}
-                    onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                    placeholder="Жишээ: Монгол, Хятад, Солонгос..."
+                    onChange={(e) => {
+                      const newCountry = e.target.value
+                      setFormData((prev) => {
+                        // Хэрэв одоо сонгогдсон брэнд шинэ улсад харьяалагдахгүй бол брэндийг хоослоно
+                        const currentBrand = brands.find(b => b.id === prev.brand_id)
+                        const brandStillValid = !newCountry || !currentBrand || !currentBrand.country || currentBrand.country === newCountry
+                        return {
+                          ...prev,
+                          country: newCountry,
+                          brand_id: brandStillValid ? prev.brand_id : '',
+                        }
+                      })
+                    }}
                     className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
-                  />
+                  >
+                    <option value="">Сонгох...</option>
+                    {COUNTRIES.map((c) => (
+                      <option key={c.value} value={c.value}>{c.label}</option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-slate-500 mt-1">Улс сонговол доорх брэндийн жагсаалт шүүгдэнэ</p>
                 </div>
 
                 <div>
@@ -1307,14 +1345,31 @@ function AdminProductsContent() {
                         onChange={(e) => setFormData({ ...formData, brand_id: e.target.value })}
                         className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
                       >
-                        <option value="">Сонгох...</option>
-                        {brands.map((brand) => (
-                          <option key={brand.id} value={brand.id}>{brand.name}</option>
-                        ))}
+                        <option value="">
+                          {formData.country
+                            ? `${formData.country} улсын брэнд сонгох...`
+                            : 'Сонгох...'}
+                        </option>
+                        {brands
+                          .filter((brand) => {
+                            if (!formData.country) return true
+                            // Улсгүй брэндүүдийг бас харуулна (legacy)
+                            if (!brand.country) return true
+                            return brand.country === formData.country
+                          })
+                          .map((brand) => (
+                            <option key={brand.id} value={brand.id}>
+                              {brand.name}
+                              {brand.country ? ` · ${brand.country}` : ''}
+                            </option>
+                          ))}
                       </select>
                       <button
                         type="button"
-                        onClick={() => setShowBrandModal(true)}
+                        onClick={() => {
+                          setNewBrandCountry(formData.country || '')
+                          setShowBrandModal(true)
+                        }}
                         className="w-10 h-10 bg-pink-500 hover:bg-pink-600 text-white rounded-xl flex items-center justify-center font-bold text-xl transition-colors"
                         title="Шинэ брэнд нэмэх"
                       >
@@ -1627,12 +1682,26 @@ function AdminProductsContent() {
                     autoFocus
                   />
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Улс</label>
+                  <select
+                    value={newBrandCountry}
+                    onChange={(e) => setNewBrandCountry(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none"
+                  >
+                    <option value="">Сонгох...</option>
+                    {COUNTRIES.map((c) => (
+                      <option key={c.value} value={c.value}>{c.label}</option>
+                    ))}
+                  </select>
+                </div>
                 <div className="flex gap-3">
                   <button
                     type="button"
                     onClick={() => {
                       setShowBrandModal(false)
                       setNewBrandName('')
+                      setNewBrandCountry('')
                     }}
                     className="flex-1 py-2.5 bg-slate-100 text-slate-700 font-medium rounded-xl hover:bg-slate-200 transition-colors"
                   >

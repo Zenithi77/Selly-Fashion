@@ -76,6 +76,7 @@ export interface Brand {
   image_url: string
   is_featured: boolean
   featured_order: number
+  country?: string | null
   created_at: string
   updated_at: string
 }

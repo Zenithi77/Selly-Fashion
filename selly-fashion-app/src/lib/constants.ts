@@ -22,6 +22,56 @@ export type PaymentStatus = typeof PAYMENT_STATUSES[number];
 export const ORDER_STATUSES = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'] as const;
 export type OrderStatus = typeof ORDER_STATUSES[number];
 
+// Supported origin countries (бид зөвхөн эдгээр улсаас бараа авдаг)
+export const COUNTRIES = [
+  { value: 'Америк',    label: 'Америк (USA)' },
+  { value: 'Монгол',    label: 'Монгол' },
+  { value: 'Хятад',     label: 'Хятад' },
+  { value: 'Канад',     label: 'Канад' },
+  { value: 'Солонгос',  label: 'Солонгос' },
+  { value: 'Австрали',  label: 'Австрали' },
+] as const;
+
+export type CountryValue = typeof COUNTRIES[number]['value'];
+
+// GS1 country prefix → манай улсын нэртэй харгалзах map
+// Reference: https://www.gs1.org/standards/id-keys/company-prefix
+// Зөвхөн дээрх 6 улсыг хамруулна.
+export function getCountryFromBarcode(barcode: string): CountryValue | null {
+  if (!barcode) return null;
+  const digits = barcode.replace(/\D/g, '');
+  if (digits.length < 3) return null;
+
+  // UPC-A (12 digits) — front-pad to EAN-13 with leading 0 (US/Canada)
+  const ean = digits.length === 12 ? '0' + digits : digits;
+  const p2 = parseInt(ean.slice(0, 2), 10);
+  const p3 = parseInt(ean.slice(0, 3), 10);
+
+  // США / Канад: 000–019, 030–039, 060–139
+  if ((p3 >= 0 && p3 <= 19) || (p3 >= 30 && p3 <= 39) || (p3 >= 60 && p3 <= 139)) {
+    // Канадын тусгайлсан мужууд: 754–755
+    return 'Америк';
+  }
+  if (p3 === 754 || p3 === 755) return 'Канад';
+
+  // Хятад: 690–699
+  if (p3 >= 690 && p3 <= 699) return 'Хятад';
+
+  // Солонгос: 880–881
+  if (p3 === 880 || p3 === 881) return 'Солонгос';
+
+  // Австрали: 930–939
+  if (p3 >= 930 && p3 <= 939) return 'Австрали';
+
+  // Монгол: 865
+  if (p3 === 865) return 'Монгол';
+
+  // Хоёр оронтой EAN-8 prefix-ийн зарим хувилбар — дээрхтэй давхцахгүй
+  void p2;
+
+  return null;
+}
+
 // Generate unique payment reference
 // Format: TK-XXXXX (5 characters alphanumeric)
 export function generatePaymentRef(): string {
