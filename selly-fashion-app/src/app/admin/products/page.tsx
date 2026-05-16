@@ -533,23 +533,56 @@ function AdminProductsContent() {
     try {
       const slug = generateSlug(newBrandName)
       const country = (newBrandCountry || formData.country || '').trim() || null
-      const { data, error } = await supabase
-        .from('brands')
-        .insert({ name: newBrandName.trim(), slug, country })
-        .select()
-        .single()
-      
-      if (error) throw error
-      
+
+      // Эхлээд country-той оролдоно. Хэрэв "country" багана үүсээгүй (migration ажиллуулаагүй) бол
+      // алдаа өгөх тул country-гүйгээр дахин оролдоно.
+      let inserted: { id: string; [k: string]: unknown } | null = null
+      let insertErr: { message?: string; code?: string; details?: string; hint?: string } | null = null
+
+      {
+        const { data, error } = await supabase
+          .from('brands')
+          .insert({ name: newBrandName.trim(), slug, country })
+          .select()
+          .single()
+        inserted = data
+        insertErr = error
+      }
+
+      // country багана байхгүйгээс үүдэлтэй алдаа бол country-гүйгээр дахин insert хийнэ
+      if (insertErr && /column .*country.* does not exist/i.test(insertErr.message || '')) {
+        console.warn('brands.country багана үүсээгүй байна. add-country-to-brands.sql migration-ыг ажиллуулна уу.')
+        const { data, error } = await supabase
+          .from('brands')
+          .insert({ name: newBrandName.trim(), slug })
+          .select()
+          .single()
+        inserted = data
+        insertErr = error
+      }
+
+      if (insertErr) {
+        // Supabase error-ийг ил харуулна
+        console.error('Error adding brand (Supabase):', {
+          message: insertErr.message,
+          code: insertErr.code,
+          details: insertErr.details,
+          hint: insertErr.hint,
+        })
+        const msg = insertErr.message || insertErr.details || 'Үл мэдэгдэх алдаа'
+        alert(`Брэнд нэмэхэд алдаа гарлаа:\n${msg}`)
+        return
+      }
+
       // Refresh brands list and auto-select new brand
       const brandsResult = await api.getBrands()
       if (brandsResult.data) {
         setBrands(brandsResult.data)
       }
-      if (data) {
+      if (inserted) {
         setFormData(prev => ({
           ...prev,
-          brand_id: data.id,
+          brand_id: inserted!.id,
           // Хэрэв product дээр улс хоосон бол брэндийн улсыг автоматаар тавина
           country: prev.country || (country ?? ''),
         }))
@@ -557,9 +590,16 @@ function AdminProductsContent() {
       setNewBrandName('')
       setNewBrandCountry('')
       setShowBrandModal(false)
-    } catch (error) {
-      console.error('Error adding brand:', error)
-      alert('Брэнд нэмэхэд алдаа гарлаа')
+    } catch (error: unknown) {
+      const err = error as { message?: string; code?: string; details?: string; hint?: string }
+      console.error('Error adding brand:', {
+        message: err?.message,
+        code: err?.code,
+        details: err?.details,
+        hint: err?.hint,
+        raw: error,
+      })
+      alert(`Брэнд нэмэхэд алдаа гарлаа:\n${err?.message || 'Үл мэдэгдэх алдаа'}`)
     } finally {
       setSavingBrand(false)
     }

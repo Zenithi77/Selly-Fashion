@@ -1,4 +1,4 @@
-// GET/POST /api/payment/qpay/callback?order_number=...&qpay_payment_id=...
+// GET/POST /api/payment/qpay/callback?order_id=...&qpay_payment_id=...
 // QPay-аас төлбөр төлөгдсөн үед энэ URL-руу дуудна.
 // QPay-н IP-ээс ирсэн эсэхийг шалгахаас гадна payment_id-г /payment/check-ээр баталгаажуулна.
 
@@ -13,16 +13,16 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey)
 async function handle(request: NextRequest) {
   try {
     const url = new URL(request.url)
-    const orderNumber = url.searchParams.get('order_number')
-    if (!orderNumber) {
-      return NextResponse.json({ error: 'order_number дутуу' }, { status: 400 })
+    const orderId = url.searchParams.get('order_id') || url.searchParams.get('order_number')
+    if (!orderId) {
+      return NextResponse.json({ error: 'order_id дутуу' }, { status: 400 })
     }
 
     // Захиалгыг олох (qpay_invoice_id хадгалсан байх ёстой)
     const { data: order, error: orderErr } = await supabase
       .from('orders')
-      .select('id, total, qpay_invoice_id, payment_status')
-      .eq('order_number', orderNumber)
+      .select('id, total_amount, qpay_invoice_id, payment_status')
+      .eq('id', orderId)
       .single()
 
     if (orderErr || !order) {
@@ -38,7 +38,7 @@ async function handle(request: NextRequest) {
       .filter(r => r.payment_status === 'PAID')
       .reduce((sum, r) => sum + Number(r.payment_amount || 0), 0)
 
-    if (totalPaid >= Number(order.total)) {
+    if (totalPaid >= Number(order.total_amount)) {
       await supabase
         .from('orders')
         .update({

@@ -1,5 +1,5 @@
 // POST /api/payment/qpay/create-invoice
-// body: { orderNumber: string, amount: number, description?: string, customerCode?: string }
+// body: { orderId: string (UUID), amount: number, description?: string, customerCode?: string }
 // Returns: { invoice_id, qr_text, qr_image, qPay_shortUrl, urls }
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -12,19 +12,19 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 export async function POST(request: NextRequest) {
   try {
-    const { orderNumber, amount, description, customerCode } = await request.json()
+    const { orderId, amount, description, customerCode } = await request.json()
 
-    if (!orderNumber || typeof orderNumber !== 'string') {
-      return NextResponse.json({ error: 'orderNumber заавал' }, { status: 400 })
+    if (!orderId || typeof orderId !== 'string') {
+      return NextResponse.json({ error: 'orderId заавал' }, { status: 400 })
     }
     if (!amount || typeof amount !== 'number' || amount <= 0) {
       return NextResponse.json({ error: 'Хүчинтэй amount хэрэгтэй' }, { status: 400 })
     }
 
     const invoice = await createInvoice({
-      orderNumber,
+      orderId,
       amount: Math.round(amount),
-      description: description || `Selly Fashion захиалга #${orderNumber}`,
+      description: description || `Selly Fashion захиалга #${orderId.slice(0, 8)}`,
       customerCode,
     })
 
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
         qpay_invoice_id: invoice.invoice_id,
         payment_method: 'qpay',
       })
-      .eq('order_number', orderNumber)
+      .eq('id', orderId)
 
     return NextResponse.json({ success: true, invoice })
   } catch (err) {

@@ -1,5 +1,5 @@
 // POST /api/payment/qpay/check
-// body: { orderNumber: string }
+// body: { orderId: string (UUID) }
 // Frontend-ээс polling хийхэд (захиалагч QR code-аа уншуулан төлсний дараа)
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -12,15 +12,15 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 export async function POST(request: NextRequest) {
   try {
-    const { orderNumber } = await request.json()
-    if (!orderNumber) {
-      return NextResponse.json({ error: 'orderNumber дутуу' }, { status: 400 })
+    const { orderId } = await request.json()
+    if (!orderId) {
+      return NextResponse.json({ error: 'orderId дутуу' }, { status: 400 })
     }
 
     const { data: order } = await supabase
       .from('orders')
-      .select('id, total, qpay_invoice_id, payment_status')
-      .eq('order_number', orderNumber)
+      .select('id, total_amount, qpay_invoice_id, payment_status')
+      .eq('id', orderId)
       .single()
 
     if (!order) {
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
       .filter(r => r.payment_status === 'PAID')
       .reduce((sum, r) => sum + Number(r.payment_amount || 0), 0)
 
-    if (totalPaid >= Number(order.total)) {
+    if (totalPaid >= Number(order.total_amount)) {
       await supabase
         .from('orders')
         .update({ payment_status: 'Paid', paid_at: new Date().toISOString() })

@@ -7,8 +7,44 @@
 //   QPAY_PASSWORD=...        (QPay-аас өгнө)
 //   QPAY_INVOICE_CODE=...    (QPay-аас өгнө, жишээ: SELLY_INVOICE)
 //   QPAY_CALLBACK_URL=https://sellyfashion.mn/api/payment/qpay/callback
+//   QUOTAGUARDSTATIC_URL=... (заавал биш — QPay static IP whitelist шаардвал)
+
+import { ProxyAgent, fetch as undiciFetch, type RequestInit as UndiciRequestInit } from 'undici'
 
 const QPAY_BASE_URL = process.env.QPAY_BASE_URL || 'https://merchant.qpay.mn/v2'
+
+// ──────────────────────────────────────────────
+// Proxy: QuotaGuard Static (static egress IP for QPay whitelist)
+// ──────────────────────────────────────────────
+let cachedProxyAgent: ProxyAgent | null = null
+function getProxyAgent(): ProxyAgent | null {
+  const proxyUrl = process.env.QUOTAGUARDSTATIC_URL || process.env.HTTPS_PROXY
+  if (!proxyUrl) return null
+  if (!cachedProxyAgent) {
+    cachedProxyAgent = new ProxyAgent(proxyUrl)
+  }
+  return cachedProxyAgent
+}
+
+// Бүх QPay-руу гарах fetch энэ wrapper-аар явна — proxy байвал автомат хэрэглэнэ
+async function proxiedFetch(url: string, init: RequestInit = {}) {
+  const agent = getProxyAgent()
+  const reqInit: UndiciRequestInit = {
+    method: init.method,
+    headers: init.headers as Record<string, string> | undefined,
+    body: init.body as string | undefined,
+  }
+  if (agent) {
+    reqInit.dispatcher = agent
+  }
+  const res = await undiciFetch(url, reqInit)
+  return {
+    ok: res.ok,
+    status: res.status,
+    text: () => res.text(),
+    json: () => res.json(),
+  }
+}
 
 interface QPayToken {
   access_token: string
@@ -37,7 +73,7 @@ async function fetchNewToken(): Promise<QPayToken> {
   }
 
   const basic = Buffer.from(`${username}:${password}`).toString('base64')
-  const res = await fetch(`${QPAY_BASE_URL}/auth/token`, {
+  const res = await proxiedFetch(`${QPAY_BASE_URL}/auth/token`, {
     method: 'POST',
     headers: {
       'Authorization': `Basic ${basic}`,
@@ -50,7 +86,12 @@ async function fetchNewToken(): Promise<QPayToken> {
     throw new Error(`QPay auth амжилтгүй (${res.status}): ${text}`)
   }
 
-  const data = await res.json()
+  const data = await res.json() as {
+    access_token: string
+    refresh_token: string
+    expires_in: number
+    refresh_expires_in: number
+  }
   return {
     access_token: data.access_token,
     refresh_token: data.refresh_token,
@@ -69,12 +110,12 @@ async function getAccessToken(): Promise<string> {
 
 async function qpayFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
   const token = await getAccessToken()
-  const res = await fetch(`${QPAY_BASE_URL}${path}`, {
+  const res = await proxiedFetch(`${QPAY_BASE_URL}${path}`, {
     ...init,
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
-      ...(init.headers || {}),
+      ...(init.headers as Record<string, string> || {}),
     },
   })
 
@@ -82,30 +123,30 @@ async function qpayFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
   if (res.status === 401) {
     cachedToken = null
     const retryToken = await getAccessToken()
-    const retry = await fetch(`${QPAY_BASE_URL}${path}`, {
+    const retry = await proxiedFetch(`${QPAY_BASE_URL}${path}`, {
       ...init,
       headers: {
         'Authorization': `Bearer ${retryToken}`,
         'Content-Type': 'application/json',
-        ...(init.headers || {}),
+        ...(init.headers as Record<string, string> || {}),
       },
     })
     if (!retry.ok) throw new Error(`QPay ${path} (${retry.status}): ${await retry.text()}`)
-    return retry.json()
+    return retry.json() as Promise<T>
   }
 
   if (!res.ok) {
     throw new Error(`QPay ${path} (${res.status}): ${await res.text()}`)
   }
-  return res.json()
+  return res.json() as Promise<T>
 }
 
 // ──────────────────────────────────────────────
 // 2. Invoice create: POST /invoice
 // ──────────────────────────────────────────────
 export interface CreateInvoiceParams {
-  /** Манай захиалгын дугаар (unique). QPay-руу sender_invoice_no болж очно */
-  orderNumber: string
+  /** Манай захиалгын ID (UUID). QPay-руу sender_invoice_no болж очно */
+  orderId: string
   /** Захиалагчийн ID/нэр (заавал биш) */
   customerCode?: string
   /** Захиалгын тайлбар */
@@ -128,14 +169,14 @@ export async function createInvoice(params: CreateInvoiceParams): Promise<Create
   if (!invoiceCode) throw new Error('QPAY_INVOICE_CODE env дутуу')
   if (!callbackBase) throw new Error('QPAY_CALLBACK_URL env дутуу')
 
-  // QPay callback-руу ?qpay_payment_id=... query параметр өөрөө нэмж явуулна
-  const callback_url = `${callbackBase}?order_number=${encodeURIComponent(params.orderNumber)}`
+  // QPay callback-руу ?order_id=... query параметр өөрөө нэмж явуулна
+  const callback_url = `${callbackBase}?order_id=${encodeURIComponent(params.orderId)}`
 
   return qpayFetch<CreateInvoiceResponse>('/invoice', {
     method: 'POST',
     body: JSON.stringify({
       invoice_code: invoiceCode,
-      sender_invoice_no: params.orderNumber,
+      sender_invoice_no: params.orderId,
       invoice_receiver_code: params.customerCode || 'terminal',
       invoice_description: params.description,
       amount: params.amount,

@@ -53,6 +53,161 @@ function Confetti() {
   )
 }
 
+// ─── QPay Invoice type ─────────────────────────────────────
+interface QPayInvoice {
+  invoice_id: string
+  qr_text: string
+  qr_image: string // base64 PNG
+  qPay_shortUrl?: string
+  urls?: Array<{ name: string; description: string; logo: string; link: string }>
+}
+
+// ─── QPay Payment Modal ────────────────────────────────────
+interface QPayPaymentModalProps {
+  isOpen: boolean
+  onClose: () => void
+  orderId: string
+  invoice: QPayInvoice | null
+  totalAmount: number
+  onPaymentSuccess: () => void
+}
+
+function QPayPaymentModal({ isOpen, onClose, orderId, invoice, totalAmount, onPaymentSuccess }: QPayPaymentModalProps) {
+  const [paymentStatus, setPaymentStatus] = useState<string>('Pending')
+  const [showConfetti, setShowConfetti] = useState(false)
+
+  useEffect(() => {
+    if (!isOpen || !orderId || !invoice) return
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const res = await fetch('/api/payment/qpay/check', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderId }),
+          cache: 'no-store',
+        })
+        const data = await res.json()
+        if (data.paid) {
+          setPaymentStatus('Paid')
+          setShowConfetti(true)
+          clearInterval(pollInterval)
+          setTimeout(() => onPaymentSuccess(), 3000)
+        }
+      } catch (error) {
+        console.error('QPay check failed:', error)
+      }
+    }, 3000)
+
+    return () => clearInterval(pollInterval)
+  }, [isOpen, orderId, invoice, onPaymentSuccess])
+
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {showConfetti && <Confetti />}
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        onClick={paymentStatus === 'Paid' ? undefined : onClose}
+      />
+      <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden max-h-[90vh] overflow-y-auto">
+        {paymentStatus === 'Paid' ? (
+          <div className="p-8 text-center">
+            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-10 h-10 text-green-500">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">Төлбөр амжилттай!</h2>
+            <p className="text-slate-500 mb-6">Таны захиалга баталгаажлаа.</p>
+            <div className="animate-pulse text-sm text-slate-400">Хуудас автоматаар шилжих болно...</div>
+          </div>
+        ) : (
+          <>
+            <div className="bg-gradient-to-r from-pink-500 to-rose-500 p-6 text-white">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold">QPay-ээр төлөх</h2>
+                <button
+                  onClick={onClose}
+                  className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div className="text-center">
+                <p className="text-white/80 text-sm mb-1">Төлөх дүн</p>
+                <p className="text-4xl font-bold">{formatPrice(totalAmount)}</p>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {/* QR Code */}
+              {invoice?.qr_image ? (
+                <div className="bg-white border-2 border-slate-100 rounded-2xl p-4 flex flex-col items-center">
+                  <img
+                    src={`data:image/png;base64,${invoice.qr_image}`}
+                    alt="QPay QR"
+                    className="w-56 h-56 object-contain"
+                  />
+                  <p className="text-xs text-slate-500 mt-3 text-center">
+                    Аль ч банкны апп-аар QR кодыг уншуулна уу
+                  </p>
+                </div>
+              ) : (
+                <div className="bg-slate-50 rounded-2xl p-8 text-center">
+                  <div className="w-8 h-8 border-2 border-pink-200 border-t-pink-500 rounded-full animate-spin mx-auto" />
+                  <p className="text-sm text-slate-500 mt-3">QR код үүсгэж байна...</p>
+                </div>
+              )}
+
+              {/* Bank deeplink list */}
+              {invoice?.urls && invoice.urls.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 mb-3 uppercase tracking-wide">
+                    Эсвэл банкны апп нээх
+                  </p>
+                  <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto">
+                    {invoice.urls.map((u) => (
+                      <a
+                        key={u.name}
+                        href={u.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex flex-col items-center gap-1 p-2 rounded-xl hover:bg-slate-50 transition-colors"
+                      >
+                        {u.logo && (
+                          <img src={u.logo} alt={u.name} className="w-10 h-10 rounded-lg object-contain" />
+                        )}
+                        <span className="text-[10px] text-center text-slate-600 truncate w-full">
+                          {u.description || u.name}
+                        </span>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center justify-center gap-3 py-2 text-slate-500">
+                <div className="relative">
+                  <div className="w-6 h-6 border-2 border-pink-200 rounded-full"></div>
+                  <div className="absolute inset-0 w-6 h-6 border-2 border-pink-500 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+                <span className="text-sm">Төлбөр хүлээж байна...</span>
+              </div>
+              <p className="text-xs text-center text-slate-400">
+                Төлбөр хийсний дараа автоматаар баталгаажна
+              </p>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // Payment Modal Component
 interface PaymentModalProps {
   isOpen: boolean
@@ -278,6 +433,9 @@ export default function CheckoutPage() {
   const [orderId, setOrderId] = useState('')
   const [paymentRef, setPaymentRef] = useState('')
   const [orderTotal, setOrderTotal] = useState(0)
+  const [paymentMethod, setPaymentMethod] = useState<'qpay' | 'bank_transfer'>('qpay')
+  const [qpayInvoice, setQpayInvoice] = useState<QPayInvoice | null>(null)
+  const [showQPayModal, setShowQPayModal] = useState(false)
   
   const [formData, setFormData] = useState({
     name: user?.full_name || '',
@@ -316,7 +474,7 @@ export default function CheckoutPage() {
       const orderData = {
         user_id: user?.id,
         status: 'pending' as const,
-        payment_method: 'bank_transfer',
+        payment_method: paymentMethod,
         total_amount: grandTotal,
         shipping_address: fullShippingAddress
       }
@@ -333,11 +491,40 @@ export default function CheckoutPage() {
       
       if (error) throw error
 
-      // Store order info and show payment modal
-      setOrderId(data?.id || '')
-      setPaymentRef(newPaymentRef)
+      const newOrderId = data?.id || ''
+      setOrderId(newOrderId)
       setOrderTotal(grandTotal)
-      setShowPaymentModal(true)
+
+      if (paymentMethod === 'qpay') {
+        // QPay: invoice үүсгээд QR харуулна
+        try {
+          const res = await fetch('/api/payment/qpay/create-invoice', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              orderId: newOrderId,
+              amount: grandTotal,
+              description: `Selly Fashion #${newOrderId.slice(0, 8)}`,
+            }),
+          })
+          const json = await res.json()
+          if (!res.ok || !json.success) {
+            throw new Error(json.error || 'QPay invoice үүсгэхэд алдаа')
+          }
+          setQpayInvoice(json.invoice)
+          setShowQPayModal(true)
+        } catch (qErr) {
+          console.error('QPay invoice error:', qErr)
+          alert('QPay-тай холбогдоход алдаа гарлаа. Банкны шилжүүлгээр төлнө үү.')
+          // Fallback: банкны модал нээх
+          setPaymentRef(newPaymentRef)
+          setShowPaymentModal(true)
+        }
+      } else {
+        // Банкны шилжүүлэг
+        setPaymentRef(newPaymentRef)
+        setShowPaymentModal(true)
+      }
 
     } catch (error) {
       console.error('Order error:', error)
@@ -352,7 +539,7 @@ export default function CheckoutPage() {
     router.push(`/order-success?id=${orderId}`)
   }, [clearCart, router, orderId])
 
-  if (items.length === 0 && !showPaymentModal) {
+  if (items.length === 0 && !showPaymentModal && !showQPayModal) {
     return (
       <main className="min-h-screen pt-[104px] flex items-center justify-center">
         <div className="text-center">
@@ -379,6 +566,16 @@ export default function CheckoutPage() {
         onClose={() => setShowPaymentModal(false)}
         orderId={orderId}
         paymentRef={paymentRef}
+        totalAmount={orderTotal}
+        onPaymentSuccess={handlePaymentSuccess}
+      />
+
+      {/* QPay Payment Modal */}
+      <QPayPaymentModal
+        isOpen={showQPayModal}
+        onClose={() => setShowQPayModal(false)}
+        orderId={orderId}
+        invoice={qpayInvoice}
         totalAmount={orderTotal}
         onPaymentSuccess={handlePaymentSuccess}
       />
@@ -480,34 +677,87 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            {/* Payment Method - Bank Transfer Only */}
+            {/* Payment Method - QPay or Bank Transfer */}
             <div className="bg-white rounded-2xl p-6 border border-slate-100">
               <h2 className="font-bold text-lg mb-6">Төлбөрийн хэлбэр</h2>
-              
-              <div className="bg-pink-50 border-2 border-pink-200 rounded-xl p-5">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-pink-500 rounded-xl flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-white">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z" />
-                    </svg>
+
+              <div className="space-y-3">
+                {/* QPay option */}
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod('qpay')}
+                  className={`w-full text-left rounded-xl p-5 border-2 transition-all ${
+                    paymentMethod === 'qpay'
+                      ? 'bg-pink-50 border-pink-300'
+                      : 'bg-white border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                      paymentMethod === 'qpay' ? 'bg-pink-500' : 'bg-slate-100'
+                    }`}>
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={`w-6 h-6 ${paymentMethod === 'qpay' ? 'text-white' : 'text-slate-500'}`}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75ZM6.75 16.5h.75v.75h-.75v-.75ZM16.5 6.75h.75v.75h-.75v-.75ZM13.5 13.5h.75v.75h-.75v-.75ZM13.5 19.5h.75v.75h-.75v-.75ZM19.5 13.5h.75v.75h-.75v-.75ZM19.5 19.5h.75v.75h-.75v-.75ZM16.5 16.5h.75v.75h-.75v-.75Z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-bold text-lg text-slate-900">QPay</p>
+                      <p className="text-sm text-slate-500">QR код уншуулан банкны апп-аар төлөх</p>
+                    </div>
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                      paymentMethod === 'qpay' ? 'bg-pink-500' : 'bg-slate-200'
+                    }`}>
+                      {paymentMethod === 'qpay' && (
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-4 h-4 text-white">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                        </svg>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <p className="font-bold text-lg text-slate-900">Банкны шилжүүлэг</p>
-                    <p className="text-sm text-slate-500">Хаан банкны дансруу шилжүүлэг хийнэ</p>
+                </button>
+
+                {/* Bank transfer option */}
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod('bank_transfer')}
+                  className={`w-full text-left rounded-xl p-5 border-2 transition-all ${
+                    paymentMethod === 'bank_transfer'
+                      ? 'bg-pink-50 border-pink-300'
+                      : 'bg-white border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                      paymentMethod === 'bank_transfer' ? 'bg-pink-500' : 'bg-slate-100'
+                    }`}>
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={`w-6 h-6 ${paymentMethod === 'bank_transfer' ? 'text-white' : 'text-slate-500'}`}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-bold text-lg text-slate-900">Банкны шилжүүлэг</p>
+                      <p className="text-sm text-slate-500">Хаан банкны дансруу шилжүүлэг хийнэ</p>
+                    </div>
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                      paymentMethod === 'bank_transfer' ? 'bg-pink-500' : 'bg-slate-200'
+                    }`}>
+                      {paymentMethod === 'bank_transfer' && (
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-4 h-4 text-white">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                        </svg>
+                      )}
+                    </div>
                   </div>
-                  <div className="w-6 h-6 bg-pink-500 rounded-full flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-4 h-4 text-white">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                    </svg>
-                  </div>
-                </div>
-                
-                <div className="mt-4 pt-4 border-t border-pink-200">
-                  <p className="text-sm text-slate-600">
-                    Захиалга баталгаажуулсны дараа банкны данс болон гүйлгээний утга харагдана. 
-                    Төлбөр хийсний дараа автоматаар баталгаажна.
-                  </p>
-                </div>
+                </button>
+              </div>
+
+              <div className="mt-4 bg-slate-50 rounded-xl p-4">
+                <p className="text-sm text-slate-600">
+                  {paymentMethod === 'qpay'
+                    ? 'Захиалга баталгаажуулсны дараа QR код гарч ирнэ. Аль ч банкны апп-аар уншуулан төлнө үү.'
+                    : 'Захиалга баталгаажуулсны дараа банкны данс болон гүйлгээний утга харагдана. Төлбөр хийсний дараа автоматаар баталгаажна.'}
+                </p>
               </div>
             </div>
           </div>
