@@ -8,6 +8,9 @@ import { checkPayment } from '@/lib/qpay'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  console.warn('[QPay callback] ⚠️ SUPABASE_SERVICE_ROLE_KEY дутуу — RLS-ээс orders update fail болох болзошгүй')
+}
 const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 async function handle(request: NextRequest) {
@@ -39,13 +42,19 @@ async function handle(request: NextRequest) {
       .reduce((sum, r) => sum + Number(r.payment_amount || 0), 0)
 
     if (totalPaid >= Number(order.total_amount)) {
-      await supabase
+      const { error: updErr } = await supabase
         .from('orders')
         .update({
           payment_status: 'Paid',
           paid_at: new Date().toISOString(),
+          paid_amount: totalPaid,
+          status: 'confirmed',
         })
         .eq('id', order.id)
+      if (updErr) {
+        console.error('[QPay callback] orders update алдаа:', updErr)
+        return NextResponse.json({ success: false, error: updErr.message }, { status: 500 })
+      }
 
       return NextResponse.json({ success: true, paid: true })
     }
