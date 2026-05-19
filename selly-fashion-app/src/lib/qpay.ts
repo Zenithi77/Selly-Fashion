@@ -49,17 +49,29 @@ async function proxiedFetch(url: string, init: RequestInit = {}) {
 interface QPayToken {
   access_token: string
   refresh_token: string
-  expires_in: number  // seconds
-  refresh_expires_in: number
-  obtained_at: number // ms timestamp
+  expires_in: number          // access_token хүчинтэй хугацаа (сек)
+  refresh_expires_in: number  // refresh_token хүчинтэй хугацаа (сек)
+  obtained_at: number         // ms timestamp (token авсан мөч)
 }
 
-// In-memory cache (per serverless instance)
+// ──────────────────────────────────────────────
+// In-memory token cache (per serverless instance)
+// QPay шаардлага: "тухайн хугацаанд НЭГ Л УДАА авна".
+// Тиймээс:
+//   1) хүчинтэй байгаа access_token-ыг дахин ашиглана
+//   2) зэрэгцээ хүсэлтүүд нэг л fetch-ийг хуваалцана (in-flight dedupe)
+//   3) access_token хугацаа дууссан ч refresh_token хүчинтэй бол /auth/refresh ашиглана
+// ──────────────────────────────────────────────
 let cachedToken: QPayToken | null = null
+let pendingTokenPromise: Promise<QPayToken> | null = null
 
-function isExpired(t: QPayToken): boolean {
-  // 60 second safety margin
+function isAccessExpired(t: QPayToken): boolean {
+  // 60 секундын safety margin
   return Date.now() >= t.obtained_at + (t.expires_in - 60) * 1000
+}
+
+function isRefreshExpired(t: QPayToken): boolean {
+  return Date.now() >= t.obtained_at + (t.refresh_expires_in - 60) * 1000
 }
 
 // ──────────────────────────────────────────────
@@ -101,11 +113,65 @@ async function fetchNewToken(): Promise<QPayToken> {
   }
 }
 
-async function getAccessToken(): Promise<string> {
-  if (!cachedToken || isExpired(cachedToken)) {
-    cachedToken = await fetchNewToken()
+// POST /auth/refresh  — refresh_token-оор шинэ access_token авна
+async function refreshToken(refresh_token: string): Promise<QPayToken> {
+  const res = await proxiedFetch(`${QPAY_BASE_URL}/auth/refresh`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${refresh_token}`,
+      'Content-Type': 'application/json',
+    },
+  })
+
+  if (!res.ok) {
+    // refresh бүтэхгүй бол шинээр basic auth-аар авна
+    return fetchNewToken()
   }
-  return cachedToken.access_token
+
+  const data = await res.json() as {
+    access_token: string
+    refresh_token: string
+    expires_in: number
+    refresh_expires_in: number
+  }
+  return {
+    access_token: data.access_token,
+    refresh_token: data.refresh_token,
+    expires_in: data.expires_in,
+    refresh_expires_in: data.refresh_expires_in,
+    obtained_at: Date.now(),
+  }
+}
+
+async function getAccessToken(forceRefresh = false): Promise<string> {
+  // 1) хүчинтэй token байвал шууд буцаана
+  if (!forceRefresh && cachedToken && !isAccessExpired(cachedToken)) {
+    return cachedToken.access_token
+  }
+
+  // 2) аль хэдийн өөр хүсэлт token авч байгаа бол түүнийг хүлээнэ (concurrent dedupe)
+  if (pendingTokenPromise) {
+    const t = await pendingTokenPromise
+    return t.access_token
+  }
+
+  // 3) шинэ fetch эхлүүлнэ
+  pendingTokenPromise = (async () => {
+    try {
+      if (cachedToken && !isRefreshExpired(cachedToken) && !forceRefresh) {
+        // access expire болсон ч refresh хүчинтэй — refresh ашиглана
+        cachedToken = await refreshToken(cachedToken.refresh_token)
+      } else {
+        cachedToken = await fetchNewToken()
+      }
+      return cachedToken
+    } finally {
+      pendingTokenPromise = null
+    }
+  })()
+
+  const t = await pendingTokenPromise
+  return t.access_token
 }
 
 async function qpayFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
@@ -119,10 +185,9 @@ async function qpayFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
     },
   })
 
-  // Token expire болсон бол нэг удаа дахин оролдоно
+  // Token expire болсон бол нэг удаа дахин оролдоно (force refresh)
   if (res.status === 401) {
-    cachedToken = null
-    const retryToken = await getAccessToken()
+    const retryToken = await getAccessToken(true)
     const retry = await proxiedFetch(`${QPAY_BASE_URL}${path}`, {
       ...init,
       headers: {
