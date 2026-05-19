@@ -34,10 +34,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ paid: false, reason: 'invoice үүсгээгүй' })
     }
 
-    const check = await checkPayment(order.qpay_invoice_id)
+    let check
+    try {
+      check = await checkPayment(order.qpay_invoice_id)
+    } catch (e) {
+      console.error('[QPay check] /payment/check алдаа:', e)
+      return NextResponse.json({
+        paid: false,
+        error: e instanceof Error ? e.message : 'check failed',
+        invoiceId: order.qpay_invoice_id,
+      })
+    }
+
     const totalPaid = check.rows
       .filter(r => r.payment_status === 'PAID')
       .reduce((sum, r) => sum + Number(r.payment_amount || 0), 0)
+
+    console.log('[QPay check]', {
+      orderId,
+      invoiceId: order.qpay_invoice_id,
+      expected: Number(order.total_amount),
+      totalPaid,
+      rows: check.rows.length,
+      statuses: check.rows.map(r => r.payment_status),
+    })
 
     if (totalPaid >= Number(order.total_amount)) {
       await supabase
@@ -47,7 +67,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ paid: true, totalPaid })
     }
 
-    return NextResponse.json({ paid: false, totalPaid })
+    return NextResponse.json({
+      paid: false,
+      totalPaid,
+      expected: Number(order.total_amount),
+      rows: check.rows.length,
+    })
   } catch (err) {
     console.error('QPay check error:', err)
     return NextResponse.json(

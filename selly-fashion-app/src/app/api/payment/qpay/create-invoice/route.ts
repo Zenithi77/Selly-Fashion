@@ -28,14 +28,25 @@ export async function POST(request: NextRequest) {
       customerCode,
     })
 
+    console.log('[QPay create-invoice] OK', {
+      orderId,
+      invoiceId: invoice.invoice_id,
+      amount: Math.round(amount),
+      callbackEnv: process.env.QPAY_CALLBACK_URL,
+    })
+
     // Захиалга дээр QPay invoice_id-г хадгална (callback дээр харгалзуулахад хэрэгтэй)
-    await supabase
+    const { error: updateErr } = await supabase
       .from('orders')
       .update({
         qpay_invoice_id: invoice.invoice_id,
         payment_method: 'qpay',
       })
       .eq('id', orderId)
+
+    if (updateErr) {
+      console.error('[QPay create-invoice] orders update алдаа:', updateErr)
+    }
 
     return NextResponse.json({ success: true, invoice })
   } catch (err) {
