@@ -11,7 +11,8 @@ export const BANK_ACCOUNTS = {
 };
 
 // Shipping cost in MNT (₮)
-export const SHIPPING_COST = 5000;
+// Түр хаалттай — захиалга бүрт хүргэлтийн төлбөр аваагүй (0₮)
+export const SHIPPING_COST = 0;
 export const FREE_SHIPPING_THRESHOLD = 100000;
 
 // Payment statuses
