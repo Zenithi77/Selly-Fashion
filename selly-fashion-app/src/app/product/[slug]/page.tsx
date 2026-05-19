@@ -98,9 +98,12 @@ export default function ProductDetailPage() {
   }, [slug])
 
   const handleAddToCart = () => {
-    if (product && selectedSize && selectedColor) {
-      addItem(product, quantity, selectedSize, selectedColor)
-    }
+    if (!product) return
+    const hasSizes = !!product.sizes?.length
+    const hasColors = !!product.colors?.length
+    if (hasSizes && !selectedSize) return
+    if (hasColors && !selectedColor) return
+    addItem(product, quantity, selectedSize || '-', selectedColor || '-')
   }
 
   if (loading) {
@@ -346,7 +349,11 @@ export default function ProductDetailPage() {
             <div className="flex gap-4 pt-4">
               <button
                 onClick={handleAddToCart}
-                disabled={!selectedSize || !selectedColor || product.stock_quantity === 0}
+                disabled={
+                  (!!product.sizes?.length && !selectedSize) ||
+                  (!!product.colors?.length && !selectedColor) ||
+                  product.stock_quantity === 0
+                }
                 className="flex-1 py-4 bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold rounded-xl hover:from-pink-600 hover:to-rose-600 transition-all shadow-lg shadow-pink-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
