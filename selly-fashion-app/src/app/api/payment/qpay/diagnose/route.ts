@@ -23,16 +23,30 @@ export async function GET(request: NextRequest) {
       : '⚠ ДУТУУ — anon key ашиглана, RLS update fail болж магадгүй',
   }
 
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+  const supabase = createClient(supabaseUrl, supabaseKey)
+
+  // Сүүлийн callback лог-уудыг авах (qpay_callbacks хүснэгт байгаа бол)
+  async function recentCallbacks(filter?: { orderId?: string }) {
+    let q = supabase
+      .from('qpay_callbacks')
+      .select('id, received_at, method, order_id, invoice_id, status, paid, total_paid, error, ip')
+      .order('received_at', { ascending: false })
+      .limit(20)
+    if (filter?.orderId) q = q.eq('order_id', filter.orderId)
+    const { data, error } = await q
+    if (error) return { error: error.message, hint: 'qpay_callbacks хүснэгт байхгүй бол migrations/add-qpay-callbacks-log.sql ажиллуулна уу' }
+    return data
+  }
+
   if (!orderId) {
     return NextResponse.json({
       hint: '?orderId=<uuid> нэмж дуудна уу',
       env,
+      recentCallbacks: await recentCallbacks(),
     })
   }
-
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-  const supabase = createClient(supabaseUrl, supabaseKey)
 
   // 1) Захиалгыг олно
   const { data: order, error: orderErr } = await supabase
@@ -81,6 +95,7 @@ export async function GET(request: NextRequest) {
     qpayCheck: qpay,
     qpayError: qpayErr,
     rlsUpdateTest: updTestErr ? `✗ FAIL: ${updTestErr.message}` : '✔ OK',
+    callbacksForOrder: await recentCallbacks({ orderId }),
     env,
   })
 }
